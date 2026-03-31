@@ -9,5 +9,5 @@
 - **Mh. Kholil**
   - Backend Development (API & Database)
 
-- **Dilas Sholeh Masyyuhur**
+- **Dilas Sholeh Masysyuhur**
   - Machine Learning Model Development
