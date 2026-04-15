@@ -1,7 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\AuthController;
 
 Route::post('/signup', [AuthController::class, 'signup']);
 
@@ -51,3 +51,19 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+
+// ── HALAMAN ADMIN ──────────────────────────────────────────────
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth'])
+    ->group(function () {
+        Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
+        Route::get('/skrining',  fn() => view('admin.skrining'))->name('skrining');
+        Route::get('/model',     fn() => view('admin.model'))->name('model');
+        Route::get('/export',    fn() => view('admin.export'))->name('export');
+
+        Route::post('/logout', function () {
+            // TODO: logika backend (AuthController@logout)
+            return redirect()->route('login');
+        })->name('logout');
+    });
