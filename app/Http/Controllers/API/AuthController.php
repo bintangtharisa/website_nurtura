@@ -7,62 +7,67 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|min:4',
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',
+            'role' => 'required|in:ayah,ibu,admin'
+        ]);
 
+        $role = match ($request->role) {
+            'ayah' => 'father',
+            'ibu'  => 'mother',
+            default => 'admin'
+        };
 
-public function register(Request $request)
-{
-    if (User::where('email', $request->email)->exists()) {
-        return response()->json([
-            'message' => 'Email already exists'
-        ], 400);
+        User::create([
+            'username'        => $request->name,
+            'email'           => $request->email,
+            'password_hash'   => Hash::make($request->password),
+            'role'            => $role,
+            'connection_code' => Str::random(6),
+            'code_used'       => false,
+            'created_at'      => Carbon::now(),
+            'updated_at'      => Carbon::now(),
+        ]);
+
+        return redirect('/login')->with('status', 'Register berhasil!');
     }
 
-    $user = User::create([
-        'username'        => $request->username,
-        'email'           => $request->email,
-        'password_hash'   => Hash::make($request->password),
-        'role'            => $request->role,
-        'connection_code' => Str::random(6),
-        'code_used'       => false,
-        'created_at'      => now(),
-        'updated_at'      => now()
-    ]);
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
 
-    $token = JWTAuth::fromUser($user);
+        $user = User::where('email', $request->email)->first();
 
-    return response()->json([
-        'message' => 'Register success',
-        'token'   => $token,
-        'user'    => $user
-    ], 201);
-}
+        if (!$user || !Hash::check($request->password, $user->password_hash)) {
+            return back()->withErrors([
+                'email' => 'Email atau password salah'
+            ]);
+        }
 
+        session([
+            'user_id' => $user->_id,
+            'role' => $user->role
+        ]);
 
-public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required'
-    ]);
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user || !Hash::check($request->password, $user->password_hash)) {
-        return response()->json([
-            'message' => 'Invalid email or password'
-        ], 401);
     }
 
-        $token = JWTAuth::fromUser($user);
+    public function dashboard()
+{
+    if (!session('user_id')) {
+        return redirect('/login');
+    }
 
-    return response()->json([
-        'message' => 'Login success',
-        'token' => $token,
-        'user' => $user
-    ]);
+    return view('admin.dashboard');
 }
-
 }

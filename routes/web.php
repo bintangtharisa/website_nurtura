@@ -1,69 +1,28 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\AuthController;
 
-use App\Http\Controllers\Api\AuthController;
-
-Route::post('/signup', [AuthController::class, 'signup']);
-
-// ── HALAMAN LOGIN ──────────────────────────────────────────────
-// GET  /login  → tampilkan form login
-// POST /login  → proses form login (nanti dibuat sama backend)
-Route::get('/login', function () {
-    return view('auth.login');        // file: resources/views/auth/login.blade.php
-})->name('login');
-
-Route::post('/login', function () {
-// TODO: logika backend (AuthController@login)
-// Ini placeholder supaya form tidak error saat submit
-    return redirect()->route('login')->with('status', 'Login diterima! (belum ada logika)');
-})->name('login.post');
-
-
-// ── HALAMAN REGISTER ───────────────────────────────────────────
-// GET  /register  → tampilkan form daftar
-// POST /register  → proses pendaftaran
 Route::get('/register', function () {
-    return view('auth.register');     // file: resources/views/auth/register.blade.php
+    return view('auth.register');
 })->name('register');
 
-Route::post('/register', function () {
-    // TODO: logika backend (AuthController@register)
-    return redirect()->route('login')->with('status', 'Akun berhasil dibuat! Silakan login.');
-})->name('register.post');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
 
-// ── HALAMAN FORGOT PASSWORD ────────────────────────────────────
-// GET  /forgotpassword  → tampilkan form lupa sandi
-// POST /forgotpassword  → proses kirim email reset
-Route::get('/forgotpassword', function () {
-    return view('auth.forgotpassword'); // file: resources/views/auth/forgot-password.blade.php
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
 })->name('password.request');
 
-Route::post('/forgotpassword', function () {
-    // TODO: logika backend kirim email reset (PasswordController@sendResetLink)
-    // Laravel punya built-in password reset, nanti backend yang integrasi
-    return back()->with('status', 'Link reset kata sandi telah dikirim ke email kamu!');
-})->name('password.email');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ── HALAMAN HOME (sementara redirect ke login) ─────────────────
+Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect('/login');
 });
-
-
-// ── HALAMAN ADMIN ──────────────────────────────────────────────
-Route::prefix('admin')
-    ->name('admin.')
-    ->middleware(['auth'])
-    ->group(function () {
-        Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
-        Route::get('/skrining',  fn() => view('admin.skrining'))->name('skrining');
-        Route::get('/model',     fn() => view('admin.model'))->name('model');
-        Route::get('/export',    fn() => view('admin.export'))->name('export');
-
-        Route::post('/logout', function () {
-            // TODO: logika backend (AuthController@logout)
-            return redirect()->route('login');
-        })->name('logout');
-    });
