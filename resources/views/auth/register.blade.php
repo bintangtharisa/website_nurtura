@@ -7,328 +7,401 @@
     <title>Daftar – Nurtura</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             min-height: 100vh;
-            background-color: #f0ebe3;
+            background-color: #f7f6f2; /* Warna background luar */
             display: flex;
-            flex-direction: column;
-            justify-content: center; /* Bikin ke tengah vertikal */
-            align-items: center; /* Bikin ke tengah horizontal */
+            justify-content: center; 
+            align-items: center; 
             font-family: 'DM Sans', sans-serif;
-            position: relative; /* Ditambahkan agar absolute topbar rapi */
-            padding: 20px;
+            padding: 40px 20px;
+            color: #333;
         }
 
-        /* ── TOP BAR ── */
-        .topbar {
-            position: absolute; /* Dipisah dari aliran supaya nempel di pojok */
-            top: 32px;
-            left: 32px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .topbar a {
-            width: 32px; height: 32px; /* Disamakan dengan login */
-            border-radius: 50%;
-            background: #3a3a3a;
-            color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .topbar span {
-            font-size: 14px;
-            color: #3a3a3a;
-            font-weight: 500;
-        }
-
-        /* ── MAIN ── */
-        .page-body {
+        .card-container {
+            background: #ffffff;
             width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .card-outer {
-            width: 100%;
-            max-width: 680px; /* Diperlebar dari 580px agar judul sejajar 1 baris */
-            background: #e8ddd3;
+            max-width: 480px; /* Sedikit lebih lebar dari login untuk mengakomodasi dua kolom role */
             border-radius: 24px;
-            padding: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-        }
-
-        .card-inner {
-            background: #f2b5a0;
-            border-radius: 18px;
-            padding: 32px 48px 36px; /* Disamakan dengan halaman login */
+            padding: 40px 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
             text-align: center;
         }
 
+        /* ── ICON HEART ── */
+        .icon-top {
+            width: 56px; height: 56px;
+            background-color: #f1f5ee;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .icon-top svg {
+            width: 24px; height: 24px;
+            fill: #9baf8b;
+        }
+
+        /* ── TYPOGRAPHY ── */
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 30px; /* Skala disesuaikan */
-            color: #2e2e2e;
-            margin-bottom: 4px;
-            line-height: 1.15;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
         }
         .subtitle {
-            font-size: 14px;
-            color: #5a5a5a;
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 32px;
+        }
+
+        /* ── ROLE SELECTOR CARDS ── */
+        .role-section {
+            text-align: left;
             margin-bottom: 24px;
         }
-
-        /* ── ROLE SELECTOR ── */
-        .role-label {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            color: #5a5a5a;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-        .role-options {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        /* tombol role pakai <label> + hidden radio agar bisa toggle aktif */
-        .role-options input[type="radio"] { display: none; }
-
-        .role-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 12px 28px;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.55);
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: border-color 0.2s, background 0.2s;
-            min-width: 110px;
-        }
-        .role-btn svg {
-            width: 20px; height: 20px;
-            color: #7a9e6a;
-        }
-        .role-btn span {
+        .section-label {
             font-size: 13px;
             font-weight: 600;
-            color: #3a3a3a;
+            color: #444;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .role-cards {
+            display: flex;
+            gap: 16px;
+        }
+        .role-card {
+            flex: 1;
+            border: 1.5px solid #eaeaea;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .role-card input[type="radio"] { display: none; }
+        
+        /* State aktif saat dipilih */
+        .role-card.active {
+            border-color: #9baf8b;
+            background-color: #fdfaf7;
+            box-shadow: 0 4px 12px rgba(155, 175, 139, 0.1);
+        }
+        .role-card svg {
+            width: 32px; height: 32px;
+            stroke: #d0b8a8;
+            stroke-width: 1.5;
+            margin-bottom: 12px;
+            fill: none;
+            transition: stroke 0.2s;
+        }
+        .role-card.active svg { stroke: #9baf8b; }
+        .role-title {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .role-desc {
+            display: block;
+            font-size: 11px;
+            color: #888;
         }
 
-        /* state aktif: radio checked → label di-style lewat JS karena CSS sibling selector terbatas */
-        .role-btn.active {
-            background: #fff;
-            border-color: #7a9e6a;
+        /* ── DIVIDER ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 24px 0;
+            color: #999;
+            font-size: 12px;
         }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .divider:not(:empty)::before { margin-right: 1em; }
+        .divider:not(:empty)::after { margin-left: 1em; }
 
         /* ── FORM FIELDS ── */
         .field-group {
             text-align: left;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
         .field-group label {
             display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #3a3a3a;
-            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 8px;
         }
         .input-wrap {
             position: relative;
         }
         .input-wrap svg {
             position: absolute;
-            left: 14px; top: 50%;
+            left: 16px;
+            top: 50%;
             transform: translateY(-50%);
             width: 16px; height: 16px;
-            color: #9a9a9a;
+            color: #666;
         }
         .input-wrap input {
             width: 100%;
-            padding: 12px 16px 12px 40px; /* Ukuran input disesuaikan */
+            padding: 14px 16px 14px 44px;
             border: none;
-            border-radius: 50px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 13px;
             font-family: 'DM Sans', sans-serif;
-            color: #3a3a3a;
-            background: #fff;
+            background: #ebdcd0; /* Warna beige input */
+            color: #333;
             outline: none;
             transition: box-shadow 0.2s;
         }
-        .input-wrap input:focus { box-shadow: 0 0 0 3px rgba(107,140,89,0.25); }
-        .input-wrap input::placeholder { color: #b0b0b0; }
+        .input-wrap input:focus {
+            box-shadow: 0 0 0 2px #9baf8b;
+        }
+        .input-wrap input::placeholder { color: #888; }
 
         /* ── BUTTON ── */
         .btn-primary {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 50px;
-            background: #7a9e6a;
+            border-radius: 10px;
+            background: #9baf8b;
             color: #fff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             font-family: 'DM Sans', sans-serif;
             cursor: pointer;
             margin-top: 24px;
-            transition: background 0.2s, transform 0.1s;
+            margin-bottom: 16px;
+            transition: background 0.2s;
         }
-        .btn-primary:hover  { background: #6a8e5a; }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:hover { background: #869977; }
+
+        /* ── LINKS ── */
+        .login-link {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 32px;
+        }
+        .login-link a {
+            color: #9baf8b;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* ── SECURITY NOTE BOX ── */
+        .security-box {
+            background: #fdfbf9;
+            border: 1px solid #f2e9e1;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: left;
+        }
+        .sec-header {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        .sec-header svg {
+            width: 16px; height: 16px;
+            margin-right: 8px;
+            color: #d0b8a8;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .sec-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sec-list li {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 6px;
+            position: relative;
+            padding-left: 12px;
+        }
+        .sec-list li:last-child { margin-bottom: 0; }
+        .sec-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #a0a0a0;
+        }
 
         /* ── ALERTS ── */
         .alert {
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             font-size: 13px;
             text-align: left;
         }
-        .alert-error { background: rgba(220,53,69,0.15); color: #842029; }
+        .alert-error { background: #f8d7da; color: #842029; }
     </style>
 </head>
 <body>
 
-    <div class="topbar">
-        <a href="{{ route('login') }}" aria-label="Kembali">&#8592;</a>
-        <span>Create Account</span>
-    </div>
-
-    <div class="page-body">
-        <div class="card-outer">
-            <div class="card-inner">
-
-                <h1>Bergabung dengan Nurtura Family</h1>
-                <p class="subtitle">Mulailah perjalananmu untuk pulih dan merasa lebih baik lagi</p>
-
-                {{-- ERROR MESSAGES --}}
-                @if ($errors->any())
-                    <div class="alert alert-error">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
-                    </div>
-                @endif
-
-                {{-- FORM --}}
-                <form action="{{ route('register.post') }}" method="POST" id="registerForm">
-                    @csrf
-
-                    {{-- ── PILIH ROLE ── --}}
-                    <p class="role-label">Pilih Role Kamu</p>
-                    <div class="role-options">
-
-                        {{-- ROLE: AYAH --}}
-                        <input type="radio" name="role" id="role_ayah" value="ayah"
-                               {{ old('role', 'ayah') === 'ayah' ? 'checked' : '' }}>
-                        <label for="role_ayah" class="role-btn {{ old('role', 'ayah') === 'ayah' ? 'active' : '' }}" id="label_ayah">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                            </svg>
-                            <span>Ayah</span>
-                        </label>
-
-                        {{-- ROLE: ADMIN --}}
-                        <input type="radio" name="role" id="role_admin" value="admin"
-                               {{ old('role') === 'admin' ? 'checked' : '' }}>
-                        <label for="role_admin" class="role-btn {{ old('role') === 'admin' ? 'active' : '' }}" id="label_admin">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                                <line x1="12" y1="12" x2="12" y2="16"/>
-                                <line x1="10" y1="14" x2="14" y2="14"/>
-                            </svg>
-                            <span>Admin</span>
-                        </label>
-
-                    </div>
-
-                    {{-- ── NAMA LENGKAP ── --}}
-                    <div class="field-group">
-                        <label for="name">Nama Lengkap</label>
-                        <div class="input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                            </svg>
-                            <input type="text" id="name" name="name"
-                                   placeholder="Nama Lengkap Kamu"
-                                   value="{{ old('name') }}" required autocomplete="name">
-                        </div>
-                    </div>
-
-                    {{-- ── EMAIL ── --}}
-                    <div class="field-group">
-                        <label for="email">Alamat Email</label>
-                        <div class="input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2"/>
-                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                            </svg>
-                            <input type="email" id="email" name="email"
-                                   placeholder="nurturasahabatibu22@email.com"
-                                   value="{{ old('email') }}" required autocomplete="email">
-                        </div>
-                    </div>
-
-                    {{-- ── KATA SANDI ── --}}
-                    <div class="field-group">
-                        <label for="password">Kata Sandi</label>
-                        <div class="input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                            <input type="password" id="password" name="password"
-                                   placeholder="Buat kata sandi"
-                                   required autocomplete="new-password">
-                        </div>
-                    </div>
-
-                    {{-- ── KONFIRMASI KATA SANDI ── --}}
-                    <div class="field-group">
-                        <label for="password_confirmation">Konfirmasi Kata Sandi</label>
-                        <div class="input-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                            <input type="password" id="password_confirmation" name="password_confirmation"
-                                   placeholder="Ulangi kata sandi"
-                                   required autocomplete="new-password">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Buat Akun</button>
-                </form>
-
-            </div>
+    <div class="card-container">
+        
+        {{-- Heart Icon --}}
+        <div class="icon-top">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
         </div>
+
+        <h1>Buat Akun Baru</h1>
+        <p class="subtitle">Pilih peran dan lengkapi data diri Anda</p>
+
+        {{-- Menampilkan Error Validasi --}}
+        @if ($errors->any())
+            <div class="alert alert-error">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
+        <form action="{{ route('register.post') }}" method="POST" id="registerForm">
+            @csrf
+
+            {{-- ── ROLE SELECTOR ── --}}
+            <div class="role-section">
+                <span class="section-label">Pilih Peran</span>
+                <div class="role-cards">
+                    
+                    {{-- Role: Ayah --}}
+                    <label class="role-card {{ old('role', 'ayah') === 'ayah' ? 'active' : '' }}" id="card_ayah">
+                        <input type="radio" name="role" value="ayah" {{ old('role', 'ayah') === 'ayah' ? 'checked' : '' }}>
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span class="role-title">Ayah</span>
+                        <span class="role-desc">Mendampingi istri</span>
+                    </label>
+
+                    {{-- Role: Admin --}}
+                    <label class="role-card {{ old('role') === 'admin' ? 'active' : '' }}" id="card_admin">
+                        <input type="radio" name="role" value="admin" {{ old('role') === 'admin' ? 'checked' : '' }}>
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <span class="role-title">Admin</span>
+                        <span class="role-desc">Mengelola sistem</span>
+                    </label>
+
+                </div>
+            </div>
+
+            <div class="divider">Data Diri</div>
+
+            {{-- ── FORM INPUTS ── --}}
+            <div class="field-group">
+                <label for="name">Nama Lengkap</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <input type="text" id="name" name="name" placeholder="Nama lengkap Anda" value="{{ old('name') }}" required autocomplete="name">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                    <input type="email" id="email" name="email" placeholder="nama@email.com" value="{{ old('email') }}" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="password" id="password" name="password" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Ulangi password" required autocomplete="new-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Daftar</button>
+        </form>
+
+        <div class="login-link">
+            Sudah punya akun? <a href="{{ route('login') }}">Masuk</a>
+        </div>
+
+        {{-- ── SECURITY NOTE ── --}}
+        <div class="security-box">
+            <div class="sec-header">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Kontrol penuh di tangan Anda
+            </div>
+            <ul class="sec-list">
+                <li>Ibu bisa memutus koneksi kapan saja</li>
+                <li>Data tidak dibagikan tanpa izin</li>
+                <li>Privasi dan keamanan terjamin</li>
+            </ul>
+        </div>
+
     </div>
 
+    {{-- Script untuk ganti warna border kartu role saat diklik --}}
     <script>
-        // Highlight role button yang aktif saat diklik
         const radios = document.querySelectorAll('input[type="radio"][name="role"]');
-        const labels = { ayah: document.getElementById('label_ayah'), admin: document.getElementById('label_admin') };
+        const cards = { 
+            ayah: document.getElementById('card_ayah'), 
+            admin: document.getElementById('card_admin') 
+        };
 
         radios.forEach(radio => {
             radio.addEventListener('change', () => {
-                // reset semua
-                Object.values(labels).forEach(l => l.classList.remove('active'));
-                // aktifkan yang dipilih
-                labels[radio.value]?.classList.add('active');
+                // Hapus class active dari semua card
+                Object.values(cards).forEach(c => c.classList.remove('active'));
+                // Tambahkan class active ke card yang dipilih
+                if(cards[radio.value]) {
+                    cards[radio.value].classList.add('active');
+                }
             });
         });
     </script>

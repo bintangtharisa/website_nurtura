@@ -17,6 +17,12 @@ Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
+Route::get('/auth/google', function () {
+    return "Fitur Google Login belum aktif";
+})->name('auth.google');
+
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

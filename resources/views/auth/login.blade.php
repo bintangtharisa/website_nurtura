@@ -4,279 +4,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login – Nurtura</title>
+    <title>Masuk – Nurtura</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             min-height: 100vh;
-            background-color: #f0ebe3;
+            background-color: #f7f6f2; /* Warna background luar yang lebih terang */
             display: flex;
-            flex-direction: column;
             justify-content: center; 
             align-items: center; 
             font-family: 'DM Sans', sans-serif;
-            position: relative; /* Ditambahkan agar absolute topbar rapi */
             padding: 20px;
+            color: #333;
         }
 
-        /* ── TOP BAR ── */
-        .topbar {
-            position: absolute; /* Dipisah dari aliran supaya bisa ke pojok */
-            top: 32px; /* Jarak dari atas layar */
-            left: 32px; /* Jarak dari kiri layar (makin kecil makin mepet kiri) */
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .topbar a {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            background: #3a3a3a;
-            color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .topbar span {
-            font-size: 14px;
-            color: #3a3a3a;
-            font-weight: 500;
-        }
-
-        /* ── MAIN CARD AREA ── */
-        .page-body {
+        .card-container {
+            background: #ffffff;
             width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .card-outer {
-            width: 100%;
-            max-width: 580px;
-            background: #e8ddd3;
+            max-width: 440px;
             border-radius: 24px;
-            padding: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-        }
-
-        .card-inner {
-            background: #f2b5a0;
-            border-radius: 18px;
-            padding: 32px 48px 36px;
+            padding: 40px 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
             text-align: center;
         }
 
-        /* ── ICON ── */
-        .icon-circle {
+        /* ── ICON HEART ── */
+        .icon-top {
             width: 56px; height: 56px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.45);
+            background-color: #f1f5ee;
+            border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 16px;
+            margin: 0 auto 24px;
         }
-        .icon-circle svg {
+        .icon-top svg {
             width: 24px; height: 24px;
+            fill: #9baf8b;
         }
 
-        /* ── HEADING ── */
+        /* ── TYPOGRAPHY ── */
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 30px;
-            color: #2e2e2e;
-            margin-bottom: 4px;
-            line-height: 1.15;
+            font-size: 26px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
         }
         .subtitle {
             font-size: 14px;
-            color: #5a5a5a;
-            margin-bottom: 24px;
+            color: #777;
+            margin-bottom: 32px;
         }
 
-        /* ── FORM ── */
+        /* ── FORM FIELDS ── */
         .field-group {
             text-align: left;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
         .field-group label {
             display: block;
             font-size: 13px;
-            font-weight: 500;
-            color: #3a3a3a;
-            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 8px;
         }
         .input-wrap {
             position: relative;
         }
         .input-wrap svg {
             position: absolute;
-            left: 14px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px; height: 16px;
-            color: #9a9a9a;
+            width: 18px; height: 18px;
+            color: #666;
         }
         .input-wrap input {
             width: 100%;
-            padding: 12px 16px 12px 40px;
+            padding: 14px 16px 14px 44px;
             border: none;
-            border-radius: 50px;
+            border-radius: 12px;
             font-size: 14px;
             font-family: 'DM Sans', sans-serif;
-            color: #3a3a3a;
-            background: #fff;
+            background: #ebdcd0; /* Warna beige seperti di desain */
+            color: #333;
             outline: none;
             transition: box-shadow 0.2s;
         }
         .input-wrap input:focus {
-            box-shadow: 0 0 0 3px rgba(107,140,89,0.25);
+            box-shadow: 0 0 0 2px #9baf8b;
         }
-        .input-wrap input::placeholder { color: #b0b0b0; }
+        .input-wrap input::placeholder { color: #888; }
 
-        /* ── BUTTON ── */
+        .forgot-password {
+            display: block;
+            text-align: right;
+            font-size: 13px;
+            color: #9baf8b;
+            text-decoration: none;
+            margin-top: 8px;
+            margin-bottom: 24px;
+        }
+
+        /* ── BUTTONS ── */
         .btn-primary {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 50px;
-            background: #7a9e6a;
+            border-radius: 12px;
+            background: #9baf8b;
             color: #fff;
             font-size: 15px;
             font-weight: 600;
             font-family: 'DM Sans', sans-serif;
             cursor: pointer;
-            margin-top: 24px;
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.2s;
         }
-        .btn-primary:hover  { background: #6a8e5a; }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:hover { background: #869977; }
 
-        /* ── FOOTER LINK ── */
-        .form-footer {
-            margin-top: 16px;
+        /* ── DIVIDER ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 24px 0;
+            color: #999;
             font-size: 13px;
-            color: #5a5a5a;
         }
-        .form-footer a {
-            color: #7a9e6a;
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #eee;
+        }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        /* ── GOOGLE BUTTON ── */
+        .btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #eaeaea;
+            border-radius: 12px;
+            background: #fafafa;
+            color: #333;
+            font-size: 14px;
             font-weight: 500;
             text-decoration: none;
+            margin-bottom: 24px;
+            transition: background 0.2s;
         }
-        .form-footer a:hover { text-decoration: underline; }
+        .btn-google:hover { background: #f0f0f0; }
+        .btn-google svg { width: 18px; height: 18px; margin-right: 10px; }
 
-        /* ── ERROR / SUCCESS ALERTS ── */
-        .alert {
-            padding: 10px 14px;
+        /* ── FOOTER LINKS & NOTE ── */
+        .register-link {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 24px;
+        }
+        .register-link a {
+            color: #9baf8b;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: center;
+            background: #f8faf7;
+            padding: 16px;
             border-radius: 12px;
-            margin-bottom: 16px;
+            font-size: 12px;
+            color: #666;
+            text-align: left;
+        }
+        .security-note svg {
+            width: 20px; height: 20px;
+            color: #9baf8b;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        /* ── ALERTS ── */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             font-size: 13px;
             text-align: left;
         }
-        .alert-error   { background: rgba(220,53,69,0.15);  color: #842029; }
-        .alert-success { background: rgba(107,140,89,0.2);  color: #2d5016; }
+        .alert-error   { background: #f8d7da; color: #842029; }
+        .alert-success { background: #d1e7dd; color: #0f5132; }
     </style>
 </head>
 <body>
 
-    {{-- TOP BAR --}}
-    <div class="topbar">
-        <a href="{{ url('/') }}" aria-label="Kembali">&#8592;</a>
-        <span>Login</span>
-    </div>
-
-    <div class="page-body">
-        <div class="card-outer">
-            <div class="card-inner">
-
-                {{-- ICON --}}
-                <div class="icon-circle">
-                    {{-- Ikon daun / tanaman --}}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#7a9e6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22V12"/>
-                        <path d="M12 12C12 12 7 10 5 5c4 0 7 2 7 7z"/>
-                        <path d="M12 12c0 0 5-2 7-7-4 0-7 2-7 7z"/>
-                    </svg>
-                </div>
-
-                <h1>Selamat Datang Kembali</h1>
-                <p class="subtitle">Senang melihatmu lagi hari ini</p>
-
-                {{-- ALERT ERROR (dari Laravel session) --}}
-                @if ($errors->any())
-                    <div class="alert alert-error">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
-                    </div>
-                @endif
-
-                @if (session('status'))
-                    <div class="alert alert-success">{{ session('status') }}</div>
-                @endif
-
-                {{-- FORM --}}
-                {{-- action diarahkan ke route login, method POST --}}
-                <form action="{{ route('login.post') }}" method="POST">
-                    @csrf {{-- wajib ada di setiap form Laravel --}}
-
-                    <div class="field-group">
-                        <label for="email">Alamat Email</label>
-                        <div class="input-wrap">
-                            {{-- ikon amplop --}}
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2"/>
-                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                            </svg>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="nurturasahabatibu22@email.com"
-                                value="{{ old('email') }}"
-                                required
-                                autocomplete="email"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="field-group">
-                        <label for="password">Kata Sandi</label>
-                        <div class="input-wrap">
-                            {{-- ikon kunci --}}
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                placeholder="nurtura22"
-                                required
-                                autocomplete="current-password"
-                            >
-                        </div>
-                        <div style="text-align: right; margin-top: 8px;">
-                            <a href="{{ route('password.request') }}" 
-                               style="font-size: 13px; color: #7a9e6a; text-decoration: none; font-weight: 500;">
-                               Lupa Kata Sandi?
-                            </a>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Login</button>
-                </form>
-
-                <p class="form-footer">
-                    Baru di komunitas kami? <a href="{{ route('register') }}">Mari bergabung</a>
-                </p>
-
-            </div>
+    <div class="card-container">
+        
+        {{-- Heart Icon --}}
+        <div class="icon-top">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
         </div>
+
+        <h1>Selamat Datang Kembali</h1>
+        <p class="subtitle">Ruang aman untuk kesehatan mental ibu</p>
+
+        {{-- Menampilkan Error Validasi (Bawaan Laravel) --}}
+        @if ($errors->any())
+            <div class="alert alert-error">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- Menampilkan Pesan Sukses (Bawaan Laravel) --}}
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        {{-- Form Login: Action mengarah ke route aslimu --}}
+        <form action="{{ route('login.post') }}" method="POST">
+            @csrf
+
+            <div class="field-group">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                    {{-- Mail Icon --}}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                    <input type="email" id="email" name="email" placeholder="nama@email.com" value="{{ old('email') }}" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    {{-- Lock Icon --}}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+            </div>
+
+            <a href="{{ route('password.request') }}" class="forgot-password">Lupa password?</a>
+
+            <button type="submit" class="btn-primary">Masuk</button>
+        </form>
+
+        <div class="divider">atau</div>
+
+        {{-- Tombol Google (Href diisi # supaya tidak error route) --}}
+        <a href="#" class="btn-google">
+            <svg viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Masuk dengan Google
+        </a>
+
+        <div class="register-link">
+            Belum punya akun? <a href="{{ route('register') }}">Daftar akun baru</a>
+        </div>
+
+        <div class="security-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Data Anda aman dan hanya dapat dibagikan dengan persetujuan Anda
+        </div>
+
     </div>
 
 </body>
