@@ -32,3 +32,8 @@ Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard'
 Route::get('/', function () {
     return redirect('/login');
 });
+
+// 👇 INI ROUTE TAMBAHAN BUAT CEK TAMPILAN (FRONTEND AJA) 👇
+Route::get('/hubungkan-akun', function () {
+    return view('auth.hubungkan-akun');
+})->name('hubungkan-akun');
