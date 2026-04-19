@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta username="viewport" content="width=device-width, initial-scale=1.0" />
   <title>@yield('title', 'Nurtura Family')</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,7 +24,7 @@
         </svg>
       </div>
       <div class="sidebar__brand-text">
-        <span class="sidebar__brand-name">Nurtura Family</span>
+        <span class="sidebar__brand-username">Nurtura Family</span>
         <span class="sidebar__brand-role">Admin Panel</span>
       </div>
     </div>
@@ -116,10 +116,10 @@
     {{-- User Profile --}}
     <div class="sidebar__profile">
       <div class="sidebar__profile-avatar">
-        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+        {{ strtoupper(substr(Auth::user()->username, 0, 1)) }}
       </div>
       <div class="sidebar__profile-info">
-        <span class="sidebar__profile-name">{{ Auth::user()->name }}</span>
+        <span class="sidebar__profile-username">{{ Auth::user()->username }}</span>
         <span class="sidebar__profile-id">ID: {{ Auth::user()->id }}</span>
       </div>
     </div>

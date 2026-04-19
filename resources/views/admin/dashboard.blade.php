@@ -21,7 +21,8 @@
       <span class="stat-card__delta stat-card__delta--up">+12.5%</span>
     </div>
     <div class="stat-card__label">Total Users</div>
-    <div class="stat-card__value">4,821</div>
+    <div class="stat-card__value">{{ $totalUser }}</div>
+    <p class="stat-desc">User yang aktif dalam 6 bulan terakhir</p>
   </div>
 
   {{-- Prediction Accuracy --}}
@@ -49,7 +50,7 @@
       </div>
     </div>
     <div class="stat-card__label">Total Pengguna</div>
-    <div class="stat-card__value">1,284</div>
+    <div class="stat-card__value">{{ $totalUser }}</div>
     <div class="stat-card__note">
       <span class="up">+12%</span> bulan ini
     </div>
