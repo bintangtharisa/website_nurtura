@@ -28,7 +28,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('admin.dashboard');
-Route::view('/admin/skrining', 'admin.skrining_view')->name('admin.skrining');
+Route::view('/admin/skrining', 'admin.skrining')->name('admin.skrining')->middleware('auth');
 Route::get('/admin/model', [ModelController::class, 'index'])->name('admin.model');
 Route::get('/admin/export', [ModelController::class, 'index'])->name('admin.export');
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
