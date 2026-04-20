@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\DashboardController;
 
 Route::get('/register', function () {
     return view('auth.register');
@@ -27,7 +28,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/dashboard', [DashboardController::class, 'dashboardAdmin'])->name('admin.dashboard');
 Route::view('/admin/skrining', 'admin.skrining')->name('admin.skrining')->middleware('auth');
 Route::get('/admin/model', [ModelController::class, 'index'])->name('admin.model');
 Route::get('/admin/export', [ModelController::class, 'index'])->name('admin.export');
