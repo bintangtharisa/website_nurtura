@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 
+// 👇 UNTUK LANDING PAGE 👇
+Route::get('/', function () {
+    return view('landing'); 
+});
+// 👆--------------------👆
+
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
@@ -32,10 +38,6 @@ Route::view('/admin/skrining', 'admin.skrining')->name('admin.skrining')->middle
 Route::get('/admin/model', [ModelController::class, 'index'])->name('admin.model');
 Route::get('/admin/export', [ModelController::class, 'index'])->name('admin.export');
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
-
-Route::get('/', function () {
-    return redirect('/login');
-});
 
 // 👇 INI ROUTE TAMBAHAN BUAT CEK TAMPILAN (FRONTEND AJA) 👇
 Route::get('/hubungkan-akun', function () {
