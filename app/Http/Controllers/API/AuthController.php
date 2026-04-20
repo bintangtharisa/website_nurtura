@@ -84,24 +84,6 @@ class AuthController extends Controller
         return redirect('/dashboard');
     }
 
-    public function dashboard()
-    {
-        if (!Auth::check()) {
-            return redirect('/login');
-        }
-
-        $totalUser = User::where('role', 'father')->orWhere('role', 'mother')->count();
-        $enamBulanLalu = new \MongoDB\BSON\UTCDateTime(now()->subMonths(6)->getTimestamp() * 1000);
-        $userAktif6Bulan = User::where('last_login', '>=', $enamBulanLalu)->count();
-        $screenings = [];
-
-        return view('admin.dashboard', [
-            'totalUser' => $totalUser,
-            'screenings' => $screenings,
-            'userAktif6Bulan' => $userAktif6Bulan,
-            ]);
-    }
-
     public function logout()
     {
         Auth::logout();
