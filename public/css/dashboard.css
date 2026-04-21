@@ -10,36 +10,36 @@
    CSS VARIABLES
    ============================================================ */
 :root {
-  /* Brand Colors */
-  --clr-primary:          #4A7C59;
-  --clr-primary-light:    #E8F0EB;
-  --clr-primary-dark:     #3A6347;
+  /* Brand Colors (Diubah ke Sage Green) */
+  --clr-primary:          #A3B18A;
+  --clr-primary-light:    #F0F3EB; /* Sage green versi terang untuk hover/background */
+  --clr-primary-dark:     #829168; /* Sage green versi gelap untuk tombol */
 
-  /* Page & Surface */
+  /* Page & Surface (Tetap aslinya) */
   --clr-bg:               #F5F3EE;
   --clr-surface:          #FFFFFF;
   --clr-border:           #E8E3DC;
   --clr-border-light:     #F0EDE8;
 
-  /* Sidebar */
+  /* Sidebar (Tetap aslinya, active pakai Sage Green) */
   --clr-sidebar-bg:       #FFFFFF;
-  --clr-sidebar-active:   #4A7C59;
+  --clr-sidebar-active:   var(--clr-primary);
   --clr-sidebar-active-text: #FFFFFF;
   --clr-sidebar-text:     #6B7280;
   --clr-sidebar-hover:    #F5F3EE;
 
-  /* Text */
+  /* Text (Tetap aslinya) */
   --clr-text-heading:     #1A1A1A;
   --clr-text-body:        #3D3D3D;
   --clr-text-muted:       #9CA3AF;
   --clr-text-label:       #6B7280;
 
-  /* Chart / Accent */
-  --clr-accent-rose:      #DDBFA8;
-  --clr-accent-sand:      #C9A882;
-  --clr-accent-sage:      #8FAF8C;
+  /* Chart / Accent (Diubah ke Dusty Rose, Beige, dan Sage Green) */
+  --clr-accent-rose:      #DDBEA9; /* Dusty Rose */
+  --clr-accent-sand:      #EDE0D4; /* Beige */
+  --clr-accent-sage:      #A3B18A; /* Sage Green */
 
-  /* Risk Badges */
+  /* Risk Badges (Tetap) */
   --clr-low-bg:           #E6F4EA;
   --clr-low-text:         #2E7D32;
   --clr-med-bg:           #FFF8E1;
@@ -47,7 +47,7 @@
   --clr-high-bg:          #FDECEA;
   --clr-high-text:        #C62828;
 
-  /* Layout */
+  /* Layout (Tetap) */
   --sidebar-w:            215px;
   --topbar-h:             62px;
   --page-pad:             26px;
@@ -55,7 +55,7 @@
   --radius-sm:            8px;
   --shadow-card:          0 1px 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.04);
 
-  /* Typography */
+  /* Typography (Tetap) */
   --font-display:         'Lora', Georgia, serif;
   --font-body:            'DM Sans', sans-serif;
 }
