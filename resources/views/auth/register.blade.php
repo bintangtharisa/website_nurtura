@@ -282,8 +282,7 @@
             </div>
         @endif
 
-        <form action="{{ route('register.post') }}" method="POST" id="registerForm">
-            @csrf
+        <form id="registerForm">
 
             {{-- ── ROLE SELECTOR ── --}}
             <div class="role-section">
@@ -405,6 +404,6 @@
             });
         });
     </script>
-
+<script src="{{ asset('js/admin/auth.js') }}"></script>
 </body>
 </html>

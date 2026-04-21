@@ -98,29 +98,32 @@
 
     {{-- Logout --}}
     <div class="sidebar__logout">
-      <form method="POST" action="{{ route('admin.logout') }}">
-        @csrf
-        <button type="submit" class="sidebar__logout-btn">
-          <span class="sidebar__nav-icon">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <span>Keluar</span>
-        </button>
-      </form>
+<button onclick="logout()">Logout</button>
+
+<script>
+function logout() {
+    fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            'Accept': 'application/json'
+        }
+    }).then(() => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+}
+</script>
     </div>
 
     {{-- User Profile --}}
     <div class="sidebar__profile">
       <div class="sidebar__profile-avatar">
-        {{ strtoupper(substr(Auth::user()->username, 0, 1)) }}
+        <div id="userInitial">U</div>
       </div>
       <div class="sidebar__profile-info">
-        <span class="sidebar__profile-username">{{ Auth::user()->username }}</span>
-        <span class="sidebar__profile-id">ID: {{ Auth::user()->id }}</span>
+        <span class="sidebar__profile-username"  id="usernameText" ></span>
+        <span class="sidebar__profile-id" id="userIdText">ID: </span>
       </div>
     </div>
 
@@ -166,5 +169,46 @@
   {{-- ===== END MAIN WRAPPER ===== --}}
 
   @stack('scripts')
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        window.location.href = "/login";
+        return;
+    }
+
+    fetch("/api/profile", {
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Accept": "application/json"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data || !data.username) {
+            window.location.href = "/login";
+            return;
+        }
+
+        document.getElementById("userInitial").innerText =
+            data.username.charAt(0).toUpperCase();
+
+        document.getElementById("usernameText").innerText =
+            data.username;
+
+        document.getElementById("userIdText").innerText =
+            "ID: " + data.id;
+
+    })
+    .catch(() => {
+        window.location.href = "/login";
+    });
+
+});
+</script>
 </body>
 </html>

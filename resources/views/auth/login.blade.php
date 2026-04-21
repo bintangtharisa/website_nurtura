@@ -232,37 +232,47 @@
         @endif
 
         {{-- Form Login: Action mengarah ke route aslimu --}}
-        <form action="{{ route('login.post') }}" method="POST">
-            @csrf
+        <form id="loginForm">
 
-            <div class="field-group">
-                <label for="email">Email</label>
-                <div class="input-wrap">
-                    {{-- Mail Icon --}}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                    </svg>
-                    <input type="email" id="email" name="email" placeholder="nama@email.com" value="{{ old('email') }}" required autocomplete="email">
-                </div>
-            </div>
 
-            <div class="field-group">
-                <label for="password">Password</label>
-                <div class="input-wrap">
-                    {{-- Lock Icon --}}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-                </div>
-            </div>
+    <div class="field-group">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+            {{-- Mail Icon --}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
 
-            <a href="{{ route('password.request') }}" class="forgot-password">Lupa password?</a>
+            <input type="email" id="email" name="email"
+                   placeholder="nama@email.com"
+                   value="{{ old('email') }}"
+                   required autocomplete="email">
+        </div>
+    </div>
 
-            <button type="submit" class="btn-primary">Masuk</button>
-        </form>
+    <div class="field-group">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+            {{-- Lock Icon --}}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+
+            <input type="password" id="password" name="password"
+                   placeholder="••••••••"
+                   required autocomplete="current-password">
+        </div>
+    </div>
+
+    <a href="{{ route('password.request') }}" class="forgot-password">
+        Lupa password?
+    </a>
+
+    <button type="submit" class="btn-primary">Masuk</button>
+</form>
+
 
         <div class="divider">atau</div>
 
@@ -290,6 +300,6 @@
         </div>
 
     </div>
-
+<script src="{{ asset('js/admin/auth.js') }}"></script>
 </body>
 </html>

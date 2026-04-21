@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use MongoDB\Laravel\Eloquent\Model;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
 use MongoDB\Laravel\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
+    use Notifiable;
+
     protected $connection = 'mongodb';
     protected $collection = 'users';
 
@@ -19,10 +19,8 @@ class User extends Authenticatable implements JWTSubject
         'password_hash',
         'role',
         'linked_mother_id',
-        'connection_code',
-        'code_used',
-        'code_expires_at',
         'anonymous_id',
+        'notification_enabled',
         'created_at',
         'updated_at'
     ];
@@ -31,7 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'password_hash'
     ];
 
-     public function getJWTIdentifier()
+    public function getJWTIdentifier()
     {
         return $this->getKey();
     }
@@ -39,5 +37,10 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
     }
 }

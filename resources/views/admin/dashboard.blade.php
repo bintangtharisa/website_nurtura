@@ -21,7 +21,7 @@
       <span class="stat-card__delta stat-card__delta--up">+12.5%</span>
     </div>
     <div class="stat-card__label">Total Users</div>
-    <div class="stat-card__value">{{ $totalUser }}</div>
+    <div class="stat-card__value" id="totalUser">Loading...</div>
     <p class="stat-desc">User yang aktif dalam 6 bulan terakhir</p>
   </div>
 
@@ -50,7 +50,7 @@
       </div>
     </div>
     <div class="stat-card__label">Total Pengguna</div>
-    <div class="stat-card__value">{{ $totalUser }}</div>
+    <div class="stat-card__value" id="totalPengguna">Loading...</div>
     <div class="stat-card__note">
       <span class="up">+12%</span> bulan ini
     </div>
@@ -113,36 +113,12 @@
         <th>Status</th>
       </tr>
     </thead>
-    <tbody>
-      @forelse ($screenings as $item)
-        <tr>
-          <td class="td-code">{{ $item->unique_code }}</td>
-          <td class="td-muted">{{ $item->created_at->format('Y-m-d H:i') }}</td>
-          <td>{{ $item->model_version }}</td>
-          <td>
-            <span class="badge badge--{{ strtolower($item->risk_level) }}">
-              {{ $item->risk_level }}
-            </span>
-          </td>
-          <td>
-            @if ($item->status === 'Verified')
-              <span class="status--verified">Verified</span>
-            @elseif ($item->status === 'Alert Sent')
-              <span class="status--alert">Alert Sent</span>
-            @else
-              <span class="status--pending">{{ $item->status }}</span>
-            @endif
-          </td>
-        </tr>
-      @empty
-        <tr>
-          <td colspan="5" style="text-align:center; padding: 28px; color: var(--clr-text-muted);">
-            Belum ada data skrining.
-          </td>
-        </tr>
-      @endforelse
-    </tbody>
+    <tbody id="screeningTable">
+  <tr>
+    <td colspan="5">Loading...</td>
+  </tr>
+</tbody>
   </table>
 </section>
-
+<script src="{{ asset('js/admin/dashboard.js') }}"></script>
 @endsection

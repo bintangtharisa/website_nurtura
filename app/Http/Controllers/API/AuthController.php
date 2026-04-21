@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use MongoDB\BSON\UTCDateTime;
 use Illuminate\Support\Facades\Auth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -17,77 +18,126 @@ class AuthController extends Controller
         return new UTCDateTime(($time ?? now())->getTimestamp() * 1000);
     }
 
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'min:4', 'max:50'],
-            'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', 'string', 'in:ayah,ibu,admin']
-        ]);
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => ['required', 'string', 'min:4', 'max:50'],
+        'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
+        'password' => ['required', 'string', 'min:6', 'confirmed'],
+        'role' => ['required', 'string', 'in:ayah,ibu,admin']
+    ]);
 
-        $role = match ($request->role) {
-            'ayah' => 'father',
-            'ibu'  => 'mother',
-            default => 'admin'
-        };
+    $role = match ($request->role) {
+        'ayah' => 'father',
+        'ibu'  => 'mother',
+        default => 'admin'
+    };
 
-        $data = [
-            'username'      => $request->name,
-            'email'         => $request->email,
-            'password_hash' => Hash::make($request->password),
-            'role'          => $role,
-            'created_at'    => $this->bsonDate(),
-            'updated_at'    => $this->bsonDate(),
-        ];
+    $data = [
+        'username'      => $request->name,
+        'email'         => $request->email,
+        'password_hash' => Hash::make($request->password),
+        'role'          => $role,
+        'created_at'    => $this->bsonDate(),
+        'updated_at'    => $this->bsonDate(),
+    ];
 
-        if ($role === 'father') {
-            $data['connection_code'] = Str::random(6);
-            $data['code_used'] = false;
-            $data['code_expires_at'] = $this->bsonDate(now()->addDay());
-        }
-
-        if ($role === 'mother') {
-            $data['anonymous_id'] = Str::random(10);
-        }
-
-        User::create($data);
-
-        return redirect('/login')->with('status', 'Register berhasil!');
+    if ($role === 'father') {
+        $data['connection_code'] = Str::random(6);
+        $data['code_used'] = false;
+        $data['code_expires_at'] = $this->bsonDate(now()->addDay());
     }
 
-    public function login(Request $request)
+    if ($role === 'mother') {
+        $data['anonymous_id'] = Str::random(10);
+    }
+
+    User::create($data);
+
+    return response()->json([
+        'message' => 'Register berhasil',
+        'status' => true
+    ], 201);
+}
+
+public function login(Request $request)
+{
+    $request->validate([
+        'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
+        'password' => ['required', 'string']
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'Email tidak ditemukan'], 404);
+    }
+
+    if (!Hash::check($request->password, $user->password_hash)) {
+        return response()->json(['message' => 'Password salah'], 401);
+    }
+
+    $user->update([
+        'last_login' => $this->bsonDate(),
+        'updated_at' => $this->bsonDate()
+    ]);
+
+    try {
+        $token = JWTAuth::fromUser($user);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Gagal membuat token'], 500);
+    }
+
+    return response()->json([
+        'message' => 'Login berhasil',
+        'token' => $token,
+        'token_type' => 'bearer',
+        'expires_in' => config('jwt.ttl') * 60,
+        'user' => [
+            'id'       => (string) $user->_id,
+            'username' => $user->name,
+            'email'    => $user->email,
+            'role'     => $user->role
+        ]
+    ]);
+}
+
+    public function dashboard()
     {
-        $request->validate([
-            'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
-            'password' => ['required', 'string']
-        ]);
+        if (!Auth::check()) {
+            return redirect('/login');
+        }
 
-        $user = User::where('email', $request->email)->first();
+        $totalUser = User::where('role', 'father')->orWhere('role', 'mother')->count();
+        $enamBulanLalu = new \MongoDB\BSON\UTCDateTime(now()->subMonths(6)->getTimestamp() * 1000);
+        $userAktif6Bulan = User::where('last_login', '>=', $enamBulanLalu)->count();
+        $screenings = [];
 
-        if (!$user || !Hash::check($request->password, $user->password_hash)) {
-            return back()->withErrors([
-                'email' => 'Email atau password salah'
+        return view('admin.dashboard', [
+            'totalUser' => $totalUser,
+            'screenings' => $screenings,
+            'userAktif6Bulan' => $userAktif6Bulan,
             ]);
+    }
+
+public function logout(Request $request)
+{
+    try {
+        $token = JWTAuth::getToken();
+
+        if ($token) {
+            JWTAuth::invalidate($token);
         }
 
-        $user->update([
-            'last_login' => $this->bsonDate(),
-            'updated_at' => $this->bsonDate()
+        return response()->json([
+            'message' => 'Logout berhasil'
         ]);
 
-        Auth::login($user);
-
-
-        session(['role' => $user->role]);
-
-        return redirect('/dashboard');
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Gagal logout',
+            'error' => $e->getMessage()
+        ], 500);
     }
-
-    public function logout()
-    {
-        Auth::logout();
-        session()->flush();
-        return redirect('/login');
-    }
+}
 }
