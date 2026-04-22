@@ -186,28 +186,28 @@ document.addEventListener("DOMContentLoaded", function () {
             "Accept": "application/json"
         }
     })
-    .then(res => res.json())
+    .then(res => {
+        return res.json();
+    })
     .then(data => {
 
-        if (!data || !data.username) {
+        if (!data || !data.data) {
             window.location.href = "/login";
             return;
         }
 
         document.getElementById("userInitial").innerText =
-            data.username.charAt(0).toUpperCase();
+            data.data.username.charAt(0).toUpperCase();
 
         document.getElementById("usernameText").innerText =
-            data.username;
+            data.data.username;
 
         document.getElementById("userIdText").innerText =
-            "ID: " + data.id;
-
+            "ID: " + data.data.id;
     })
     .catch(() => {
         window.location.href = "/login";
     });
-
 });
 </script>
 </body>

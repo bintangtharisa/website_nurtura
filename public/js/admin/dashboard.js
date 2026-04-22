@@ -1,7 +1,9 @@
- const token = localStorage.getItem("token");
+document.addEventListener("DOMContentLoaded", function () {
+    const token = localStorage.getItem("token");
 
     if (!token) {
         window.location.href = "/login";
+        return;
     }
 
     fetch("/api/dashboard", {
@@ -10,44 +12,24 @@
             "Accept": "application/json"
         }
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("totalUser").innerText = data.totalUser;
-    });
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        window.location.href = "/login";
-        return;
-    }
-
-    fetch("/api/screenings", {
-        headers: {
-            "Authorization": "Bearer " + token,
-            "Accept": "application/json"
+    .then(res => {
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            return;
         }
+        return res.json();
     })
-    .then(res => res.json())
-    .then(data => {
+.then(data => {
+    if (!data) return;
 
-        let html = "";
+    const totalUser = document.getElementById("totalUser");
+    if (totalUser) totalUser.innerText = data.totalUser ?? 0;
 
-        data.forEach(item => {
-            html += `
-                <tr>
-                    <td>${item.unique_code}</td>
-                    <td>${item.created_at}</td>
-                    <td>${item.model_version}</td>
-                    <td>${item.risk_level}</td>
-                    <td>${item.status}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById("screeningTable").innerHTML = html;
+    const totalPengguna = document.getElementById("totalPengguna");
+    if (totalPengguna) totalPengguna.innerText = data.totalPengguna ?? 0;
+})
+    .catch(err => {
+        console.error("fetch error:", err);
     });
-
 });

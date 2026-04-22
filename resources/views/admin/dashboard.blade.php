@@ -22,7 +22,7 @@
     </div>
     <div class="stat-card__label">Total Users</div>
     <div class="stat-card__value" id="totalUser">Loading...</div>
-    <p class="stat-desc">User yang aktif dalam 6 bulan terakhir</p>
+    <p class="stat-desc">User yang aktif dalam 2 bulan terakhir</p>
   </div>
 
   {{-- Prediction Accuracy --}}

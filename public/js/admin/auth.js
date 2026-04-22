@@ -1,5 +1,3 @@
-console.log("auth.js loaded");
-
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
 
@@ -21,12 +19,19 @@ if (loginForm) {
             });
 
             const data = await res.json();
-            console.log("response:", res.status, data);
 
             if (res.ok) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
-                window.location.href = "/admin/dashboard";
+                
+                const role = data.user.role;
+                if (role === "admin"){
+                    window.location.href = "/admin/dashboard";
+                }else if(role === "father"){
+                    window.location.href = "/father/dashboard";
+                }else{
+                    alert("Role tidak valid");
+                }
             } else {
                 alert(data.message);
             }
@@ -40,12 +45,11 @@ if (registerForm) {
     registerForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        const name = document.getElementById("name").value;
-        const email = document.getElementById("email").value;
+        const name     = document.getElementById("name").value;
+        const email    = document.getElementById("email").value;
         const password = document.getElementById("password").value;
         const password_confirmation = document.getElementById("password_confirmation").value;
-
-        const role = document.querySelector('input[name="role"]:checked')?.value;
+        const role     = document.querySelector('input[name="role"]:checked')?.value;
 
         if (!role) {
             alert("Pilih role terlebih dahulu!");
@@ -64,17 +68,10 @@ if (registerForm) {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    password,
-                    password_confirmation,
-                    role
-                })
+                body: JSON.stringify({ name, email, password, password_confirmation, role })
             });
 
             const data = await res.json();
-            console.log("response:", res.status, data);
 
             if (res.ok) {
                 window.location.href = "/login";

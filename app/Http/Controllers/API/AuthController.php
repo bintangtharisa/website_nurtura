@@ -77,9 +77,16 @@ public function login(Request $request)
         return response()->json(['message' => 'Password salah'], 401);
     }
 
-    $user->update([
+    \Log::info('before update', ['user_id' => (string) $user->_id]);
+
+    $updated = $user->update([
         'last_login' => $this->bsonDate(),
         'updated_at' => $this->bsonDate()
+    ]);
+
+    \Log::info('after update', [
+        'updated'    => $updated,
+        'last_login' => (string) $user->fresh()->last_login
     ]);
 
     try {
@@ -89,36 +96,18 @@ public function login(Request $request)
     }
 
     return response()->json([
-        'message' => 'Login berhasil',
-        'token' => $token,
+        'message'    => 'Login berhasil',
+        'token'      => $token,
         'token_type' => 'bearer',
         'expires_in' => config('jwt.ttl') * 60,
-        'user' => [
+        'user'       => [
             'id'       => (string) $user->_id,
-            'username' => $user->name,
+            'username' => $user->username,
             'email'    => $user->email,
             'role'     => $user->role
         ]
     ]);
 }
-
-    public function dashboard()
-    {
-        if (!Auth::check()) {
-            return redirect('/login');
-        }
-
-        $totalUser = User::where('role', 'father')->orWhere('role', 'mother')->count();
-        $enamBulanLalu = new \MongoDB\BSON\UTCDateTime(now()->subMonths(6)->getTimestamp() * 1000);
-        $userAktif6Bulan = User::where('last_login', '>=', $enamBulanLalu)->count();
-        $screenings = [];
-
-        return view('admin.dashboard', [
-            'totalUser' => $totalUser,
-            'screenings' => $screenings,
-            'userAktif6Bulan' => $userAktif6Bulan,
-            ]);
-    }
 
 public function logout(Request $request)
 {
