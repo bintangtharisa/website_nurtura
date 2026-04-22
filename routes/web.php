@@ -32,6 +32,7 @@ Route::get('/admin/skrining', function () { return view('admin.skrining'); })->n
 Route::get('/admin/manajemen', function () { return view('admin.manajemen'); })->name('admin.manajemen');
 Route::get('/admin/model', function () { return view('admin.model'); })->name('admin.model');
 Route::get('/admin/exportdata', function () { return view('admin.exportdata'); })->name('admin.exportdata');
+Route::get('/admin/profile', function () { return view('admin.profile'); })->name('admin.profile');
 
 Route::get('/hubungkan-akun', function () {
     return view('auth.hubungkan-akun');

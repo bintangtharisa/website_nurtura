@@ -96,24 +96,39 @@
     {{-- Spacer --}}
     <div class="sidebar__spacer"></div>
 
-    {{-- Logout --}}
+    {{-- Logout (Sudah diperbaiki sejajar dan berwarna merah) --}}
     <div class="sidebar__logout">
-<button onclick="logout()">Logout</button>
+      <nav class="sidebar__nav">
+        <ul class="sidebar__nav-list">
+          <li class="sidebar__nav-item">
+            <a href="#" onclick="event.preventDefault(); logout();" class="sidebar__nav-link" style="color: #EF4444;">
+              <span class="sidebar__nav-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </span>
+              <span class="sidebar__nav-label" style="font-weight: 500;">Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-<script>
-function logout() {
-    fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token'),
-            'Accept': 'application/json'
-        }
-    }).then(() => {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-    });
-}
-</script>
+      <script>
+      function logout() {
+          fetch('/api/auth/logout', {
+              method: 'POST',
+              headers: {
+                  'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                  'Accept': 'application/json'
+              }
+          }).then(() => {
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+          });
+      }
+      </script>
     </div>
 
     {{-- User Profile --}}
@@ -122,7 +137,7 @@ function logout() {
         <div id="userInitial">U</div>
       </div>
       <div class="sidebar__profile-info">
-        <span class="sidebar__profile-username"  id="usernameText" ></span>
+        <span class="sidebar__profile-username" id="usernameText"></span>
         <span class="sidebar__profile-id" id="userIdText">ID: </span>
       </div>
     </div>
@@ -134,18 +149,18 @@ function logout() {
   {{-- ===== MAIN WRAPPER ===== --}}
   <div class="main-wrapper">
 
-    {{-- Topbar (Sudah Diubah) --}}
+    {{-- Topbar --}}
     <header class="topbar" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
       
       {{-- Bagian Kiri: Logo dan Judul --}}
       <div class="topbar__left" style="display: flex; align-items: center; gap: 20px;">
         
-        {{-- Kotak Putih untuk Logo (Diperlebar) --}}
+        {{-- Kotak Putih untuk Logo --}}
         <div class="topbar__logo-box" style="background-color: #FFFFFF; padding: 10px 30px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: center; min-width: 220px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
           <img src="{{ asset('images/logo_nurtura.png') }}" alt="Logo Nurtura" style="max-height: 35px; width: auto;" />
         </div>
 
-        {{-- Judul (Dikeluarkan dari kotak putih, ditambahkan flex agar icon dan teks sejajar) --}}
+        {{-- Judul --}}
         <h1 class="topbar__page-title" style="margin: 0; background: transparent; padding: 0; box-shadow: none; display: flex; align-items: center; gap: 8px;">
           @yield('page_title', 'Dashboard')
         </h1>
@@ -155,22 +170,20 @@ function logout() {
       {{-- Bagian Kanan: Aksi (Dibuat Dinamis) --}}
       <div class="topbar__actions" style="display: flex; align-items: center; gap: 12px;">
         @hasSection('topbar_actions')
-          {{-- Jika halaman punya aksi khusus (seperti halaman Manajemen), tampilkan di sini --}}
           @yield('topbar_actions')
         @else
-          {{-- Jika tidak ada, tampilkan tombol default (Lonceng & Setting) --}}
           <button class="topbar__icon-btn" aria-label="Notifikasi">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
           </button>
-          <button class="topbar__icon-btn" aria-label="Pengaturan">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.8"/>
-            </svg>
-          </button>
+          <a href="{{ route('admin.profile') }}" class="topbar__icon-btn" aria-label="Pengaturan">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">  
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+        </a>
         @endif
       </div>
     </header>
