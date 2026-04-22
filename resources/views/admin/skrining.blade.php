@@ -1,12 +1,9 @@
-{{--
-    resources/views/admin/skrining.blade.php
-    Extends: resources/views/admin/layout.blade.php
---}}
 @extends('admin.layout')
 
 @section('title', 'Data Skrining — Nurtura Family')
 
-@section('page_title', 'Data Skrining')
+{{-- Tambahkan baris ini untuk menghilangkan tulisan default --}}
+@section('page_title', '') 
 
 @section('content')
 
@@ -19,7 +16,7 @@
       </p>
     </div>
     <div class="page-header__actions">
-      <a href="{{ route('admin.export') }}" class="btn btn--outline">
+      <a href="{{ route('admin.exportdata') }}" class="btn btn--outline">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"
                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
