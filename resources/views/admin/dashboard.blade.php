@@ -1,7 +1,9 @@
 @extends('admin.layout')
 
 @section('title', 'Dashboard Monitoring — Nurtura Family')
-@section('page_title', 'Dashboard Monitoring Admin')
+
+{{-- Tambahkan baris ini untuk menghilangkan tulisan default --}}
+@section('page_title', '') 
 
 @section('content')
 

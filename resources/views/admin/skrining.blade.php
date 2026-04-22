@@ -1,12 +1,9 @@
-{{--
-    resources/views/admin/skrining.blade.php
-    Extends: resources/views/admin/layout.blade.php
---}}
 @extends('admin.layout')
 
 @section('title', 'Data Skrining — Nurtura Family')
 
-@section('page_title', 'Data Skrining')
+{{-- Tambahkan baris ini untuk menghilangkan tulisan default --}}
+@section('page_title', '') 
 
 @section('content')
 
