@@ -217,7 +217,7 @@
     </div>
 
     {{-- Form Edit JWT --}}
-    <form id="formProfile" onsubmit="updateProfile(event)">
+    <form id="formProfile" onsubmit="handleSubmit(event)">
       
       <div class="p-form-group">
         <label class="p-form-label" for="profileUsername">Username Admin</label>
@@ -329,6 +329,19 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(err => console.error("Gagal mengambil data profil:", err));
 });
 
+function handleSubmit(e) {
+    e.preventDefault();
+
+    const passwordLama = document.getElementById("profilePasswordLama").value.trim();
+    const passwordBaru = document.getElementById("profilePasswordBaru").value.trim();
+
+    if (passwordLama && passwordBaru) {
+        changePassword(e);
+    } else {
+        updateProfile(e);
+    }
+}
+
 // 2. FUNGSI UNTUK MENYIMPAN PERUBAHAN
 function updateProfile(e) {
     e.preventDefault(); 
@@ -338,28 +351,67 @@ function updateProfile(e) {
     
     const username = document.getElementById("profileUsername").value;
     const email = document.getElementById("profileEmail").value;
-    const passwordBaru = document.getElementById("profilePasswordBaru").value;
     const passwordLama = document.getElementById("profilePasswordLama").value;
 
-    const payload = { username: username, email: email };
-    
-    // Validasi sederhana: Jika password baru diisi, password lama wajib diisi
-    if (passwordBaru.trim() !== "") {
-        if(passwordLama.trim() === "") {
-            alert("Harap masukkan Password Lama Anda untuk mengonfirmasi perubahan password.");
-            document.getElementById("profilePasswordLama").focus();
-            return;
-        }
-        // Masukkan data password ke payload (Sesuaikan key ini dengan permintaan Backend temanmu)
-        payload.new_password = passwordBaru; 
-        payload.old_password = passwordLama;
+    if (passwordLama.trim() === "") {
+        alert("Password lama wajib diisi untuk konfirmasi perubahan.");
+        return;
     }
 
+    const payload = {
+        username: username,
+        email: email,
+        old_password: passwordLama
+    };
+
     btn.disabled = true;
-    btn.innerHTML = "Menyimpan...";
+    btn.innerText = "Menyimpan...";
 
     fetch("/api/profile", {
-        method: "PUT", 
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token,
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status) {
+            alert("Profil berhasil diperbarui!");
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(() => alert("Terjadi kesalahan"))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerText = "Simpan Perubahan";
+    });
+}
+
+function changePassword(e) {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+
+    const oldPassword = document.getElementById("profilePasswordLama").value;
+    const newPassword = document.getElementById("profilePasswordBaru").value;
+
+    if (!oldPassword || !newPassword) {
+        alert("Password lama dan password baru wajib diisi");
+        return;
+    }
+
+    const payload = {
+        old_password: oldPassword,
+        new_password: newPassword
+    };
+
+    fetch("/api/change-password", {
+        method: "PUT",
         headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token,
@@ -368,27 +420,19 @@ function updateProfile(e) {
         body: JSON.stringify(payload)
     })
     .then(async (res) => {
-        const responseData = await res.json();
-        
+        const data = await res.json();
+
         if (res.ok) {
-            alert("Profil berhasil diperbarui!");
-            window.location.reload(); 
+            alert("Password berhasil diubah, silakan login ulang");
+            localStorage.removeItem("token");
+            window.location.href = "/login";
         } else {
-            alert("Gagal memperbarui profil: " + (responseData.message || "Terjadi kesalahan"));
+            alert(data.message || "Gagal mengubah password");
         }
     })
     .catch(err => {
-        console.error("Error:", err);
-        alert("Kesalahan jaringan saat memperbarui profil.");
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="7 3 7 8 15 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>Simpan Perubahan</span>`;
+        console.error(err);
+        alert("Terjadi kesalahan jaringan");
     });
 }
 </script>

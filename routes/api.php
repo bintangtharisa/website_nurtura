@@ -11,8 +11,10 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:api')->group(function () {
-    Route::post('/logout',       [AuthController::class, 'logout']);  // pindah ke sini
+    Route::post('/logout',       [AuthController::class, 'logout']);
     Route::get('/profile',       [ProfileController::class, 'me']);
     Route::get('/dashboard',     [DashboardAdminController::class, 'dashboard']);
     Route::get('/screenings',    [DashboardAdminController::class, 'screenings']);
+    Route::put('/profile',       [ProfileController::class, 'updateProfile']);
+    Route::put('/change-password', [ProfileController::class, 'changePassword']);
 });
