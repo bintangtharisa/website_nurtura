@@ -9,19 +9,22 @@ use App\Http\Controllers\API\ForgotPasswordController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login',    [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
-Route::prefix('forgot-password')->group(function () {
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword']);
-    Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword']);
+Route::prefix('password')->group(function () {
+    Route::post('/forgot', [ForgotPasswordController::class, 'forgotPassword']);
+    Route::post('/reset', [ForgotPasswordController::class, 'resetPassword']);
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [DashboardAdminController::class, 'dashboard']);
+    Route::middleware('auth:api')->get('/dashboard', [DashboardAdminController::class, 'dashboard']);
     Route::get('/screenings', [DashboardAdminController::class, 'screenings']);
+    
     Route::get('/questions', [QuestionsController::class, 'index']);
     Route::put('/questions/{id}/toggle', [QuestionsController::class, 'toggle']);
     Route::put('/questions/{id}', [QuestionsController::class, 'update']);
     Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
 });
+
+Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);
