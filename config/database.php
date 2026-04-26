@@ -115,14 +115,14 @@ return [
         ],
         'mongodb' => [
             'driver'   => 'mongodb',
-            'host'     => env('DB_HOST'),
+            'host'     => env('MONGODB_HOST'),
             'dsn'     => env('MONGODB_URI'),
-            'port'     => env('DB_PORT'),
-            'database' => env('DB_DATABASE', 'DBnurtura'),
-            'username' => env('DB_USERNAME', 'userNurtura'),
-            'password' => env('DB_PASSWORD', ''),
+            'port'     => env('MONGODB_PORT'),
+            'database' => env('MONGODB_DATABASE', 'DBnurtura'),
+            'username' => env('MONGODB_USERNAME', 'userNurtura'),
+            'password' => env('MONGODB_PASSWORD', ''),
             'options'  => [
-                'database' => env('DB_AUTH_DATABASE', 'DBnurtura'), // required with Mongo 3+
+                'database' => env('MONGODB_AUTH_DATABASE', 'DBnurtura'), // required with Mongo 3+
         ],
 ],
 
