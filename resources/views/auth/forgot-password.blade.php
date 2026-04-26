@@ -248,7 +248,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('password.email') }}" method="POST">
+            <form id = "forgotForm">
                 @csrf
 
                 <div class="form-group">
@@ -266,6 +266,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Kirim Link Reset</button>
+                <div id="message"></div>
             </form>
 
             <a href="{{ route('login') }}" class="back-link">
@@ -279,6 +280,34 @@
         @endif
 
     </div>
+<script>
+document.getElementById("forgotForm").addEventListener("submit", function(e) {
+    e.preventDefault();
 
+    const email = document.getElementById("email").value;
+
+    fetch("/api/password/forgot", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const msg = document.getElementById("message");
+
+        if (data.status) {
+            msg.innerHTML = "<p style='color:green'>" + data.message + "</p>";
+        } else {
+            msg.innerHTML = "<p style='color:red'>" + data.message + "</p>";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+    });
+});
+</script>
 </body>
 </html>

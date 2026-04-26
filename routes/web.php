@@ -22,6 +22,9 @@ Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
+    Route::get('/lupa-password', function () {
+        return view('auth.forgot-password');
+    })->name('lupa-password');
 
 Route::get('/reset-password', function (Request $request) {
 
