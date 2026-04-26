@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\ForgotPasswordController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('landing');
@@ -20,7 +22,19 @@ Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
+Route::get('/reset-password', function (Request $request) {
+
+    if (!$request->email || !$request->token) {
+        abort(404);
+    }
+
+    return view('auth.reset-password', [
+        'email' => $request->email,
+        'token' => $request->token
+    ]);
+});
+
 
 Route::get('/auth/google', function () {
     return "Fitur Google Login belum aktif";
