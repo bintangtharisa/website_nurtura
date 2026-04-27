@@ -5,25 +5,40 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Screening;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use MongoDB\BSON\UTCDateTime;
 
 class DashboardAdminController extends Controller
 {
     public function dashboard()
-{
-    $twoMonthsAgo = now()->subMonths(2);
+    {
+        try {
 
-    $totalUser = User::whereIn('role', ['father', 'mother'])
-        ->where('last_login', '>=', new \MongoDB\BSON\UTCDateTime($twoMonthsAgo->timestamp * 1000))
-        ->count();
+            $twoMonthsAgo = new UTCDateTime(
+                now()->subMonths(2)->timestamp * 1000
+            );
 
-    $totalPengguna = User::whereIn('role', ['father', 'mother'])->count();
+            $totalUser = User::whereIn('role', ['father', 'mother'])
+                ->whereNotNull('last_login')
+                ->where('last_login', '>=', $twoMonthsAgo)
+                ->count();
 
-    return response()->json([
-        'status'        => true,
-        'totalUser'     => $totalUser,
-        'totalPengguna' => $totalPengguna
-    ]);
-}
+            $totalPengguna = User::whereIn('role', ['father', 'mother'])->count();
+
+            return response()->json([
+                'status' => true,
+                'totalUser' => $totalUser,
+                'totalPengguna' => $totalPengguna
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Dashboard error',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function screenings()
     {

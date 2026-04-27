@@ -4,15 +4,25 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, string $role): mixed
+    public function handle(Request $request, Closure $next, string $role)
     {
-        if (!$request->user() || $request->user()->role !== $role) {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+        } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Unauthorized. Required role: ' . $role,
+                'status' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        if (!$user || $user->role !== $role) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized role'
             ], 403);
         }
 
