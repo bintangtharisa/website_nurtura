@@ -21,7 +21,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'min:4', 'max:50'],
-            'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
+            'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'string', 'in:ayah,ibu,admin']
         ]);
@@ -53,7 +53,9 @@ class AuthController extends Controller
 
         User::create($data);
 
-        return redirect('/login')->with('status', 'Register berhasil!');
+        return response()->json([
+            'message' => 'Register berhasil'
+        ], 200);
     }
 
     public function login(Request $request)
@@ -66,9 +68,9 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
-            return back()->withErrors([
-                'email' => 'Email atau password salah'
-            ]);
+            return response()->json([
+                'message' => 'Email atau password salah'
+            ], 401);
         }
 
         $user->update([
@@ -76,12 +78,12 @@ class AuthController extends Controller
             'updated_at' => $this->bsonDate()
         ]);
 
-        Auth::login($user);
-
-
-        session(['role' => $user->role]);
-
-        return redirect('/dashboard');
+      
+        return response()->json([
+    'message' => 'Login berhasil',
+    'user' => $user,
+    'token' => base64_encode($user->email) // sementara
+], 200);
     }
 
     public function dashboard()
@@ -99,7 +101,7 @@ class AuthController extends Controller
             'totalUser' => $totalUser,
             'screenings' => $screenings,
             'userAktif6Bulan' => $userAktif6Bulan,
-            ]);
+        ]);
     }
 
     public function logout()
