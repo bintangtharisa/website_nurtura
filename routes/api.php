@@ -18,13 +18,10 @@ Route::prefix('password')->group(function () {
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::middleware('auth:api')->get('/dashboard', [DashboardAdminController::class, 'dashboard']);
-    Route::get('/screenings', [DashboardAdminController::class, 'screenings']);
-    
     Route::get('/questions', [QuestionsController::class, 'index']);
+    Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
     Route::put('/questions/{id}/toggle', [QuestionsController::class, 'toggle']);
     Route::put('/questions/{id}', [QuestionsController::class, 'update']);
-    Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
 });
 
 Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);

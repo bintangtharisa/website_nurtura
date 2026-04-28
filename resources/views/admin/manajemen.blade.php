@@ -6,7 +6,6 @@
 
 @push('styles')
 <style>
-  /* Search & Button di Header */
   .m-search-box { position: relative; }
   .m-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8; }
   .m-search-input { padding: 10px 16px 10px 36px; border-radius: 6px; border: 1px solid #E2E8F0; outline: none; font-size: 13px; width: 280px; background: #FFFFFF; color: #334155; }
@@ -14,14 +13,12 @@
   .m-btn-publish { background: #A3B18A; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s; }
   .m-btn-publish:hover { background: #8E9C76; }
 
-  /* Kuesioner List Style */
   .m-card-full { background: transparent; margin-top: 10px; }
   .m-section-subtitle { font-size: 14px; font-weight: 700; color: #475569; text-decoration: underline; margin-bottom: 24px; display: inline-block; }
   .m-card-header-inline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .m-preview-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #1E293B; }
   .m-active-badge { background: #F1F5F9; color: #64748B; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
-  /* Question Item */
   .q-item { background: #FFFFFF; padding: 24px; border-radius: 12px; margin-bottom: 16px; position: relative; border-left: 4px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
   .q-item.active-border { border-left-color: #A3B18A; }
   .q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
@@ -36,11 +33,41 @@
   .q-actions { display: flex; gap: 12px; align-items: center; }
   .btn-edit-icon { color: #94A3B8; cursor: pointer; transition: color 0.2s; }
   .btn-edit-icon:hover { color: #A3B18A; }
-  .status-pill { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #E2E8F0; color: #64748B; }
-  .status-pill.active { background: #ECFDF5; color: #059669; }
-  .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #CBD5E1;
+    background: #F1F5F9;
+    color: #475569;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
 
-  /* Modal Edit */
+  .status-pill:hover {
+    background: #E2E8F0;
+    transform: scale(1.05);
+  }
+
+  .status-pill:active {
+    transform: scale(0.95);
+  }
+
+  .status-pill.active {
+    background: #A3B18A;
+    color: #FFFFFF;
+    border-color: #A3B18A;
+  }
+
+  .status-pill.active:hover {
+    background: #8E9C76;
+  }
+
   .m-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
   .m-modal-card { background: white; padding: 28px; border-radius: 12px; width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
   .m-modal-card h3 { margin-bottom: 20px; color: #1E293B; font-size: 18px; }
@@ -49,11 +76,43 @@
   .m-input-style { width: 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px; outline: none; }
   .m-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   .m-fixed-ans { font-size: 12px; color: #A3B18A; background: #F0F4E8; padding: 4px 8px; border-radius: 4px; font-weight: 700; }
+  
+  .q-item.loading {
+    position: relative;
+    pointer-events: none;
+  }
+
+  .q-item.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px;
+    z-index: 2;
+  }
+
+  .q-item.loading::after {
+    content: '';
+    width: 22px;
+    height: 22px;
+    border: 3px solid #A3B18A;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spin 0.6s linear infinite;
+    z-index: 3;
+  }
+
+  @keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
 </style>
 @endpush
 
 @section('content')
-
 <div class="page-header">
   <div>
     <h2 class="page-header__title">Manajemen Model & Dataset</h2>
@@ -83,209 +142,156 @@
     <span class="m-active-badge">9 Pertanyaan Terdaftar</span>
   </div>
 
-  <div class="q-container">
-    <div class="q-item active-border" data-id="1">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">01</div><div class="q-title-text">Frekuensi Nyeri Dada</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
-        </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Seberapa sering Anda merasakan tekanan atau nyeri di bagian dada saat beraktivitas fisik dalam 30 hari terakhir?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
+  <div class="q-container" id="q-container"></div>
 
-    <div class="q-item active-border" data-id="2">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">02</div><div class="q-title-text">Riwayat Merokok Keluarga</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
+  <div class="m-modal-overlay" id="modalEdit">
+    <div class="m-modal-card">
+      <h3>Edit Pertanyaan</h3>
+      <form id="formUpdateQuest">
+        <input type="hidden" id="edit-id">
+        <div class="m-form-group">
+          <label>Pertanyaan</label>
+          <input type="text" id="edit-title" class="m-input-style">
         </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah orang tua atau saudara kandung memiliki riwayat perokok aktif selama lebih dari 10 tahun?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item active-border" data-id="3">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">03</div><div class="q-title-text">Kualitas Pola Makan</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
+        <div class="m-form-group">
+          <label>Deskripsi Singkat</label>
+          <textarea id="edit-desc" class="m-input-style" rows="3"></textarea>
         </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah Anda mengonsumsi sayuran dan buah-buahan secara rutin minimal 3 porsi sehari?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item active-border" data-id="4">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">04</div><div class="q-title-text">Tingkat Stres Kerja</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
+        <div class="m-form-group">
+          <label>Pilihan Jawaban</label>
+          <div style="display: flex; gap: 8px;"><span class="m-fixed-ans">Ya</span><span class="m-fixed-ans">Tidak</span><span class="m-fixed-ans">Kadang-kadang</span></div>
         </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah beban pekerjaan Anda sering menyebabkan gangguan tidur atau kecemasan berlebih?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item active-border" data-id="5">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">05</div><div class="q-title-text">Aktivitas Olahraga</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
+        <div class="m-modal-actions">
+          <button type="button" style="background:none; border:none; color:#64748B; cursor:pointer;" onclick="closeEditForm()">Batal</button>
+          <button type="submit" class="m-btn-publish">Simpan Perubahan</button>
         </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah Anda rutin berolahraga setidaknya 30 menit sebanyak 3 kali dalam seminggu?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
+      </form>
     </div>
-
-    <div class="q-item active-border" data-id="6">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">06</div><div class="q-title-text">Konsumsi Air Putih</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
-        </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah Anda memenuhi asupan air putih minimal 2 liter atau 8 gelas dalam satu hari?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item active-border" data-id="7">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">07</div><div class="q-title-text">Paparan Polusi</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
-        </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah lingkungan kerja atau tempat tinggal Anda memiliki tingkat polusi udara yang tinggi?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item active-border" data-id="8">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">08</div><div class="q-title-text">Kesehatan Mental</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill active">AKTIF</span>
-        </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah Anda sering merasa cemas atau kesulitan berkonsentrasi dalam melakukan pekerjaan harian?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-
-    <div class="q-item" data-id="9">
-      <div class="q-header">
-        <div class="q-number-title"><div class="q-number">09</div><div class="q-title-text">Pemeriksaan Medis</div></div>
-        <div class="q-actions">
-          <i class="btn-edit-icon" onclick="openEditForm(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></i>
-          <span class="status-pill">NONAKTIF</span>
-        </div>
-      </div>
-      <div class="q-body">
-        <p class="q-desc">Apakah Anda melakukan medical check-up rutin setidaknya sekali dalam setahun?</p>
-        <div class="q-options"><button class="q-btn-opt">Ya</button><button class="q-btn-opt">Tidak</button><button class="q-btn-opt">Kadang-kadang</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{{-- MODAL EDIT --}}
-<div class="m-modal-overlay" id="modalEdit">
-  <div class="m-modal-card">
-    <h3>Edit Pertanyaan</h3>
-    <form id="formUpdateQuest">
-      <input type="hidden" id="edit-id">
-      <div class="m-form-group">
-        <label>Pertanyaan</label>
-        <input type="text" id="edit-title" class="m-input-style">
-      </div>
-      <div class="m-form-group">
-        <label>Deskripsi Singkat</label>
-        <textarea id="edit-desc" class="m-input-style" rows="3"></textarea>
-      </div>
-      <div class="m-form-group">
-        <label>Pilihan Jawaban</label>
-        <div style="display: flex; gap: 8px;"><span class="m-fixed-ans">Ya</span><span class="m-fixed-ans">Tidak</span><span class="m-fixed-ans">Kadang-kadang</span></div>
-      </div>
-      <div class="m-form-group">
-        <label>Status Aktif</label>
-        <select id="edit-status" class="m-input-style">
-          <option value="active">Aktif</option>
-          <option value="nonactive">Nonaktif</option>
-        </select>
-      </div>
-      <div class="m-modal-actions">
-        <button type="button" style="background:none; border:none; color:#64748B; cursor:pointer;" onclick="closeEditForm()">Batal</button>
-        <button type="submit" class="m-btn-publish">Simpan Perubahan</button>
-      </div>
-    </form>
   </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-  let currentTargetCard = null;
+document.addEventListener('DOMContentLoaded', function () {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('q-container');
 
-  function openEditForm(btn) {
-    currentTargetCard = btn.closest('.q-item');
-    const id = currentTargetCard.getAttribute('data-id');
-    const title = currentTargetCard.querySelector('.q-title-text').innerText;
-    const desc = currentTargetCard.querySelector('.q-desc').innerText;
-    const isActive = currentTargetCard.querySelector('.status-pill').classList.contains('active');
+    if (!container) return;
 
-    document.getElementById('edit-id').value = id;
-    document.getElementById('edit-title').value = title;
-    document.getElementById('edit-desc').value = desc;
-    document.getElementById('edit-status').value = isActive ? 'active' : 'nonactive';
-    document.getElementById('modalEdit').style.display = 'flex';
-  }
+    async function loadQuestions() {
+        try {
+            const res = await fetch('/api/admin/questions', {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json'
+                }
+            });
+            const result = await res.json();
+            if (!result.status) throw new Error(result.message);
 
-  function closeEditForm() {
-    document.getElementById('modalEdit').style.display = 'none';
-  }
-
-  document.getElementById('formUpdateQuest').addEventListener('submit', function(e) {
-    e.preventDefault();
-    currentTargetCard.querySelector('.q-title-text').innerText = document.getElementById('edit-title').value;
-    currentTargetCard.querySelector('.q-desc').innerText = document.getElementById('edit-desc').value;
-    
-    const status = document.getElementById('edit-status').value;
-    const pill = currentTargetCard.querySelector('.status-pill');
-    if(status === 'active') {
-      pill.innerText = 'AKTIF';
-      pill.classList.add('active');
-      currentTargetCard.classList.add('active-border');
-    } else {
-      pill.innerText = 'NONAKTIF';
-      pill.classList.remove('active');
-      currentTargetCard.classList.remove('active-border');
+            container.innerHTML = '';
+            result.data.forEach((q, index) => {
+                const isActive = !!q.is_active;
+                container.innerHTML += `
+                <div class="q-item ${isActive ? 'active-border' : ''}" data-id="${q._id}">
+                    <div class="q-header">
+                        <div class="q-number-title">
+                            <div class="q-number">${String(index+1).padStart(2, '0')}</div>
+                            <div class="q-title-text">${q.question_text}</div>
+                        </div>
+                        <div class="q-actions">
+                            <i onclick="openEditForm(this)" style="cursor:pointer">✏️</i>
+                            <span class="status-pill ${isActive ? 'active' : ''}" 
+                                  onclick="toggleStatus('${q._id}', this)">
+                                  ${isActive ? 'AKTIF' : 'NONAKTIF'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="q-body">
+                        <p class="q-desc">${q.category ?? '-'}</p>
+                    </div>
+                </div>`;
+            });
+        } catch (err) {
+            container.innerHTML = `<p style="color:red;">Gagal load data</p>`;
+        }
     }
-    closeEditForm();
-    // Untuk teman Backend: Di sini nanti panggil axios/fetch dengan JWT Header buat update ke DB.
-  });
+
+    window.toggleStatus = async function(id, el) {
+        const card = el.closest('.q-item');
+        if (card.classList.contains('loading')) return;
+
+        try {
+            card.classList.add('loading');
+            const res = await fetch(`/api/admin/questions/${id}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Accept': 'application/json'
+                }
+            });
+
+            const result = await res.json();
+            if (!result.status) throw new Error(result.message);
+
+            const newState = !!result.is_active;
+            if (newState) {
+                el.innerText = 'AKTIF';
+                el.classList.add('active');
+                card.classList.add('active-border');
+            } else {
+                el.innerText = 'NONAKTIF';
+                el.classList.remove('active');
+                card.classList.remove('active-border');
+            }
+        } catch (err) {
+            alert('Gagal: ' + err.message);
+        } finally {
+            card.classList.remove('loading');
+        }
+    };
+
+    document.getElementById('formUpdateQuest')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+            const id = document.getElementById('edit-id').value;
+            const res = await fetch(`/api/admin/questions/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question_text: document.getElementById('edit-title').value,
+                    category: document.getElementById('edit-desc').value
+                })
+            });
+
+            const result = await res.json();
+            if (!result.status) throw new Error(result.message);
+
+            closeEditForm();
+            loadQuestions();
+        } catch (err) {
+            alert('Gagal update: ' + err.message);
+        }
+    });
+
+    loadQuestions();
+});
+
+window.openEditForm = function(btn) {
+    const card = btn.closest('.q-item');
+    document.getElementById('edit-id').value = card.dataset.id;
+    document.getElementById('edit-title').value = card.querySelector('.q-title-text').innerText;
+    document.getElementById('edit-desc').value = card.querySelector('.q-desc').innerText;
+    document.getElementById('modalEdit').style.display = 'flex';
+};
+
+window.closeEditForm = function() {
+    document.getElementById('modalEdit').style.display = 'none';
+};
 </script>
 @endpush

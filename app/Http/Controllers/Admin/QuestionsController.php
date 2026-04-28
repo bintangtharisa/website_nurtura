@@ -4,103 +4,149 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
+use MongoDB\Client;
+use Illuminate\Support\Facades\Log;
 
 class QuestionsController extends Controller
 {
-    public function index(){
-        $client = new \MongoDB\Client(env('MONGODB_URI'));
-        $collection = $client->selectCollection(env('MONGODB_DATABASE'), 'questions');
-        
-        $questions = $collection -> find(
-            [
-                'is_active' => true
-             ],
-             [
-                'sort' => ['order' => 1]
-            ]
-        )-> toArray();
-
-        $questions = array_map(function ($q) {
-            $q['_id'] = (string) $q['_id'];
-            return $q;
-        }, $questions);
-        return $questions;
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $questions
-        ]);
+    private function collection()
+    {
+        $uri = config('database.connections.mongodb.dsn');
+        $database = config('database.connections.mongodb.database');
+        $client = new Client($uri);
+        return $client->selectCollection($database, 'questions');
     }
 
-    public function toggle($id){
-        $collection = $this->collection();
-        $question = $collection->findOne([
-            '_id' => new ObjectId($id)
-        ]);
+    private function isValidObjectId($id)
+    {
+        return (bool) preg_match('/^[a-f\d]{24}$/i', $id);
+    }
 
-        if (!$question) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Question not found'
-            ], 404);
+    public function index()
+    {
+        try {
+            $questions = $this->collection()->find([], ['sort' => ['order' => 1]])->toArray();
+
+            $questions = array_map(function ($q) {
+                $q['_id'] = (string) $q['_id'];
+                $q['is_active'] = isset($q['is_active']) ? (bool) $q['is_active'] : false;
+                return $q;
+            }, $questions);
+
+            return response()->json(['status' => true, 'data' => $questions]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
         }
-
-        $collection->updateOne(
-            ['_id' => new ObjectId($id)],
-            [
-                '$set' => [
-                    'is_active' => !$question['is_active'],
-                    'updated_at' => new \MongoDB\BSON\UTCDateTime()
-                ]
-            ]
-        );
-        return response()->json([
-            'status' => true,
-            'message' => 'Question updated successfully'
-        ]);
     }
 
-    public function update(Request $request, $id){
-        $collection = $this->collection();
+    public function toggle($id)
+    {
+        try {
+            if (!$this->isValidObjectId($id)) {
+                return response()->json(['status' => false], 400);
+            }
 
-        $request0->validate([
-            'question_text' => 'required|string',
-            'category' => 'required|string',
-        ]);
+            $collection = $this->collection();
+            $objectId = new ObjectId($id);
+            $question = $collection->findOne(['_id' => $objectId]);
 
-        $collection->updateOne(
-            ['_id' => new ObjectId($id)],
-            [
-                '$set' => [
-                    'question_text' => $request->question_text,
-                    'category' => $request->category,
-                    'updated_at' => new \MongoDB\BSON\UTCDateTime()
-                ]
-            ]
-        );
-        return response()->json([
-            'status' => true,
-            'message' => 'Question updated successfully'
-        ]);
-    }
+            if (!$question) {
+                return response()->json(['status' => false], 404);
+            }
 
-    public function reorder(Request $request){
-        $collection = $this->collection();
+            $newStatus = !(bool) ($question['is_active'] ?? false);
 
-        foreach ($request->all() as $item) {
-            $collection->updateOne(
-                ['_id' => new ObjectId($item['id'])],
+            $result = $collection->findOneAndUpdate(
+                ['_id' => $objectId],
                 [
                     '$set' => [
-                        'order' => (int) $item['order'],
-                        'updated_at' => new \MongoDB\BSON\UTCDateTime()
+                        'is_active' => $newStatus,
+                        'updated_at' => new UTCDateTime()
                     ]
+                ],
+                [
+                    'returnDocument' => \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER
                 ]
             );
+
+            return response()->json([
+                'status' => true,
+                'is_active' => (bool) $result['is_active']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json([
-            'status' => true,
-            'message' => 'Questions reordered successfully'
-        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            if (!$this->isValidObjectId($id)) {
+                return response()->json(['status' => false], 400);
+            }
+
+            $data = $request->all();
+            $updateData = [];
+
+            if (isset($data['question_text'])) {
+                $updateData['question_text'] = (string) $data['question_text'];
+            }
+
+            if (array_key_exists('category', $data)) {
+                $updateData['category'] = $data['category'] !== '' ? (string) $data['category'] : null;
+            }
+
+            if (isset($data['options']) && is_array($data['options'])) {
+                $updateData['options'] = array_map('strval', $data['options']);
+            }
+
+            if (isset($data['order'])) {
+                $updateData['order'] = (int) $data['order'];
+            }
+
+            $updateData['updated_at'] = new UTCDateTime();
+
+            $this->collection()->updateOne(
+                ['_id' => new ObjectId($id)],
+                ['$set' => $updateData]
+            );
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reorder(Request $request)
+    {
+        try {
+            $collection = $this->collection();
+
+            foreach ($request->all() as $item) {
+                if (isset($item['id'], $item['order']) && $this->isValidObjectId($item['id'])) {
+                    $collection->updateOne(
+                        ['_id' => new ObjectId($item['id'])],
+                        [
+                            '$set' => [
+                                'order' => (int) $item['order'],
+                                'updated_at' => new UTCDateTime()
+                            ]
+                        ]
+                    );
+                }
+            }
+
+            return response()->json(['status' => true, 'message' => 'Reorder berhasil']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }
