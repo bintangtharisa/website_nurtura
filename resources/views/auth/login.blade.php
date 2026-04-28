@@ -13,10 +13,10 @@
 
         body {
             min-height: 100vh;
-            background-color: #f7f6f2; /* Warna background luar yang lebih terang */
+            background-color: #f7f6f2;
             display: flex;
-            justify-content: center; 
-            align-items: center; 
+            justify-content: center;
+            align-items: center;
             font-family: 'DM Sans', sans-serif;
             padding: 20px;
             color: #333;
@@ -32,37 +32,41 @@
             text-align: center;
         }
 
-        /* ── ICON HEART ── */
         .icon-top {
-            width: 56px; height: 56px;
+            width: 56px;
+            height: 56px;
             background-color: #f1f5ee;
             border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0 auto 24px;
         }
+
         .icon-top svg {
-            width: 24px; height: 24px;
+            width: 24px;
+            height: 24px;
             fill: #9baf8b;
         }
 
-        /* ── TYPOGRAPHY ── */
         h1 {
             font-size: 26px;
             font-weight: 600;
             color: #333;
             margin-bottom: 8px;
         }
+
         .subtitle {
             font-size: 14px;
             color: #777;
             margin-bottom: 32px;
         }
 
-        /* ── FORM FIELDS ── */
         .field-group {
             text-align: left;
             margin-bottom: 16px;
         }
+
         .field-group label {
             display: block;
             font-size: 13px;
@@ -70,17 +74,21 @@
             color: #444;
             margin-bottom: 8px;
         }
+
         .input-wrap {
             position: relative;
         }
+
         .input-wrap svg {
             position: absolute;
             left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            width: 18px; height: 18px;
+            width: 18px;
+            height: 18px;
             color: #666;
         }
+
         .input-wrap input {
             width: 100%;
             padding: 14px 16px 14px 44px;
@@ -88,15 +96,19 @@
             border-radius: 12px;
             font-size: 14px;
             font-family: 'DM Sans', sans-serif;
-            background: #ebdcd0; /* Warna beige seperti di desain */
+            background: #ebdcd0;
             color: #333;
             outline: none;
             transition: box-shadow 0.2s;
         }
+
         .input-wrap input:focus {
             box-shadow: 0 0 0 2px #9baf8b;
         }
-        .input-wrap input::placeholder { color: #888; }
+
+        .input-wrap input::placeholder {
+            color: #888;
+        }
 
         .forgot-password {
             display: block;
@@ -108,7 +120,6 @@
             margin-bottom: 24px;
         }
 
-        /* ── BUTTONS ── */
         .btn-primary {
             display: block;
             width: 100%;
@@ -123,9 +134,11 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .btn-primary:hover { background: #869977; }
 
-        /* ── DIVIDER ── */
+        .btn-primary:hover {
+            background: #869977;
+        }
+
         .divider {
             display: flex;
             align-items: center;
@@ -134,15 +147,22 @@
             color: #999;
             font-size: 13px;
         }
-        .divider::before, .divider::after {
+
+        .divider::before,
+        .divider::after {
             content: '';
             flex: 1;
             border-bottom: 1px solid #eee;
         }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
 
-        /* ── GOOGLE BUTTON ── */
+        .divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
         .btn-google {
             display: flex;
             align-items: center;
@@ -159,15 +179,23 @@
             margin-bottom: 24px;
             transition: background 0.2s;
         }
-        .btn-google:hover { background: #f0f0f0; }
-        .btn-google svg { width: 18px; height: 18px; margin-right: 10px; }
 
-        /* ── FOOTER LINKS & NOTE ── */
+        .btn-google:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-google svg {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+        }
+
         .register-link {
             font-size: 13px;
             color: #777;
             margin-bottom: 24px;
         }
+
         .register-link a {
             color: #9baf8b;
             font-weight: 600;
@@ -184,14 +212,15 @@
             color: #666;
             text-align: left;
         }
+
         .security-note svg {
-            width: 20px; height: 20px;
+            width: 20px;
+            height: 20px;
             color: #9baf8b;
             margin-right: 12px;
             flex-shrink: 0;
         }
 
-        /* ── ALERTS ── */
         .alert {
             padding: 12px 16px;
             border-radius: 12px;
@@ -199,15 +228,65 @@
             font-size: 13px;
             text-align: left;
         }
-        .alert-error   { background: #f8d7da; color: #842029; }
-        .alert-success { background: #d1e7dd; color: #0f5132; }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        /* LOADING */
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(247,246,242,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-box {
+            text-align: center;
+        }
+
+        .loading-box img {
+            width: 90px;
+            margin-bottom: 16px;
+        }
+
+        .loading-box p {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid #ddd;
+            border-top: 4px solid #9baf8b;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="card-container">
-        
-        {{-- Heart Icon --}}
+
         <div class="icon-top">
             <svg viewBox="0 0 24 24">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -217,7 +296,6 @@
         <h1>Selamat Datang Kembali</h1>
         <p class="subtitle">Ruang aman untuk kesehatan mental ibu</p>
 
-        {{-- Menampilkan Error Validasi (Bawaan Laravel) --}}
         @if ($errors->any())
             <div class="alert alert-error">
                 @foreach ($errors->all() as $error)
@@ -226,57 +304,50 @@
             </div>
         @endif
 
-        {{-- Menampilkan Pesan Sukses (Bawaan Laravel) --}}
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
-        {{-- Form Login: Action mengarah ke route aslimu --}}
         <form id="loginForm">
 
+            <div class="field-group">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
 
-    <div class="field-group">
-        <label for="email">Email</label>
-        <div class="input-wrap">
-            {{-- Mail Icon --}}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-            </svg>
+                    <input type="email" id="email" name="email"
+                        placeholder="nama@email.com"
+                        value="{{ old('email') }}"
+                        required autocomplete="email">
+                </div>
+            </div>
 
-            <input type="email" id="email" name="email"
-                   placeholder="nama@email.com"
-                   value="{{ old('email') }}"
-                   required autocomplete="email">
-        </div>
-    </div>
+            <div class="field-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
 
-    <div class="field-group">
-        <label for="password">Password</label>
-        <div class="input-wrap">
-            {{-- Lock Icon --}}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
+                    <input type="password" id="password" name="password"
+                        placeholder="••••••••"
+                        required autocomplete="current-password">
+                </div>
+            </div>
 
-            <input type="password" id="password" name="password"
-                   placeholder="••••••••"
-                   required autocomplete="current-password">
-        </div>
-    </div>
+            <a href="{{ route('password.request') }}" class="forgot-password">
+                Lupa password?
+            </a>
 
-    <a href="{{ route('password.request') }}" class="forgot-password">
-        Lupa password?
-    </a>
-
-    <button type="submit" class="btn-primary">Masuk</button>
-</form>
-
+            <button type="submit" class="btn-primary">Masuk</button>
+        </form>
 
         <div class="divider">atau</div>
 
-        {{-- Tombol Google (Href diisi # supaya tidak error route) --}}
         <a href="#" class="btn-google">
             <svg viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -292,14 +363,35 @@
         </div>
 
         <div class="security-note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
             Data Anda aman dan hanya dapat dibagikan dengan persetujuan Anda
         </div>
 
     </div>
+
+    <!-- LOADING -->
+    <div id="loadingOverlay">
+        <div class="loading-box">
+            <img src="{{ asset('images/logo_nurtura.png') }}" alt="Logo Nurtura">
+            <p>Memproses login...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("loginForm");
+    const loading = document.getElementById("loadingOverlay");
+
+    form.addEventListener("submit", function () {
+        loading.style.display = "flex";
+    });
+});
+</script>
+
 <script src="{{ asset('js/admin/auth.js') }}"></script>
 </body>
 </html>
