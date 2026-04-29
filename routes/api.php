@@ -15,16 +15,16 @@ Route::prefix('auth')->group(function () {
 Route::prefix('password')->group(function () {
     Route::post('/forgot', [ForgotPasswordController::class, 'forgotPassword']);
     Route::post('/reset', [ForgotPasswordController::class, 'resetPassword']);
+    Route::post('/change', [ForgotPasswordController::class, 'changePassword'])->middleware('auth:api');
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::middleware('auth:api')->get('/dashboard', [DashboardAdminController::class, 'dashboard']);
-    Route::get('/screenings', [DashboardAdminController::class, 'screenings']);
-    
+    Route::get('/dashboard', [DashboardAdminController::class, 'dashboard']);
     Route::get('/questions', [QuestionsController::class, 'index']);
+    Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
     Route::put('/questions/{id}/toggle', [QuestionsController::class, 'toggle']);
     Route::put('/questions/{id}', [QuestionsController::class, 'update']);
-    Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
 });
 
 Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);
+Route::put('/change-password', [ProfileController::class, 'changePassword'])->middleware('auth:api');

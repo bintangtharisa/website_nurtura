@@ -9,7 +9,7 @@ class QuestionsSeeder extends Seeder
     public function run()
     {
         $client = new \MongoDB\Client(env('MONGODB_URI'));
-        $db = $client->selectDatabase(env('MONGODB_DATABASE'));
+        $db = $client->selectDatabase(env('MONGODB_DATABASE', 'DBnurtura'));
         $collection = $db->questions;
 
         $now = new \MongoDB\BSON\UTCDateTime();
@@ -38,7 +38,7 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "kesulitan_tidur_di_malam_hari",
                 "question_text" => "Apakah Anda mengalami kesulitan tidur di malam hari?",
-                "options" => ["Tidak", "Ya", "Dua hari atau lebih dalam seminggu"],
+                "options" => ["Ya", "Tidak", "Dua hari atau lebih dalam seminggu"],
                 "category" => "tidur",
                 "is_active" => true,
                 "order" => (int) 3,
@@ -48,7 +48,7 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "kesulitan_konsentrasi_atau_mengambil_keputusan",
                 "question_text" => "Apakah Anda kesulitan berkonsentrasi atau mengambil keputusan?",
-                "options" => ["Tidak", "Sering", "Ya"],
+                "options" => ["Ya", "Tidak", "Sering"],
                 "category" => "kognitif",
                 "is_active" => true,
                 "order" => (int) 4,
@@ -58,7 +58,7 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "makan_berlebihan_atau_kehilangan_nafsu_makan",
                 "question_text" => "Apakah Anda makan berlebihan atau kehilangan nafsu makan?",
-                "options" => ["Tidak", "Ya", "Tidak sama sekali"],
+                "options" => ["Ya", "Tidak", "Tidak sama sekali"],
                 "category" => "fisik",
                 "is_active" => true,
                 "order" => (int) 5,
@@ -66,9 +66,9 @@ class QuestionsSeeder extends Seeder
                 "updated_at" => null
             ],
             [
-                "field_key" => "perasaan_bersalah",
-                "question_text" => "Apakah Anda merasa bersalah?",
-                "options" => ["Tidak", "Mungkin", "Ya"],
+                "field_key" => "merasa_cemas_atau_gelisah",
+                "question_text" => "Apakah Anda merasa cemas atau gelisah?",
+                "options" => ["Ya", "Tidak", "Kadang-kadang"],
                 "category" => "emosional",
                 "is_active" => true,
                 "order" => (int) 6,
@@ -76,12 +76,32 @@ class QuestionsSeeder extends Seeder
                 "updated_at" => null
             ],
             [
-                "field_key" => "kesulitan_membangun_ikatan_dengan_bayi",
-                "question_text" => "Apakah Anda mengalami kesulitan membangun ikatan dengan bayi?",
-                "options" => ["Tidak", "Kadang-kadang", "Ya"],
-                "category" => "ikatan",
+                "field_key" => "perasaan_bersalah",
+                "question_text" => "Apakah Anda merasa bersalah?",
+                "options" => ["Ya", "Tidak", "Mungkin"],
+                "category" => "emosional",
                 "is_active" => true,
                 "order" => (int) 7,
+                "created_at" => $now,
+                "updated_at" => null
+            ],
+            [
+                "field_key" => "kesulitan_membangun_ikatan_dengan_bayi",
+                "question_text" => "Apakah Anda mengalami kesulitan membangun ikatan dengan bayi?",
+                "options" => ["Ya", "Tidak", "Kadang-kadang"],
+                "category" => "ikatan",
+                "is_active" => true,
+                "order" => (int) 8,
+                "created_at" => $now,
+                "updated_at" => null
+            ],
+            [
+                "field_key" => "percobaan_bunuh_diri",
+                "question_text" => "Apakah Anda pernah memiliki pikiran atau melakukan percobaan bunuh diri?",
+                "options" => ["Ya", "Tidak"],
+                "category" => "kritis",
+                "is_active" => true,
+                "order" => (int) 9,
                 "created_at" => $now,
                 "updated_at" => null
             ]
