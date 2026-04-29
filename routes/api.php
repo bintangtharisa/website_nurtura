@@ -15,6 +15,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('password')->group(function () {
     Route::post('/forgot', [ForgotPasswordController::class, 'forgotPassword']);
     Route::post('/reset', [ForgotPasswordController::class, 'resetPassword']);
+    Route::post('/change', [ForgotPasswordController::class, 'changePassword'])->middleware('auth:api');
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
@@ -26,3 +27,4 @@ Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function (
 });
 
 Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);
+Route::put('/change-password', [ProfileController::class, 'changePassword'])->middleware('auth:api');
