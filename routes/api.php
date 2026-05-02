@@ -6,6 +6,7 @@ use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
 use App\Http\Controllers\Admin\QuestionsController;
 use App\Http\Controllers\API\ForgotPasswordController;
+use App\Http\Controllers\Father\DashboardController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -24,6 +25,10 @@ Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function (
     Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
     Route::put('/questions/{id}/toggle', [QuestionsController::class, 'toggle']);
     Route::put('/questions/{id}', [QuestionsController::class, 'update']);
+});
+
+Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'dashboard']);
 });
 
 Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);

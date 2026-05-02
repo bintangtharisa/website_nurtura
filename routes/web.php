@@ -51,6 +51,12 @@ Route::get('/admin/model', function () { return view('admin.model'); })->name('a
 Route::get('/admin/exportdata', function () { return view('admin.exportdata'); })->name('admin.exportdata');
 Route::get('/admin/profile', function () { return view('admin.profile'); })->name('admin.profile');
 
+Route::get('/father/dashboard', function () { return view('father.dashboard'); })->name('father.dashboard');
+Route::get('/father/monitoring', function () { return view('father.monitoring'); })->name('father.monitoring');
+Route::get('/father/profile', function () { return view('father.profile'); })->name('father.profile');
+Route::get('/father/support', function () { return view('father.support'); })->name('father.support');
+Route::get('logout', function () { return view('father.logout'); })->name('father.logout');
+
 Route::get('/hubungkan-akun', function () {
     return view('auth.hubungkan-akun');
 })->name('hubungkan-akun');

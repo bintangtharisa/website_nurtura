@@ -34,26 +34,26 @@
 
         {{-- Navigation --}}
         <nav class="sidebar-nav">
-            <a href="{{ route('ayah.dashboard') }}"
-               class="nav-item {{ request()->routeIs('ayah.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('father.dashboard') }}"
+               class="nav-item {{ request()->routeIs('father.dashboard') ? 'active' : '' }}">
                 <i class="fa-solid fa-house nav-icon"></i>
                 <span>Beranda</span>
             </a>
 
-            <a href="{{ route('ayah.monitoring') }}"
-               class="nav-item {{ request()->routeIs('ayah.monitoring') ? 'active' : '' }}">
+            <a href="{{ route('father.monitoring') }}"
+               class="nav-item {{ request()->routeIs('father.monitoring') ? 'active' : '' }}">
                 <i class="fa-solid fa-chart-line nav-icon"></i>
                 <span>Monitoring</span>
             </a>
 
-            <a href="{{ route('ayah.dukungan') }}"
-               class="nav-item {{ request()->routeIs('ayah.dukungan') ? 'active' : '' }}">
+            <a href="{{ route('father.support') }}"
+               class="nav-item {{ request()->routeIs('father.support') ? 'active' : '' }}">
                 <i class="fa-solid fa-hands-holding-heart nav-icon"></i>
                 <span>Dukungan</span>
             </a>
 
-            <a href="{{ route('ayah.profil') }}"
-               class="nav-item {{ request()->routeIs('ayah.profil') ? 'active' : '' }}">
+            <a href="{{ route('father.profile') }}"
+               class="nav-item {{ request()->routeIs('father.profile') ? 'active' : '' }}">
                 <i class="fa-solid fa-circle-user nav-icon"></i>
                 <span>Profil</span>
             </a>
@@ -61,25 +61,18 @@
 
         {{-- Logout --}}
         <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <i class="fa-solid fa-arrow-right-from-bracket nav-icon"></i>
-                    <span>Keluar</span>
-                </button>
-            </form>
+            <a href="#" onclick="event.preventDefault(); logout();" class="sidebar__nav-link" style="color: #EF4444;"></a>
+                <i class="fa-solid fa-right-from-bracket nav-icon"></i>
+                <span>Keluar</span>
+            </a>
 
             {{-- User Info --}}
             <div class="sidebar-user">
                 <div class="user-avatar">
-                    @if(Auth::user()->foto_profil)
-                        <img src="{{ asset('storage/' . Auth::user()->foto_profil) }}" alt="Avatar">
-                    @else
-                        <span>{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                    @endif
+
                 </div>
                 <div class="user-info">
-                    <span class="user-name">{{ Auth::user()->name }}</span>
+                    
                     <span class="user-role">Premium Member</span>
                 </div>
             </div>
@@ -119,5 +112,19 @@
     </div>
 
     @stack('scripts')
+    <script>
+      function logout() {
+          fetch('/api/auth/logout', {
+              method: 'POST',
+              headers: {
+                  'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                  'Accept': 'application/json'
+              }
+          }).then(() => {
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+          });
+      }
+      </script>
 </body>
 </html>
