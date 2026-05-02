@@ -31,5 +31,15 @@ Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function
     Route::get('/dashboard', [DashboardController::class, 'dashboard']);
 });
 
+Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
+    Route::get('/dashboard', function () {
+        return response()->json([
+            'status' => true,
+            'message' => 'Welcome Mother'
+        ]);
+    });
+
+});
+
 Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);
 Route::put('/change-password', [ProfileController::class, 'changePassword'])->middleware('auth:api');
