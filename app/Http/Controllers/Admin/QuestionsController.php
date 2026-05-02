@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Illuminate\Support\Facades\Log;
 
 class QuestionsController extends Controller
 {
@@ -16,6 +15,7 @@ class QuestionsController extends Controller
         $uri = config('database.connections.mongodb.dsn');
         $database = config('database.connections.mongodb.database');
         $client = new Client($uri);
+
         return $client->selectCollection($database, 'questions');
     }
 
@@ -24,56 +24,24 @@ class QuestionsController extends Controller
         return (bool) preg_match('/^[a-f\d]{24}$/i', $id);
     }
 
+    // =========================
+    // GET QUESTIONS
+    // =========================
     public function index()
     {
         try {
-            $questions = $this->collection()->find([], ['sort' => ['order' => 1]])->toArray();
+            $questions = $this->collection()
+                ->find([], ['sort' => ['order' => 1]])
+                ->toArray();
 
             $questions = array_map(function ($q) {
                 $q['_id'] = (string) $q['_id'];
-                $q['is_active'] = isset($q['is_active']) ? (bool) $q['is_active'] : false;
                 return $q;
             }, $questions);
 
-            return response()->json(['status' => true, 'data' => $questions]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function toggle($id)
-    {
-        try {
-            if (!$this->isValidObjectId($id)) {
-                return response()->json(['status' => false], 400);
-            }
-
-            $collection = $this->collection();
-            $objectId = new ObjectId($id);
-            $question = $collection->findOne(['_id' => $objectId]);
-
-            if (!$question) {
-                return response()->json(['status' => false], 404);
-            }
-
-            $newStatus = !(bool) ($question['is_active'] ?? false);
-
-            $result = $collection->findOneAndUpdate(
-                ['_id' => $objectId],
-                [
-                    '$set' => [
-                        'is_active' => $newStatus,
-                        'updated_at' => new UTCDateTime()
-                    ]
-                ],
-                [
-                    'returnDocument' => \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER
-                ]
-            );
-
             return response()->json([
                 'status' => true,
-                'is_active' => (bool) $result['is_active']
+                'data' => $questions
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -83,6 +51,9 @@ class QuestionsController extends Controller
         }
     }
 
+    // =========================
+    // UPDATE (SAFE FOR ML)
+    // =========================
     public function update(Request $request, $id)
     {
         try {
@@ -93,6 +64,7 @@ class QuestionsController extends Controller
             $data = $request->all();
             $updateData = [];
 
+            // ❗ HANYA BOLEH EDIT TEXT (AMAN)
             if (isset($data['question_text'])) {
                 $updateData['question_text'] = (string) $data['question_text'];
             }
@@ -101,13 +73,8 @@ class QuestionsController extends Controller
                 $updateData['category'] = $data['category'] !== '' ? (string) $data['category'] : null;
             }
 
-            if (isset($data['options']) && is_array($data['options'])) {
-                $updateData['options'] = array_map('strval', $data['options']);
-            }
-
-            if (isset($data['order'])) {
-                $updateData['order'] = (int) $data['order'];
-            }
+            // ❗ JANGAN IZINKAN EDIT:
+            // field_key, options (berbahaya untuk ML)
 
             $updateData['updated_at'] = new UTCDateTime();
 
@@ -117,6 +84,7 @@ class QuestionsController extends Controller
             );
 
             return response()->json(['status' => true]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -125,13 +93,19 @@ class QuestionsController extends Controller
         }
     }
 
+    // =========================
+    // REORDER
+    // =========================
     public function reorder(Request $request)
     {
         try {
             $collection = $this->collection();
 
             foreach ($request->all() as $item) {
-                if (isset($item['id'], $item['order']) && $this->isValidObjectId($item['id'])) {
+                if (
+                    isset($item['id'], $item['order']) &&
+                    $this->isValidObjectId($item['id'])
+                ) {
                     $collection->updateOne(
                         ['_id' => new ObjectId($item['id'])],
                         [
@@ -144,9 +118,16 @@ class QuestionsController extends Controller
                 }
             }
 
-            return response()->json(['status' => true, 'message' => 'Reorder berhasil']);
+            return response()->json([
+                'status' => true,
+                'message' => 'Reorder berhasil'
+            ]);
+
         } catch (\Exception $e) {
-            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

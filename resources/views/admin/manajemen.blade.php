@@ -187,14 +187,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Accept': 'application/json'
                 }
             });
+
             const result = await res.json();
             if (!result.status) throw new Error(result.message);
 
             container.innerHTML = '';
+
             result.data.forEach((q, index) => {
-                const isActive = !!q.is_active;
                 container.innerHTML += `
-                <div class="q-item ${isActive ? 'active-border' : ''}" data-id="${q._id}">
+                <div class="q-item" data-id="${q._id}">
                     <div class="q-header">
                         <div class="q-number-title">
                             <div class="q-number">${String(index+1).padStart(2, '0')}</div>
@@ -202,66 +203,35 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="q-actions">
                             <i onclick="openEditForm(this)" style="cursor:pointer">✏️</i>
-                            <span class="status-pill ${isActive ? 'active' : ''}" 
-                                  onclick="toggleStatus('${q._id}', this)">
-                                  ${isActive ? 'AKTIF' : 'NONAKTIF'}
-                            </span>
                         </div>
                     </div>
+
                     <div class="q-body">
                         <p class="q-desc">${q.category ?? '-'}</p>
+                        <div class="q-options">
+                            ${(q.options || []).map(opt => `<button class="q-btn-opt">${opt}</button>`).join('')}
+                        </div>
                     </div>
                 </div>`;
             });
+
         } catch (err) {
             container.innerHTML = `<p style="color:red;">Gagal load data</p>`;
         }
     }
 
-    window.toggleStatus = async function(id, el) {
-        const card = el.closest('.q-item');
-        if (card.classList.contains('loading')) return;
-
-        try {
-            card.classList.add('loading');
-            const res = await fetch(`/api/admin/questions/${id}/toggle`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                    'Accept': 'application/json'
-                }
-            });
-
-            const result = await res.json();
-            if (!result.status) throw new Error(result.message);
-
-            const newState = !!result.is_active;
-            if (newState) {
-                el.innerText = 'AKTIF';
-                el.classList.add('active');
-                card.classList.add('active-border');
-            } else {
-                el.innerText = 'NONAKTIF';
-                el.classList.remove('active');
-                card.classList.remove('active-border');
-            }
-        } catch (err) {
-            alert('Gagal: ' + err.message);
-        } finally {
-            card.classList.remove('loading');
-        }
-    };
-
     document.getElementById('formUpdateQuest')?.addEventListener('submit', async function(e) {
         e.preventDefault();
+
         try {
             const id = document.getElementById('edit-id').value;
+
             const res = await fetch(`/api/admin/questions/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     question_text: document.getElementById('edit-title').value,
@@ -274,6 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeEditForm();
             loadQuestions();
+
         } catch (err) {
             alert('Gagal update: ' + err.message);
         }
@@ -284,9 +255,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.openEditForm = function(btn) {
     const card = btn.closest('.q-item');
+
     document.getElementById('edit-id').value = card.dataset.id;
     document.getElementById('edit-title').value = card.querySelector('.q-title-text').innerText;
     document.getElementById('edit-desc').value = card.querySelector('.q-desc').innerText;
+
     document.getElementById('modalEdit').style.display = 'flex';
 };
 
