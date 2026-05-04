@@ -4,9 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
-use App\Http\Controllers\Admin\QuestionsController;
+use App\Http\Controllers\Admin\QuestionsController as QuestionsControllerAdmin;
+use App\Http\Controllers\Mother\QuestionsController as QuestionsControllerMother;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\Father\DashboardController;
+use App\Http\Controllers\Mother\ScreeningController;
+
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -21,10 +24,10 @@ Route::prefix('password')->group(function () {
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/dashboard', [DashboardAdminController::class, 'dashboard']);
-    Route::get('/questions', [QuestionsController::class, 'index']);
-    Route::put('/questions/reorder', [QuestionsController::class, 'reorder']);
-    Route::put('/questions/{id}/toggle', [QuestionsController::class, 'toggle']);
-    Route::put('/questions/{id}', [QuestionsController::class, 'update']);
+    Route::get('/questions', [QuestionsControllerAdmin::class, 'index']);
+    Route::put('/questions/reorder', [QuestionsControllerAdmin::class, 'reorder']);
+    Route::put('/questions/{id}/toggle', [QuestionsControllerAdmin::class, 'toggle']);
+    Route::put('/questions/{id}', [QuestionsControllerAdmin::class, 'update']);
 });
 
 Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function () {
@@ -38,6 +41,9 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
             'message' => 'Welcome Mother'
         ]);
     });
+
+    Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
+    Route::post('/screening', [ScreeningController::class, 'screening']);
 
 });
 
