@@ -96,22 +96,6 @@ class QuestionsSeeder extends Seeder
                 "updated_at" => null
             ],
             [
-                "field_key" => "merasa_cemas_atau_gelisah",
-                "question_text" => "Apakah Anda merasa cemas atau gelisah?",
-                "options" => ["Ya", "Tidak", "Kadang-kadang"],
-                "value_map" => [
-                    "Ya" => 2,
-                    "Kadang-kadang" => 1,
-                    "Tidak" => 0
-                ],
-                "category" => "emosional",
-                "ml_index" => 5,
-                "order" => 6,
-                "version" => 1,
-                "created_at" => $now,
-                "updated_at" => null
-            ],
-            [
                 "field_key" => "perasaan_bersalah",
                 "question_text" => "Apakah Anda merasa bersalah?",
                 "options" => ["Ya", "Tidak", "Mungkin"],
