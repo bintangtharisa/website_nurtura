@@ -804,20 +804,29 @@ input { font-family: inherit; }
   transform: translateY(-2px);
 }
 
-/* Featured card spans full width */
+/* Featured card spans full width + horizontal layout */
 .artikel-card--featured {
   grid-column: 1 / -1;
+  flex-direction: row;
 }
 
 .artikel-card__img-wrap {
   width: 100%;
-  height: 280px;
+  height: 160px;
   overflow: hidden;
   background: var(--clr-accent-sand);
+  flex-shrink: 0;
 }
 
 .artikel-card__img-wrap--sm {
   height: 140px;
+}
+
+/* Featured: gambar di kiri, lebar tetap, tinggi mengikuti card */
+.artikel-card__img-wrap--featured {
+  width: 380px;
+  height: auto;
+  min-height: 220px;
 }
 
 .artikel-card__img {
@@ -1050,11 +1059,332 @@ input { font-family: inherit; }
 
 @media (max-width: 760px) {
   .artikel-grid { grid-template-columns: 1fr; }
-  .artikel-card--featured { grid-column: 1; }
+  .artikel-card--featured { grid-column: 1; flex-direction: column; }
+  .artikel-card__img-wrap--featured { width: 100%; min-height: 180px; }
   .pengingat-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {
   .panduan-header__title { font-size: 20px; }
   .alokasi-bar__segment  { font-size: 11px; }
+}
+
+
+/* ============================================================
+   PROFIL PAGE — TAMBAHAN STYLES
+   File : views/father/profile.blade.php
+   Depends on : public/css/dashboardayah.css
+   ============================================================ */
+
+/* ── PAGE HEADER ───────────────────────────────────────────── */
+.profil-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.profil-header__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--clr-text-heading);
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.profil-header__subtitle {
+  font-size: 13.5px;
+  color: var(--clr-text-label);
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+
+/* ── PROFIL CARD SHARED ────────────────────────────────────── */
+.profil-card .card__header {
+  align-items: center;
+}
+
+.profil-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profil-card__icon {
+  display: flex;
+  align-items: center;
+  color: var(--clr-primary);
+}
+
+
+/* ── DATA DIRI ─────────────────────────────────────────────── */
+.profil-data {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+/* Avatar */
+.profil-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profil-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--clr-primary-light);
+  border: 3px solid var(--clr-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profil-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profil-avatar__initials {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--clr-primary);
+}
+
+.profil-avatar__edit-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--clr-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid #fff;
+  transition: background 0.15s;
+}
+
+.profil-avatar__edit-btn:hover {
+  background: var(--clr-primary-dark);
+}
+
+/* Fields */
+.profil-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.profil-fields__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.profil-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profil-field__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--clr-text-label);
+  letter-spacing: 0.01em;
+}
+
+.profil-field__input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  background: var(--clr-bg);
+  color: var(--clr-text-body);
+  font-size: 13.5px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.profil-field__input:focus {
+  border-color: var(--clr-primary);
+  background: var(--clr-surface);
+}
+
+.profil-field__input:hover:not(:focus) {
+  border-color: var(--clr-primary);
+}
+
+
+/* ── KONEKSI BADGE ─────────────────────────────────────────── */
+.koneksi-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.koneksi-badge--terhubung {
+  background: var(--clr-low-bg);
+  color: var(--clr-low-text);
+}
+
+.koneksi-badge--terputus {
+  background: var(--clr-high-bg);
+  color: var(--clr-high-text);
+}
+
+
+/* ── KONEKSI ISTRI CARD ────────────────────────────────────── */
+.koneksi-istri {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-card);
+  background: var(--clr-bg);
+  margin-bottom: 14px;
+}
+
+.koneksi-istri__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.koneksi-istri__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--clr-accent-sand);
+  border: 2px solid var(--clr-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.koneksi-istri__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.koneksi-istri__avatar-initials {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--clr-primary-dark);
+}
+
+.koneksi-istri__online-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--clr-low-text);
+  border: 2px solid var(--clr-surface);
+}
+
+.koneksi-istri__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.koneksi-istri__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--clr-text-heading);
+  margin-bottom: 2px;
+}
+
+.koneksi-istri__since {
+  font-size: 11.5px;
+  color: var(--clr-text-muted);
+  margin-bottom: 8px;
+}
+
+.koneksi-istri__tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.koneksi-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--clr-primary-dark);
+  background: var(--clr-primary-light);
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.koneksi-tag svg {
+  flex-shrink: 0;
+}
+
+
+/* ── KONEKSI WARNING ───────────────────────────────────────── */
+.koneksi-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--clr-med-bg);
+  border: 1px solid #F0D98A;
+}
+
+.koneksi-warning__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--clr-med-text);
+}
+
+.koneksi-warning__text {
+  font-size: 12.5px;
+  color: var(--clr-med-text);
+  line-height: 1.55;
+}
+
+
+/* ── ACTION BUTTONS ────────────────────────────────────────── */
+.profil-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.profil-actions__cancel {
+  min-width: 100px;
+}
+
+.profil-actions__save {
+  min-width: 160px;
+}
+
+
+/* ── RESPONSIVE (profil) ───────────────────────────────────── */
+@media (max-width: 700px) {
+  .profil-data { flex-direction: column; align-items: flex-start; }
+  .profil-fields__row { grid-template-columns: 1fr; }
+  .profil-actions { flex-direction: column-reverse; }
+  .profil-actions__cancel,
+  .profil-actions__save { width: 100%; justify-content: center; }
 }
