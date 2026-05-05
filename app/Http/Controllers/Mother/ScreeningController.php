@@ -21,7 +21,6 @@ class ScreeningController extends Controller
     public function screening(Request $request, MLFeatureService $mlService)
     {
         try {
-            $user = auth()->user();
             $answers = $request->all();
 
             if (empty($answers)) {
@@ -31,46 +30,25 @@ class ScreeningController extends Controller
                 ], 422);
             }
 
-            $healthCollection = $this->db()->health_records;
-
-            $healthData = [
-                'mother_id' => new ObjectId($user->_id),
-                'created_at' => new UTCDateTime()
-            ];
-
-            foreach ($answers as $key => $value) {
-                $healthData[$key] = $value;
-            }
-
-            $insertHealth = $healthCollection->insertOne($healthData);
-            $healthId = $insertHealth->getInsertedId();
-
             $features = $mlService->transform($answers);
 
-            $response = Http::post('http://127.0.0.1:5000/predict', [
+            $response = \Http::post('http://127.0.0.1:5000/predict', [
                 'features' => $features
             ]);
 
             if (!$response->ok()) {
-                throw new \Exception('Gagal konek ke ML service');
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Gagal koneksi ke ML'
+                ], 500);
             }
 
-            $mlResult = $response->json();
-
-            $predictionCollection = $this->db()->prediction_results;
-
-            $predictionCollection->insertOne([
-                'mother_id' => new ObjectId($user->_id),
-                'health_record_id' => $healthId,
-                'result' => $mlResult['result'],
-                'confidence' => (float) $mlResult['confidence'],
-                'created_at' => new UTCDateTime()
-            ]);
+            $result = $response->json();
 
             return response()->json([
                 'status' => true,
-                'result' => $mlResult['result'],
-                'confidence' => $mlResult['confidence']
+                'features' => $features,
+                'prediction' => $result
             ]);
 
         } catch (\Exception $e) {

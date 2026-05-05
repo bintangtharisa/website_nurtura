@@ -6,37 +6,38 @@ use MongoDB\Client;
 
 class MLFeatureService
 {
-    private function collection()
+    private $collection;
+
+    public function __construct()
     {
         $client = new Client(config('database.connections.mongodb.dsn'));
-        $db = $client->selectDatabase(config('database.connections.mongodb.database'));
-
-        return $db->questions;
+        $this->collection = $client
+            ->selectDatabase(config('database.connections.mongodb.database'))
+            ->selectCollection('questions');
     }
 
     public function transform(array $answers)
     {
-        $questions = $this->collection()->find()->toArray();
+        $questions = $this->collection->find(
+            [],
+            ['sort' => ['ml_index' => 1]]
+        )->toArray();
 
         $features = [];
 
         foreach ($questions as $q) {
-
-            $fieldKey = $q['field_key'];
-            $mlIndex  = $q['ml_index'];
+            $field = $q['field_key'];
             $valueMap = $q['value_map'];
 
-            $answer = $answers[$fieldKey] ?? null;
+            $answer = $answers[$field] ?? null;
 
             if (!$answer || !isset($valueMap[$answer])) {
-                throw new \Exception("Jawaban tidak valid untuk: $fieldKey");
+                $features[] = $valueMap['Tidak'] ?? 1;
+            } else {
+                $features[] = (int) $valueMap[$answer];
             }
-
-            $features[$mlIndex] = $valueMap[$answer];
         }
 
-        ksort($features);
-
-        return array_values($features);
+        return $features;
     }
 }
