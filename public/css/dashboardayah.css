@@ -659,3 +659,402 @@ input { font-family: inherit; }
   .welcome-card { flex-direction: column; }
   .welcome-card__illustration { width: 100%; height: 120px; margin: 16px 0 0; }
 }
+
+
+/* ============================================================
+   PANDUAN PAGE — TAMBAHAN STYLES
+   File : views/father/panduan.blade.php (inline section)
+   Depends on : public/css/dashboardayah.css
+   ============================================================ */
+
+/* ── PAGE HEADER ───────────────────────────────────────────── */
+.panduan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panduan-header__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--clr-text-heading);
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.panduan-header__subtitle {
+  font-size: 13.5px;
+  color: var(--clr-text-label);
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+
+/* ── ALOKASI CARD ──────────────────────────────────────────── */
+.alokasi-card .card__header {
+  padding-bottom: 0;
+  margin-bottom: 12px;
+}
+
+.alokasi-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--clr-text-muted);
+  text-transform: uppercase;
+}
+
+.alokasi-bar {
+  display: flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 36px;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.alokasi-bar__segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.alokasi-bar__segment:hover { opacity: 0.85; }
+
+.alokasi-bar__segment--edukasi  { background: var(--clr-primary); }
+.alokasi-bar__segment--tindakan { background: var(--clr-accent-rose); }
+.alokasi-bar__segment--notif    { background: #9BA8BF; }
+
+.alokasi-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.alokasi-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--clr-text-label);
+}
+
+.alokasi-legend__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.alokasi-legend__dot--pengetahuan { background: var(--clr-primary); }
+.alokasi-legend__dot--aksi        { background: var(--clr-accent-rose); }
+.alokasi-legend__dot--pengingat   { background: #9BA8BF; }
+
+
+/* ── SECTION HEADING ───────────────────────────────────────── */
+.panduan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panduan-section__heading {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--clr-text-heading);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panduan-section__icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+
+/* ── ARTIKEL GRID ──────────────────────────────────────────── */
+.artikel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.artikel-card {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+
+.artikel-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+/* Featured card spans full width */
+.artikel-card--featured {
+  grid-column: 1 / -1;
+}
+
+.artikel-card__img-wrap {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  background: var(--clr-accent-sand);
+}
+
+.artikel-card__img-wrap--sm {
+  height: 140px;
+}
+
+.artikel-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.artikel-card:hover .artikel-card__img { transform: scale(1.03); }
+
+.artikel-card__img-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.artikel-card__img-placeholder--sage  { background: linear-gradient(135deg, #C5D4B2 0%, #A3B18A 100%); }
+.artikel-card__img-placeholder--rose  { background: linear-gradient(135deg, #EDD5C6 0%, #DDBEA9 100%); }
+.artikel-card__img-placeholder--sand  { background: linear-gradient(135deg, #F5ECD8 0%, #EDE0D4 100%); }
+
+.artikel-card__body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.artikel-card__trimester {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clr-primary-dark);
+}
+
+.artikel-card__title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--clr-text-heading);
+  line-height: 1.35;
+}
+
+.artikel-card__desc {
+  font-size: 12.5px;
+  color: var(--clr-text-label);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.artikel-card__btn {
+  margin-top: 10px;
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 6px 13px;
+}
+
+.panduan-viewall-wrap {
+  text-align: center;
+}
+
+
+/* ── AKSI NYATA LIST ───────────────────────────────────────── */
+.aksi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aksi-item {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: background 0.15s;
+}
+
+.aksi-item:hover { background: var(--clr-bg); }
+
+.aksi-item__icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.aksi-item__icon-wrap--primary { background: var(--clr-primary); }
+.aksi-item__icon-wrap--rose    { background: var(--clr-accent-rose); }
+.aksi-item__icon-wrap--sage    { background: #829168; }
+
+.aksi-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.aksi-item__title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--clr-text-heading);
+  margin-bottom: 2px;
+}
+
+.aksi-item__desc {
+  font-size: 12px;
+  color: var(--clr-text-muted);
+  line-height: 1.45;
+}
+
+/* Custom checkbox */
+.aksi-item__check {
+  flex-shrink: 0;
+  cursor: pointer;
+  display: block;
+  width: 22px;
+  height: 22px;
+  position: relative;
+}
+
+.aksi-item__checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.aksi-item__checkmark {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--clr-border);
+  border-radius: 6px;
+  background: #fff;
+  transition: all 0.15s;
+}
+
+.aksi-item__checkbox:checked ~ .aksi-item__checkmark {
+  background: var(--clr-primary);
+  border-color: var(--clr-primary);
+}
+
+.aksi-item__checkbox:checked ~ .aksi-item__checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px; top: 2px;
+  width: 6px; height: 10px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+
+/* ── PENGINGAT GRID ────────────────────────────────────────── */
+.pengingat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.pengingat-card {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: box-shadow 0.15s;
+}
+
+.pengingat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+
+.pengingat-card--primary {
+  border-color: var(--clr-primary);
+  background: var(--clr-primary-light);
+}
+
+.pengingat-card__icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pengingat-card__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--clr-text-heading);
+  margin-bottom: 2px;
+}
+
+.pengingat-card__desc {
+  font-size: 11.5px;
+  color: var(--clr-text-muted);
+}
+
+.pengingat-card__badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.pengingat-card__badge--soon {
+  background: var(--clr-med-bg);
+  color: var(--clr-med-text);
+}
+
+.pengingat-card__badge--done {
+  background: var(--clr-low-bg);
+  color: var(--clr-low-text);
+}
+
+
+/* ── RESPONSIVE (panduan) ──────────────────────────────────── */
+@media (max-width: 960px) {
+  .pengingat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  .artikel-grid { grid-template-columns: 1fr; }
+  .artikel-card--featured { grid-column: 1; }
+  .pengingat-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .panduan-header__title { font-size: 20px; }
+  .alokasi-bar__segment  { font-size: 11px; }
+}
