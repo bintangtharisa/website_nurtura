@@ -116,9 +116,6 @@ class ForgotPasswordController extends Controller
                     ->subject('Password Berhasil Diubah');
         });
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Password berhasil direset'
-        ]);
+        return redirect()->route('login')->with('success', 'Password berhasil direset. Silakan login dengan password baru Anda.');
     }
 }
