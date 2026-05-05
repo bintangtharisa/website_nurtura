@@ -5,222 +5,116 @@
 
 @section('content')
 
-<div class="page-content">
+{{-- Page Header: Jarak bawah dipersempit agar tidak terlalu turun --}}
+<div style="margin-bottom: 16px;">
+    <h1 style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading); margin: 0; line-height: 1.2;">
+        Panduan Dukungan Suami
+    </h1>
+    <p style="font-size: 12.5px; color: var(--clr-text-muted); margin-top: 4px; line-height: 1.4; max-width: 800px;">
+        Segala hal yang perlu Ayah ketahui untuk menjadi pendamping terbaik bagi Bunda di masa kehamilan. Mari berikan dukungan penuh kasih setiap harinya.
+    </p>
+</div>
 
-  {{-- ── PAGE HEADER ─────────────────────────────────────────── --}}
-  <div class="panduan-header">
+{{-- Container Utama (Full Width): Gap disesuaikan agar simetris --}}
+<div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+
+    {{-- Card: Alokasi Perhatian (Full ke Kanan & Menempel ke Atas) --}}
+    <div class="card" style="width: 100%; margin: 0;">
+        <div class="card__header" style="padding-bottom: 10px;">
+            <div class="card__title" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--clr-text-muted);">Alokasi Perhatian Ayah</div>
+        </div>
+        <div class="card__body" style="padding-top: 0;">
+            <div style="display: flex; height: 32px; border-radius: 8px; overflow: hidden; margin-bottom: 12px;">
+                <div style="width: 40%; background: #A3B18A; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;">Edukasi (40%)</div>
+                <div style="width: 40%; background: #DAD2BC; color: #847F67; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;">Tindakan (40%)</div>
+                <div style="width: 20%; background: #A5A9B4; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;">Notif (20%)</div>
+            </div>
+            <div style="display: flex; gap: 20px; font-size: 11px; color: var(--clr-text-muted);">
+                <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #A3B18A;"></span> Pengetahuan</span>
+                <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #DAD2BC;"></span> Aksi Nyata</span>
+                <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #A5A9B4;"></span> Pengingat Cerdas</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Section: Berita & Edukasi --}}
     <div>
-      <h1 class="panduan-header__title">Panduan Dukungan Suami</h1>
-      <p class="panduan-header__subtitle">
-        Segala hal yang perlu Ayah ketahui untuk menjadi pendamping terbaik bagi
-        Bunda di masa kehamilan. Mari berikan dukungan penuh kasih setiap harinya.
-      </p>
+        <h2 style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--clr-text-heading); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">🎓</span> Berita & Edukasi
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;">
+            {{-- Artikel 1 --}}
+            <div class="card" style="padding: 0; overflow: hidden; margin: 0;">
+                <div style="height: 140px; background: #EDE0D4;">
+                    <img src="{{ asset('images/panduan/hormon-bunda.jpg') }}" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div style="padding: 15px;">
+                    <span style="font-size: 10px; font-weight: 700; color: var(--clr-primary); text-transform: uppercase;">Trimester 2</span>
+                    <h3 style="font-size: 14px; font-weight: 600; margin: 6px 0; color: var(--clr-text-heading); line-height: 1.3;">Memahami Perubahan Hormon Bunda</h3>
+                    <p style="font-size: 12px; color: var(--clr-text-muted); line-height: 1.4; margin-bottom: 12px;">Cara menghadapi mood swing Bunda dengan sabar.</p>
+                    <a href="#" style="font-size: 12px; font-weight: 600; color: var(--clr-primary); text-decoration: none;">Baca Selengkapnya →</a>
+                </div>
+            </div>
+            {{-- Artikel 2 --}}
+            <div class="card" style="padding: 0; overflow: hidden; margin: 0;">
+                <div style="height: 140px; background: #E6F4EA;"></div>
+                <div style="padding: 15px;">
+                    <span style="font-size: 10px; font-weight: 700; color: #2E7D32; text-transform: uppercase;">Umum</span>
+                    <h3 style="font-size: 14px; font-weight: 600; margin: 6px 0; color: var(--clr-text-heading); line-height: 1.3;">Nutrisi Awal Kehamilan</h3>
+                    <p style="font-size: 12px; color: var(--clr-text-muted); line-height: 1.4; margin-bottom: 12px;">Panduan asupan folat dan zat besi untuk Bunda.</p>
+                    <a href="#" style="font-size: 12px; font-weight: 600; color: var(--clr-primary); text-decoration: none;">Baca Selengkapnya →</a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  {{-- ── ALOKASI PERHATIAN AYAH ──────────────────────────────── --}}
-  <div class="card alokasi-card">
-    <div class="card__header">
-      <div>
-        <p class="alokasi-card__label">ALOKASI PERHATIAN AYAH</p>
-      </div>
-    </div>
-    <div class="card__body">
-      {{-- Progress bar --}}
-      <div class="alokasi-bar">
-        <div class="alokasi-bar__segment alokasi-bar__segment--edukasi"  style="width:40%">Edukasi (40%)</div>
-        <div class="alokasi-bar__segment alokasi-bar__segment--tindakan" style="width:40%">Tindakan (40%)</div>
-        <div class="alokasi-bar__segment alokasi-bar__segment--notif"    style="width:20%">Notif (20%)</div>
-      </div>
-      {{-- Legend --}}
-      <div class="alokasi-legend">
-        <span class="alokasi-legend__item">
-          <span class="alokasi-legend__dot alokasi-legend__dot--pengetahuan"></span>
-          Pengetahuan
-        </span>
-        <span class="alokasi-legend__item">
-          <span class="alokasi-legend__dot alokasi-legend__dot--aksi"></span>
-          Aksi Nyata
-        </span>
-        <span class="alokasi-legend__item">
-          <span class="alokasi-legend__dot alokasi-legend__dot--pengingat"></span>
-          Pengingat Cerdas
-        </span>
-      </div>
-    </div>
-  </div>
+    {{-- Section: Aksi & Pengingat (Full Width & Simetris) --}}
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;">
+        
+        {{-- Card: Aksi Nyata --}}
+        <div class="card" style="margin: 0;">
+            <div class="card__header" style="margin-bottom: 12px;">
+                <div class="card__title" style="display: flex; align-items: center; gap: 8px;">
+                    <span>💪</span> Aksi Nyata Hari Ini
+                </div>
+            </div>
+            <div class="card__body" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--clr-border-light); border-radius: 8px;">
+                    <div style="width: 32px; height: 32px; border-radius: 6px; background: var(--clr-primary-light); display: flex; align-items: center; justify-content: center; font-size: 14px;">💊</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--clr-text-heading);">Minum Vitamin</div>
+                        <div style="font-size: 10.5px; color: var(--clr-text-muted);">Ingatkan Bunda pagi ini</div>
+                    </div>
+                    <input type="checkbox" style="width: 16px; height: 16px; accent-color: var(--clr-primary); cursor: pointer;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--clr-border-light); border-radius: 8px;">
+                    <div style="width: 32px; height: 32px; border-radius: 6px; background: #FDE2E4; display: flex; align-items: center; justify-content: center; font-size: 14px;">❤️</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--clr-text-heading);">Berikan Pelukan</div>
+                        <div style="font-size: 10.5px; color: var(--clr-text-muted);">Kurangi kecemasan Bunda</div>
+                    </div>
+                    <input type="checkbox" style="width: 16px; height: 16px; accent-color: var(--clr-primary); cursor: pointer;">
+                </div>
+            </div>
+        </div>
 
-  {{-- ── BERITA / ARTIKEL ────────────────────────────────────── --}}
-  <div class="panduan-section">
-    <h2 class="panduan-section__heading">
-      <span class="panduan-section__icon">🎓</span> Berita
-    </h2>
-
-    <div class="artikel-grid">
-
-      {{-- Card 1 – Featured (wide) --}}
-      <div class="artikel-card artikel-card--featured">
-        <div class="artikel-card__img-wrap">
-          <img
-            src="{{ asset('images/panduan/hormon-bunda.jpg') }}"
-            alt="Memahami Perubahan Hormon Bunda"
-            class="artikel-card__img"
-            onerror="this.style.background='#EDE0D4';this.removeAttribute('src')"
-          >
+        {{-- Card: Pengingat Cerdas --}}
+        <div class="card" style="margin: 0;">
+            <div class="card__header" style="margin-bottom: 12px;">
+                <div class="card__title" style="display: flex; align-items: center; gap: 8px;">
+                    <span>🔔</span> Pengingat Cerdas
+                </div>
+            </div>
+            <div class="card__body">
+                <div style="background: var(--clr-bg); padding: 12px; border-radius: 8px; border-left: 4px solid var(--clr-primary);">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--clr-text-heading);">Kontrol Kehamilan</div>
+                    <div style="font-size: 11px; color: var(--clr-text-muted); margin-top: 3px;">Kamis, 8 Mei 2026 • 09:00</div>
+                    <div style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: #E6F4EA; color: #2E7D32; border-radius: 10px; font-size: 10px; font-weight: 600;">3 Hari Lagi</div>
+                </div>
+            </div>
         </div>
-        <div class="artikel-card__body">
-          <span class="artikel-card__trimester">TRIMESTER 2</span>
-          <h3 class="artikel-card__title">Memahami Perubahan Hormon Bunda</h3>
-          <p class="artikel-card__desc">
-            Pelajari cara menghadapi mood swing dan perubahan fisik yang dialami istri.
-          </p>
-          <a href="#" class="btn btn--outline artikel-card__btn">Baca Selengkapnya</a>
-        </div>
-      </div>
-
-      {{-- Card 2 --}}
-      <div class="artikel-card">
-        <div class="artikel-card__img-wrap artikel-card__img-wrap--sm">
-          <div class="artikel-card__img-placeholder artikel-card__img-placeholder--sage"></div>
-        </div>
-        <div class="artikel-card__body">
-          <span class="artikel-card__trimester">TRIMESTER 1</span>
-          <h3 class="artikel-card__title">Nutrisi Penting di Awal Kehamilan</h3>
-          <p class="artikel-card__desc">
-            Panduan asupan folat, zat besi, dan vitamin yang dibutuhkan Bunda.
-          </p>
-          <a href="#" class="btn btn--outline artikel-card__btn">Baca Selengkapnya</a>
-        </div>
-      </div>
-
-      {{-- Card 3 --}}
-      <div class="artikel-card">
-        <div class="artikel-card__img-wrap artikel-card__img-wrap--sm">
-          <div class="artikel-card__img-placeholder artikel-card__img-placeholder--rose"></div>
-        </div>
-        <div class="artikel-card__body">
-          <span class="artikel-card__trimester">TRIMESTER 3</span>
-          <h3 class="artikel-card__title">Persiapan Persalinan Bersama</h3>
-          <p class="artikel-card__desc">
-            Tips praktis mendampingi Bunda menjelang hari persalinan tiba.
-          </p>
-          <a href="#" class="btn btn--outline artikel-card__btn">Baca Selengkapnya</a>
-        </div>
-      </div>
-
-      {{-- Card 4 --}}
-      <div class="artikel-card">
-        <div class="artikel-card__img-wrap artikel-card__img-wrap--sm">
-          <div class="artikel-card__img-placeholder artikel-card__img-placeholder--sand"></div>
-        </div>
-        <div class="artikel-card__body">
-          <span class="artikel-card__trimester">UMUM</span>
-          <h3 class="artikel-card__title">Komunikasi Efektif dengan Pasangan</h3>
-          <p class="artikel-card__desc">
-            Cara mengungkapkan kasih sayang dan empati kepada Bunda setiap hari.
-          </p>
-          <a href="#" class="btn btn--outline artikel-card__btn">Baca Selengkapnya</a>
-        </div>
-      </div>
-
-    </div>{{-- /.artikel-grid --}}
-
-    <div class="panduan-viewall-wrap">
-      <a href="#" class="btn-viewall">Lihat Semua Artikel</a>
-    </div>
-  </div>
-
-  {{-- ── AKSI NYATA ──────────────────────────────────────────── --}}
-  <div class="panduan-section">
-    <h2 class="panduan-section__heading">
-      <span class="panduan-section__icon">💪</span> Aksi Nyata Hari Ini
-    </h2>
-
-    <div class="aksi-list">
-
-      <div class="aksi-item">
-        <div class="aksi-item__icon-wrap aksi-item__icon-wrap--primary">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M12 7v5l3 3"/></svg>
-        </div>
-        <div class="aksi-item__info">
-          <p class="aksi-item__title">Ingatkan Bunda minum vitamin pagi ini</p>
-          <p class="aksi-item__desc">Konsistensi asupan vitamin sangat penting di trimester ini.</p>
-        </div>
-        <label class="aksi-item__check">
-          <input type="checkbox" class="aksi-item__checkbox">
-          <span class="aksi-item__checkmark"></span>
-        </label>
-      </div>
-
-      <div class="aksi-item">
-        <div class="aksi-item__icon-wrap aksi-item__icon-wrap--rose">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        </div>
-        <div class="aksi-item__info">
-          <p class="aksi-item__title">Berikan pelukan hangat untuk Bunda</p>
-          <p class="aksi-item__desc">Sentuhan kasih sayang membantu mengurangi kecemasan ibu hamil.</p>
-        </div>
-        <label class="aksi-item__check">
-          <input type="checkbox" class="aksi-item__checkbox">
-          <span class="aksi-item__checkmark"></span>
-        </label>
-      </div>
-
-      <div class="aksi-item">
-        <div class="aksi-item__icon-wrap aksi-item__icon-wrap--sage">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
-        <div class="aksi-item__info">
-          <p class="aksi-item__title">Siapkan camilan sehat untuk Bunda</p>
-          <p class="aksi-item__desc">Buah segar atau kacang-kacangan bisa jadi pilihan yang baik.</p>
-        </div>
-        <label class="aksi-item__check">
-          <input type="checkbox" class="aksi-item__checkbox">
-          <span class="aksi-item__checkmark"></span>
-        </label>
-      </div>
 
     </div>
-  </div>
-
-  {{-- ── PENGINGAT CERDAS ────────────────────────────────────── --}}
-  <div class="panduan-section">
-    <h2 class="panduan-section__heading">
-      <span class="panduan-section__icon">🔔</span> Pengingat Cerdas
-    </h2>
-
-    <div class="pengingat-grid">
-
-      <div class="pengingat-card pengingat-card--primary">
-        <div class="pengingat-card__icon">📅</div>
-        <div>
-          <p class="pengingat-card__title">Kontrol Kehamilan</p>
-          <p class="pengingat-card__desc">Kamis, 8 Mei 2025 • 09:00</p>
-        </div>
-        <span class="pengingat-card__badge pengingat-card__badge--soon">3 hari lagi</span>
-      </div>
-
-      <div class="pengingat-card">
-        <div class="pengingat-card__icon">💊</div>
-        <div>
-          <p class="pengingat-card__title">Vitamin Pagi Bunda</p>
-          <p class="pengingat-card__desc">Setiap hari • 07:30</p>
-        </div>
-        <span class="pengingat-card__badge pengingat-card__badge--done">Rutin</span>
-      </div>
-
-      <div class="pengingat-card">
-        <div class="pengingat-card__icon">🏃</div>
-        <div>
-          <p class="pengingat-card__title">Jalan Pagi Bersama</p>
-          <p class="pengingat-card__desc">Sabtu & Minggu • 06:30</p>
-        </div>
-        <span class="pengingat-card__badge pengingat-card__badge--done">Rutin</span>
-      </div>
-
-    </div>
-  </div>
-
-</div>{{-- /.page-content --}}
+</div>
 
 @endsection
