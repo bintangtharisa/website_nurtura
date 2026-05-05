@@ -144,17 +144,14 @@
 
             {{-- Bagian Kiri: Logo --}}
             <div class="topbar__left" style="display: flex; align-items: center; gap: 20px;">
-
-                {{-- Kotak Putih untuk Logo --}}
                 <div class="topbar__logo-box" style="background-color: #FFFFFF; padding: 10px 30px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: center; min-width: 220px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                     <img src="{{ asset('images/logo_nurtura.png') }}" alt="Logo Nurtura" style="max-height: 35px; width: auto;"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                     <span style="display:none; font-family: var(--font-display); font-size: 22px; font-weight: 600;">Nurtura</span>
                 </div>
-
             </div>
 
-            {{-- Bagian Kanan: Aksi --}}
+            {{-- Bagian Kanan: hanya notifikasi --}}
             <div class="topbar__actions" style="display: flex; align-items: center; gap: 12px;">
                 <div style="position: relative;">
                     <button class="topbar__icon-btn" aria-label="Notifikasi">
@@ -165,12 +162,6 @@
                     </button>
                     <span class="topbar__notif-dot"></span>
                 </div>
-                <button class="topbar__icon-btn" aria-label="Pengaturan">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.8"/>
-                    </svg>
-                </button>
             </div>
         </header>
 
