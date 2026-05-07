@@ -1,6 +1,23 @@
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
+const loginError = document.getElementById("loginError");
 const registerError = document.getElementById("registerError");
+
+function showLoginError(message) {
+    if (loginError) {
+        loginError.textContent = message;
+        loginError.style.display = "block";
+    } else {
+        alert(message);
+    }
+}
+
+function hideLoginError() {
+    if (loginError) {
+        loginError.textContent = "";
+        loginError.style.display = "none";
+    }
+}
 
 function showRegisterError(message) {
     if (registerError) {
@@ -18,12 +35,26 @@ function hideRegisterError() {
     }
 }
 
+function setButtonLoading(button, isLoading, loadingText, originalText) {
+    if (isLoading) {
+        button.disabled = true;
+        button.innerHTML = `<span class="button-spinner"></span> ${loadingText}`;
+    } else {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
 if (loginForm) {
+    const loginBtn = loginForm.querySelector('button[type="submit"]');
     loginForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
+
+        hideLoginError();
+        setButtonLoading(loginBtn, true, "Masuk...", "Masuk");
 
         try {
             const res = await fetch("/api/auth/login", {
@@ -47,18 +78,22 @@ if (loginForm) {
                 } else if (role === "father") {
                     window.location.href = "/father/dashboard";
                 } else {
-                    alert("Role tidak valid");
+                    showLoginError("Role tidak valid");
                 }
             } else {
-                alert(data.message);
+                showLoginError(data.message || "Email atau password salah.");
             }
         } catch (err) {
             console.error("fetch error:", err);
+            showLoginError("Terjadi kesalahan saat login.");
+        } finally {
+            setButtonLoading(loginBtn, false, "", "Masuk");
         }
     });
 }
 
 if (registerForm) {
+    const registerBtn = registerForm.querySelector('button[type="submit"]');
     registerForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
@@ -92,6 +127,8 @@ if (registerForm) {
             );
             return;
         }
+
+        setButtonLoading(registerBtn, true, "Mendaftar...", "Daftar");
 
         try {
             const payload = {
@@ -132,6 +169,9 @@ if (registerForm) {
             }
         } catch (err) {
             console.error("fetch error:", err);
+            showRegisterError("Terjadi kesalahan saat registrasi.");
+        } finally {
+            setButtonLoading(registerBtn, false, "", "Daftar");
         }
     });
 }
