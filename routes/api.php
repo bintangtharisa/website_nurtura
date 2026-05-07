@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\Admin\QuestionsController as QuestionsControllerAdmin;
 use App\Http\Controllers\Mother\QuestionsController as QuestionsControllerMother;
 use App\Http\Controllers\API\ForgotPasswordController;
@@ -47,5 +48,12 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
 
 });
 
-Route::middleware('auth:api')->get('/profile', [ProfileController::class, 'me']);
-Route::put('/change-password', [ProfileController::class, 'changePassword'])->middleware('auth:api');
+Route::middleware('auth:api')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'me']);
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    Route::put('/change-password', [ProfileController::class, 'changePassword']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+});

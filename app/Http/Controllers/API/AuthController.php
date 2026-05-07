@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Relationship;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Mail\UserNotificationMail;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -19,7 +22,7 @@ class AuthController extends Controller
         return new UTCDateTime(($time ?? now())->getTimestamp() * 1000);
     }
 
-    public function register(Request $request)
+    public function register(Request $request, NotificationService $notificationService)
     {
         $request->validate([
             'name' => ['required', 'string', 'min:4', 'max:50'],
@@ -94,6 +97,20 @@ class AuthController extends Controller
 
         $user = User::create($data);
 
+        $notificationService->createNotification(
+            $user->_id,
+            $role,
+            'Selamat Datang',
+            'Akun Anda berhasil dibuat',
+            'welcome'
+        );
+
+        Mail::to($user->email)->send(new UserNotificationMail(
+            'Selamat Datang di Nurtura',
+            'Selamat Datang di Nurtura!',
+            'Terima kasih telah mendaftar. Akun Nurtura Anda sudah aktif dan Anda dapat mulai menggunakan layanan kami untuk mendukung perjalanan keluarga Anda.'
+        ));
+
         if ($role === 'father') {
 
             Relationship::create([
@@ -108,7 +125,14 @@ class AuthController extends Controller
                 'created_at' => $this->bsonDate(),
                 'updated_at' => null,
             ]);
-        }
+            $notificationService->createNotification(
+                $mother->_id,
+                'mother',
+                'Koneksi Berhasil',
+                'Ayah berhasil terhubung dengan Anda.',
+                'connection',
+                ['father_id' => (string) $user->_id]
+            );        }
 
         return response()->json([
             'status' => true,

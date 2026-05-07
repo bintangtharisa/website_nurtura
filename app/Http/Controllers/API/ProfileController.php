@@ -5,15 +5,19 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use App\Services\NotificationService;
+use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends Controller
 {
 public function me()
 {
     return response()->json([
-        'message' => 'Berhasil mengambil profil',
+        'status' => true,
+        'message' => 'Success',
         'data' => [
             'id' => (string) auth()->user()->_id,
             'username' => auth()->user()->username,
@@ -23,7 +27,7 @@ public function me()
     ]);
 }
 
-   public function updateProfile(Request $request)
+   public function updateProfile(Request $request, NotificationService $notificationService)
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
@@ -43,17 +47,43 @@ public function me()
             }
 
 
-            $user->username = $request->input('username', $user->username);
-            $user->email    = $request->input('email', $user->email);
+            $changedEmail = $request->filled('email') && $request->email !== $user->email;
+            $changedUsername = $request->filled('username') && $request->username !== $user->username;
 
+            $user->username = $request->input('username', $user->username);
+            $user->email = $request->input('email', $user->email);
             $user->save();
 
+            if ($changedEmail || $changedUsername) {
+                $title = 'Profil Diperbarui';
+                $message = $changedEmail ? 'Email Anda berhasil diubah.' : 'Profil Anda berhasil diperbarui.';
+
+                $notificationService->createNotification(
+                    $user->_id,
+                    $user->role,
+                    $title,
+                    $message,
+                    'account'
+                );
+
+                Mail::to($user->email)->send(new UserNotificationMail(
+                    'Perubahan Akun Nurtura',
+                    'Profil Anda telah diperbarui',
+                    $changedEmail
+                        ? 'Email akun Anda telah berhasil diperbarui. Jika Anda tidak melakukan perubahan ini, segera hubungi tim support.'
+                        : 'Username Anda telah berhasil diperbarui. Jika Anda tidak melakukan perubahan ini, segera hubungi tim support.'
+                ));
+            }
+
             return response()->json([
-                'status'   => true,
-                'id'       => (string) $user->_id,
-                'username' => $user->username,
-                'email'    => $user->email,
-                'role'     => $user->role
+                'status' => true,
+                'message' => 'Success',
+                'data' => [
+                    'id' => (string) $user->_id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'role' => $user->role
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -61,7 +91,7 @@ public function me()
         }
     }
 
- public function changePassword(Request $request)
+ public function changePassword(Request $request, NotificationService $notificationService)
 {
     try {
         $user = JWTAuth::parseToken()->authenticate();
@@ -88,11 +118,26 @@ public function me()
         $user->password_hash = bcrypt($request->new_password);
         $user->save();
 
+        $notificationService->createNotification(
+            $user->_id,
+            $user->role,
+            'Password Berhasil Diubah',
+            'Password Anda berhasil diubah.',
+            'security'
+        );
+
+        Mail::to($user->email)->send(new UserNotificationMail(
+            'Password Berhasil Diubah',
+            'Password Akun Anda Telah Diubah',
+            'Password akun Nurtura Anda telah berhasil diganti. Jika Anda tidak melakukan perubahan ini, segera ganti password dan hubungi tim support.'
+        ));
+
         JWTAuth::invalidate(JWTAuth::getToken());
 
         return response()->json([
             'status' => true,
-            'message' => 'Password berhasil diubah, silakan login ulang'
+            'message' => 'Password berhasil diubah, silakan login ulang',
+            'data' => []
         ]);
 
     } catch (\Exception $e) {

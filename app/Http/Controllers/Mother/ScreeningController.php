@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mother;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\MLFeatureService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Http;
 use MongoDB\Client;
 use MongoDB\BSON\ObjectId;
@@ -18,7 +19,7 @@ class ScreeningController extends Controller
         return $client->selectDatabase(config('database.connections.mongodb.database'));
     }
 
-    public function screening(Request $request, MLFeatureService $mlService)
+    public function screening(Request $request, MLFeatureService $mlService, NotificationService $notificationService)
     {
         try {
             $answers = $request->all();
@@ -44,6 +45,15 @@ class ScreeningController extends Controller
             }
 
             $result = $response->json();
+
+            $notificationService->createNotification(
+                auth()->user()->_id,
+                auth()->user()->role,
+                'Screening Selesai',
+                'Screening Anda telah selesai.',
+                'screening',
+                ['result' => $result]
+            );
 
             return response()->json([
                 'status' => true,
