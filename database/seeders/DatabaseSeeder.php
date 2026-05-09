@@ -16,15 +16,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::create([
-            'username' => 'Admin User',
-            'email' => 'admin@nurtura.com',
-            'password_hash' => Hash::make('password'),
-            'role' => 'admin',
-            'created_at' => now(),
-            'updated_at' => now(),
+        $this->call([
+            UserSeeder::class,
+            ArticleSeeder::class,
         ]);
     }
 }

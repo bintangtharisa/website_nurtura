@@ -1,0 +1,354 @@
+{
+    "info": {
+        "_postman_id": "nurtura-articles-api",
+        "name": "Nurtura Articles API",
+        "description": "API Collection untuk Testing Artikel Backend Nurtura",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@nurtura.com\",\n  \"password\": \"password\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Article Categories",
+            "item": [
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/article-categories",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "article-categories"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Kesehatan Anak\",\n  \"slug\": \"kesehatan-anak\",\n  \"description\": \"Tips kesehatan untuk anak-anak\",\n  \"icon\": \"🏥\",\n  \"color\": \"#00D084\",\n  \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/article-categories",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "article-categories"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Category Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/article-categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "api",
+                                "article-categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Kesehatan Anak Update\",\n  \"slug\": \"kesehatan-anak-update\",\n  \"description\": \"Tips kesehatan untuk anak-anak yang lebih baik\",\n  \"icon\": \"🏥\",\n  \"color\": \"#00D084\",\n  \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/article-categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "api",
+                                "article-categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/article-categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "api",
+                                "article-categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Articles",
+            "item": [
+                {
+                    "name": "Get All Articles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/articles",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Articles by Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/articles?category_id={{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles"],
+                            "query": [
+                                {
+                                    "key": "category_id",
+                                    "value": "{{category_id}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Articles (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/articles?status=draft",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles"],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "draft"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Article",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Panduan Mendidik Anak yang Baik dan Benar\",\n  \"slug\": \"panduan-mendidik-anak-baik\",\n  \"description\": \"Panduan lengkap untuk mendidik anak dengan baik dan benar. Artikel ini membahas berbagai aspek pendidikan anak mulai dari usia dini hingga remaja termasuk strategi pembelajaran, pembentukan karakter, dan menangani tantangan perilaku.\",\n  \"thumbnail\": \"https://example.com/thumbnail.jpg\",\n  \"category_id\": \"{{category_id}}\",\n  \"author_id\": \"{{admin_id}}\",\n  \"tags\": [\"pendidikan\", \"anak\", \"parenting\", \"perkembangan\"],\n  \"status\": \"published\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/articles",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Article Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/articles/{{article_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles", "{{article_id}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Article",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Panduan Mendidik Anak yang Baik dan Benar - Updated\",\n  \"slug\": \"panduan-mendidik-anak-baik\",\n  \"description\": \"Panduan lengkap untuk mendidik anak dengan baik dan benar. Updated description...\",\n  \"thumbnail\": \"https://example.com/thumbnail-new.jpg\",\n  \"category_id\": \"{{category_id}}\",\n  \"author_id\": \"{{admin_id}}\",\n  \"tags\": [\"pendidikan\", \"anak\", \"parenting\"],\n  \"status\": \"published\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/articles/{{article_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles", "{{article_id}}"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Article",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/articles/{{article_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "articles", "{{article_id}}"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "admin_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "article_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

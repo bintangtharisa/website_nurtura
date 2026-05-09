@@ -6,10 +6,12 @@ use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\Admin\QuestionsController as QuestionsControllerAdmin;
+use App\Http\Controllers\Admin\ArticleCategoryController;
+use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Mother\QuestionsController as QuestionsControllerMother;
+use App\Http\Controllers\Mother\ScreeningController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\Father\DashboardController;
-use App\Http\Controllers\Mother\ScreeningController;
 
 
 Route::prefix('auth')->group(function () {
@@ -46,6 +48,28 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
     Route::post('/screening', [ScreeningController::class, 'screening']);
 
+});
+
+// Article Categories
+Route::prefix('article-categories')->group(function () {
+    Route::get('/', [ArticleCategoryController::class, 'index']);
+    Route::middleware(['auth:api', 'role:admin'])->group(function () {
+        Route::post('/', [ArticleCategoryController::class, 'store']);
+        Route::get('/{category}', [ArticleCategoryController::class, 'show']);
+        Route::put('/{category}', [ArticleCategoryController::class, 'update']);
+        Route::delete('/{category}', [ArticleCategoryController::class, 'destroy']);
+    });
+});
+
+// Articles
+Route::prefix('articles')->group(function () {
+    Route::get('/', [ArticleController::class, 'index']);
+    Route::get('/{article}', [ArticleController::class, 'show']);
+    Route::middleware(['auth:api', 'role:admin'])->group(function () {
+        Route::post('/', [ArticleController::class, 'store']);
+        Route::put('/{article}', [ArticleController::class, 'update']);
+        Route::delete('/{article}', [ArticleController::class, 'destroy']);
+    });
 });
 
 Route::middleware('auth:api')->group(function () {
