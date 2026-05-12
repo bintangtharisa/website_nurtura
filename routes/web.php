@@ -50,6 +50,7 @@ Route::get('/admin/manajemen', function () { return view('admin.manajemen'); })-
 Route::get('/admin/model', function () { return view('admin.model'); })->name('admin.model');
 Route::get('/admin/exportdata', function () { return view('admin.exportdata'); })->name('admin.exportdata');
 Route::get('/admin/profile', function () { return view('admin.profile'); })->name('admin.profile');
+Route::get('/admin/article-categories', function () { return view('admin.article-categories'); })->name('admin.article-categories');
 
 Route::get('/father/dashboard', function () { return view('father.dashboard'); })->name('father.dashboard');
 Route::get('/father/monitoring', function () { return view('father.monitoring'); })->name('father.monitoring');

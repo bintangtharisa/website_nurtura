@@ -131,13 +131,31 @@
           </a>
         </li>
 
+        {{-- MENU BARU: Article Builder --}}
+        <li class="sidebar__nav-item {{ request()->routeIs('admin.article-categories*') ? 'active' : '' }}">
+          <a href="{{ route('admin.article-categories') }}" class="sidebar__nav-link">
+            <span class="sidebar__nav-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+            </span>
+            <span class="sidebar__nav-label">
+              Article Builder
+              <small>Categories</small>
+            </span>
+          </a>
+        </li>
+
       </ul>
     </nav>
 
     {{-- Spacer --}}
     <div class="sidebar__spacer"></div>
 
-    {{-- Logout (Sudah diperbaiki sejajar dan berwarna merah) --}}
+    {{-- Logout --}}
     <div class="sidebar__logout">
       <nav class="sidebar__nav">
         <ul class="sidebar__nav-list">
@@ -184,8 +202,6 @@
     </div>
 
   </aside>
-  {{-- ===== END SIDEBAR ===== --}}
-
 
   {{-- ===== MAIN WRAPPER ===== --}}
   <div class="main-wrapper">
@@ -193,22 +209,15 @@
     {{-- Topbar --}}
     <header class="topbar" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
       
-      {{-- Bagian Kiri: Logo dan Judul --}}
       <div class="topbar__left" style="display: flex; align-items: center; gap: 20px;">
-        
-        {{-- Kotak Putih untuk Logo --}}
         <div class="topbar__logo-box" style="background-color: #FFFFFF; padding: 10px 30px; border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: center; min-width: 220px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
           <img src="{{ asset('images/logo_nurtura.png') }}" alt="Logo Nurtura" style="max-height: 35px; width: auto;" />
         </div>
-
-        {{-- Judul --}}
         <h1 class="topbar__page-title" style="margin: 0; background: transparent; padding: 0; box-shadow: none; display: flex; align-items: center; gap: 8px;">
           @yield('page_title', 'Dashboard')
         </h1>
-        
       </div>
 
-      {{-- Bagian Kanan: Aksi (Dibuat Dinamis) --}}
       <div class="topbar__actions" style="display: flex; align-items: center; gap: 12px;">
         @hasSection('topbar_actions')
           @yield('topbar_actions')
@@ -245,14 +254,12 @@
     </main>
 
   </div>
-  {{-- ===== END MAIN WRAPPER ===== --}}
 
   @stack('scripts')
   <script src="{{ asset('js/shared/notifications.js') }}"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -266,24 +273,15 @@ document.addEventListener("DOMContentLoaded", function () {
             "Accept": "application/json"
         }
     })
-    .then(res => {
-        return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
-
         if (!data || !data.data) {
             window.location.href = "/login";
             return;
         }
-
-        document.getElementById("userInitial").innerText =
-            data.data.username.charAt(0).toUpperCase();
-
-        document.getElementById("usernameText").innerText =
-            data.data.username;
-
-        document.getElementById("userIdText").innerText =
-            "ID: " + data.data.id;
+        document.getElementById("userInitial").innerText = data.data.username.charAt(0).toUpperCase();
+        document.getElementById("usernameText").innerText = data.data.username;
+        document.getElementById("userIdText").innerText = "ID: " + data.data.id;
     })
     .catch(() => {
         window.location.href = "/login";
