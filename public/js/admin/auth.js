@@ -1,21 +1,69 @@
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
+const loginError = document.getElementById("loginError");
+const registerError = document.getElementById("registerError");
+
+function showLoginError(message) {
+    if (loginError) {
+        loginError.textContent = message;
+        loginError.style.display = "block";
+    } else {
+        alert(message);
+    }
+}
+
+function hideLoginError() {
+    if (loginError) {
+        loginError.textContent = "";
+        loginError.style.display = "none";
+    }
+}
+
+function showRegisterError(message) {
+    if (registerError) {
+        registerError.textContent = message;
+        registerError.style.display = "block";
+    } else {
+        alert(message);
+    }
+}
+
+function hideRegisterError() {
+    if (registerError) {
+        registerError.textContent = "";
+        registerError.style.display = "none";
+    }
+}
+
+function setButtonLoading(button, isLoading, loadingText, originalText) {
+    if (isLoading) {
+        button.disabled = true;
+        button.innerHTML = `<span class="button-spinner"></span> ${loadingText}`;
+    } else {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
 
 if (loginForm) {
+    const loginBtn = loginForm.querySelector('button[type="submit"]');
     loginForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
 
+        hideLoginError();
+        setButtonLoading(loginBtn, true, "Masuk...", "Masuk");
+
         try {
             const res = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    Accept: "application/json",
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password }),
             });
 
             const data = await res.json();
@@ -23,52 +71,85 @@ if (loginForm) {
             if (res.ok) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
-                
+
                 const role = data.user.role;
-                if (role === "admin"){
+                if (role === "admin") {
                     window.location.href = "/admin/dashboard";
-                }else if(role === "father"){
+                } else if (role === "father") {
                     window.location.href = "/father/dashboard";
-                }else{
-                    alert("Role tidak valid");
+                } else {
+                    showLoginError("Role tidak valid");
                 }
             } else {
-                alert(data.message);
+                showLoginError(data.message || "Email atau password salah.");
             }
         } catch (err) {
             console.error("fetch error:", err);
+            showLoginError("Terjadi kesalahan saat login.");
+        } finally {
+            setButtonLoading(loginBtn, false, "", "Masuk");
         }
     });
 }
 
 if (registerForm) {
+    const registerBtn = registerForm.querySelector('button[type="submit"]');
     registerForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        const name     = document.getElementById("name").value;
-        const email    = document.getElementById("email").value;
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
-        const password_confirmation = document.getElementById("password_confirmation").value;
-        const role     = document.querySelector('input[name="role"]:checked')?.value;
+        const password_confirmation = document.getElementById(
+            "password_confirmation",
+        ).value;
+        const role = document.querySelector(
+            'input[name="role"]:checked',
+        )?.value;
+        const connection_code =
+            document.getElementById("connection_code")?.value || "";
+
+        hideRegisterError();
 
         if (!role) {
-            alert("Pilih role terlebih dahulu!");
+            showRegisterError("Pilih role terlebih dahulu!");
             return;
         }
 
         if (password !== password_confirmation) {
-            alert("Password dan konfirmasi password tidak sama!");
+            showRegisterError("Password dan konfirmasi password tidak sama!");
             return;
         }
 
+        if (role === "ayah" && connection_code.length !== 6) {
+            showRegisterError(
+                "Masukkan kode koneksi ibu 6 karakter (huruf atau angka).",
+            );
+            return;
+        }
+
+        setButtonLoading(registerBtn, true, "Mendaftar...", "Daftar");
+
         try {
+            const payload = {
+                name,
+                email,
+                password,
+                password_confirmation,
+                role,
+            };
+
+            if (role === "ayah") {
+                payload.connection_code = connection_code;
+            }
+
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    Accept: "application/json",
                 },
-                body: JSON.stringify({ name, email, password, password_confirmation, role })
+                body: JSON.stringify(payload),
             });
 
             const data = await res.json();
@@ -77,13 +158,20 @@ if (registerForm) {
                 window.location.href = "/login";
             } else {
                 if (data.errors) {
-                    alert(Object.values(data.errors).flat().join("\n"));
+                    showRegisterError(
+                        Object.values(data.errors).flat().join("\n"),
+                    );
                 } else {
-                    alert(data.message);
+                    showRegisterError(
+                        data.message || "Terjadi kesalahan saat registrasi.",
+                    );
                 }
             }
         } catch (err) {
             console.error("fetch error:", err);
+            showRegisterError("Terjadi kesalahan saat registrasi.");
+        } finally {
+            setButtonLoading(registerBtn, false, "", "Daftar");
         }
     });
 }

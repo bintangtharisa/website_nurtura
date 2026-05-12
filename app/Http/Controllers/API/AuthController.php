@@ -5,10 +5,14 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Relationship;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Mail\UserNotificationMail;
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
-use Illuminate\Support\Facades\Auth;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -18,115 +22,227 @@ class AuthController extends Controller
         return new UTCDateTime(($time ?? now())->getTimestamp() * 1000);
     }
 
-public function register(Request $request)
-{
-    $request->validate([
-        'name' => ['required', 'string', 'min:4', 'max:50'],
-        'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
-        'password' => ['required', 'string', 'min:6', 'confirmed'],
-        'role' => ['required', 'string', 'in:ayah,ibu,admin']
-    ]);
+    public function register(Request $request, NotificationService $notificationService)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:4', 'max:50'],
+            'email' => [
+                'required',
+                'string',
+                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+                'unique:users,email'
+            ],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'role' => ['required', 'string', 'in:ayah,ibu,admin'],
+            'connection_code' => [
+                'required_if:role,ayah',
+                'nullable',
+                'string',
+                'size:6'
+            ]
+        ]);
 
-    $role = match ($request->role) {
-        'ayah' => 'father',
-        'ibu'  => 'mother',
-        default => 'admin'
-    };
+        $role = match ($request->role) {
+            'ayah' => 'father',
+            'ibu'  => 'mother',
+            default => 'admin'
+        };
 
-    $data = [
-        'username'      => $request->name,
-        'email'         => $request->email,
-        'password_hash' => Hash::make($request->password),
-        'role'          => $role,
-        'created_at'    => $this->bsonDate(),
-        'updated_at'    => $this->bsonDate(),
-    ];
+        $mother = null;
 
-    if ($role === 'father') {
-        $data['connection_code'] = Str::random(6);
-        $data['code_used'] = false;
-        $data['code_expires_at'] = $this->bsonDate(now()->addDay());
+        if ($role === 'father') {
+
+            $mother = User::where([
+                'anonymous_id' => strtoupper($request->connection_code),
+                'role' => 'mother'
+            ])->first();
+
+            if (!$mother) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Kode koneksi ibu tidak ditemukan atau salah.',
+                    'errors' => [
+                        'connection_code' => ['Kode koneksi ibu tidak ditemukan atau salah.']
+                    ]
+                ], 422);
+            }
+
+            $existingRelationship = Relationship::where('mother_id', new ObjectId((string) $mother->_id))->exists();
+
+            if ($existingRelationship) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Kode koneksi ibu sudah digunakan oleh ayah lain.',
+                    'errors' => [
+                        'connection_code' => ['Kode koneksi ibu sudah digunakan oleh ayah lain.']
+                    ]
+                ], 422);
+            }
+        }
+
+        $data = [
+            'username' => $request->name,
+            'email' => $request->email,
+            'password_hash' => Hash::make($request->password),
+            'role' => $role,
+            'notification_enabled' => true,
+            'last_login' => null,
+            'created_at' => $this->bsonDate(),
+            'updated_at' => null,
+        ];
+
+        if ($role === 'mother') {
+            $data['anonymous_id'] = strtoupper(Str::random(6));
+        }
+
+        $user = User::create($data);
+
+        $notificationService->createNotification(
+            $user->_id,
+            $role,
+            'Selamat Datang',
+            'Akun Anda berhasil dibuat',
+            'welcome'
+        );
+
+        Mail::to($user->email)->send(new UserNotificationMail(
+            'Selamat Datang di Nurtura',
+            'Selamat Datang di Nurtura!',
+            'Terima kasih telah mendaftar. Akun Nurtura Anda sudah aktif dan Anda dapat mulai menggunakan layanan kami untuk mendukung perjalanan keluarga Anda.'
+        ));
+
+        if ($role === 'father') {
+
+            Relationship::create([
+                'mother_id' => new ObjectId((string) $mother->_id),
+                'father_id' => new ObjectId((string) $user->_id),
+                'status' => 'active',
+                'connected_at' => $this->bsonDate(),
+                'disconnected_at' => null,
+                'disconnected_by' => null,
+                'reconnect_count' => 0,
+                'last_access_by_father' => null,
+                'created_at' => $this->bsonDate(),
+                'updated_at' => null,
+            ]);
+            $notificationService->createNotification(
+                $mother->_id,
+                'mother',
+                'Koneksi Berhasil',
+                'Ayah berhasil terhubung dengan Anda.',
+                'connection',
+                ['father_id' => (string) $user->_id]
+            );        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Register berhasil',
+            'data' => [
+                'id' => (string) $user->_id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+                'connection_code' => $user->anonymous_id ?? null
+            ]
+        ], 201);
     }
 
-    if ($role === 'mother') {
-        $data['anonymous_id'] = Str::random(10);
-    }
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => [
+                'required',
+                'string',
+                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
+            ],
+            'password' => ['required', 'string']
+        ]);
 
-    User::create($data);
+        $user = User::where('email', $request->email)->first();
 
-    return response()->json([
-        'message' => 'Register berhasil',
-        'status' => true
-    ], 201);
-}
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Email tidak ditemukan'
+            ], 404);
+        }
 
-public function login(Request $request)
-{
-    $request->validate([
-        'email' => ['required', 'string', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'],
-        'password' => ['required', 'string']
-    ]);
+        if (!Hash::check($request->password, $user->password_hash)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Password salah'
+            ], 401);
+        }
 
-    $user = User::where('email', $request->email)->first();
+        $user->update([
+            'last_login' => $this->bsonDate(),
+            'updated_at' => $this->bsonDate()
+        ]);
 
-    if (!$user) {
-        return response()->json(['message' => 'Email tidak ditemukan'], 404);
-    }
+        try {
+            $token = JWTAuth::fromUser($user);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal membuat token'
+            ], 500);
+        }
 
-    if (!Hash::check($request->password, $user->password_hash)) {
-        return response()->json(['message' => 'Password salah'], 401);
-    }
+        $relationship = null;
 
-    \Log::info('before update', ['user_id' => (string) $user->_id]);
+        if ($user->role === 'father') {
+            $relationship = Relationship::where([
+                'father_id' => $user->_id,
+                'status' => 'active'
+            ])->first();
+        }
 
-    $updated = $user->update([
-        'last_login' => $this->bsonDate(),
-        'updated_at' => $this->bsonDate()
-    ]);
-
-    \Log::info('after update', [
-        'updated'    => $updated,
-        'last_login' => (string) $user->fresh()->last_login
-    ]);
-
-    try {
-        $token = JWTAuth::fromUser($user);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Gagal membuat token'], 500);
-    }
-
-    return response()->json([
-        'message'    => 'Login berhasil',
-        'token'      => $token,
-        'token_type' => 'bearer',
-        'expires_in' => config('jwt.ttl') * 60,
-        'user'       => [
-            'id'       => (string) $user->_id,
-            'username' => $user->username,
-            'email'    => $user->email,
-            'role'     => $user->role
-        ]
-    ]);
-}
-
-public function logout(Request $request)
-{
-    try {
-        $token = JWTAuth::getToken();
-
-        if ($token) {
-            JWTAuth::invalidate($token);
+        if ($user->role === 'mother') {
+            $relationship = Relationship::where([
+                'mother_id' => $user->_id,
+                'status' => 'active'
+            ])->first();
         }
 
         return response()->json([
-            'message' => 'Logout berhasil'
+            'status' => true,
+            'message' => 'Login berhasil',
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => config('jwt.ttl') * 60,
+            'user' => [
+                'id' => (string) $user->_id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+                'connection_code' => $user->anonymous_id ?? null,
+                'is_connected' => $relationship ? true : false
+            ]
         ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Gagal logout',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
+
+    public function logout(Request $request)
+    {
+        try {
+
+            $token = JWTAuth::getToken();
+
+            if ($token) {
+                JWTAuth::invalidate($token);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Logout berhasil'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal logout',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

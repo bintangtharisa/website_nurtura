@@ -13,7 +13,7 @@
 
         body {
             min-height: 100vh;
-            background-color: #f7f6f2; /* Warna background luar */
+            background-color: #f7f6f2;
             display: flex;
             justify-content: center; 
             align-items: center; 
@@ -25,7 +25,7 @@
         .card-container {
             background: #ffffff;
             width: 100%;
-            max-width: 480px; /* Sedikit lebih lebar dari login untuk mengakomodasi dua kolom role */
+            max-width: 480px;
             border-radius: 24px;
             padding: 40px 32px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.04);
@@ -86,7 +86,6 @@
         }
         .role-card input[type="radio"] { display: none; }
         
-        /* State aktif saat dipilih */
         .role-card.active {
             border-color: #9baf8b;
             background-color: #fdfaf7;
@@ -161,7 +160,7 @@
             border-radius: 10px;
             font-size: 13px;
             font-family: 'DM Sans', sans-serif;
-            background: #ebdcd0; /* Warna beige input */
+            background: #ebdcd0;
             color: #333;
             outline: none;
             transition: box-shadow 0.2s;
@@ -170,6 +169,37 @@
             box-shadow: 0 0 0 2px #9baf8b;
         }
         .input-wrap input::placeholder { color: #888; }
+
+        /* ── OTP FIELD (muncul saat role ayah) ── */
+        #otp-section {
+            display: none;
+        }
+        #otp-section.visible {
+            display: block;
+        }
+        .otp-container {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .otp-input {
+            width: 44px;
+            height: 52px;
+            border-radius: 10px;
+            border: 1.5px solid #eaeaea;
+            background: #ebdcd0;
+            font-size: 22px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            text-align: center;
+            color: #333;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .otp-input:focus {
+            border-color: #9baf8b;
+            box-shadow: 0 0 0 2px rgba(155,175,139,0.2);
+        }
 
         /* ── BUTTON ── */
         .btn-primary {
@@ -257,6 +287,24 @@
             text-align: left;
         }
         .alert-error { background: #f8d7da; color: #842029; }
+
+        /* ── BUTTON LOADING SPINNER ── */
+        .button-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,0.8);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -281,6 +329,8 @@
                 @endforeach
             </div>
         @endif
+
+        <div id="registerError" class="alert alert-error" style="display: none;"></div>
 
         <form id="registerForm">
 
@@ -360,6 +410,43 @@
                 </div>
             </div>
 
+            {{-- ── OTP SECTION (muncul saat role ayah) ── --}}
+            <div id="otp-section" class="{{ old('role', 'ayah') === 'ayah' ? 'visible' : '' }}">
+    <div class="divider">Kode Koneksi Ibu</div>
+
+    <div class="field-group" style="text-align: center;">
+
+        <label style="text-align: center;">
+            Masukkan 6 karakter kode (huruf atau angka) dari Akun Ibu
+        </label>
+
+        <div class="otp-container" id="otp-inputs">
+
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+            <input type="text" maxlength="1" inputmode="text" pattern="[A-Za-z0-9]*" class="otp-input" placeholder="*">
+
+        </div>
+
+        <input
+            type="hidden"
+            name="connection_code"
+            id="connection_code"
+            value="{{ old('connection_code') }}"
+        >
+
+        @error('connection_code')
+            <small style="color: red;">
+                {{ $message }}
+            </small>
+        @enderror
+
+    </div>
+</div>
+
             <button type="submit" class="btn-primary">Daftar</button>
         </form>
 
@@ -385,24 +472,60 @@
 
     </div>
 
-    {{-- Script untuk ganti warna border kartu role saat diklik --}}
     <script>
         const radios = document.querySelectorAll('input[type="radio"][name="role"]');
-        const cards = { 
-            ayah: document.getElementById('card_ayah'), 
-            admin: document.getElementById('card_admin') 
+        const cards = {
+            ayah: document.getElementById('card_ayah'),
+            admin: document.getElementById('card_admin')
         };
+        const otpSection = document.getElementById('otp-section');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const hiddenInput = document.getElementById('connection_code');
+
+        function updateConnectionCode() {
+            let code = '';
+            otpInputs.forEach(input => {
+                code += input.value;
+            });
+            hiddenInput.value = code;
+        }
+
+        function toggleOtp(role) {
+            if (role === 'ayah') {
+                otpSection.classList.add('visible');
+                otpInputs.forEach(i => i.setAttribute('required', true));
+            } else {
+                otpSection.classList.remove('visible');
+                otpInputs.forEach(i => { i.removeAttribute('required'); i.value = ''; });
+                updateConnectionCode();
+            }
+        }
 
         radios.forEach(radio => {
             radio.addEventListener('change', () => {
-                // Hapus class active dari semua card
                 Object.values(cards).forEach(c => c.classList.remove('active'));
-                // Tambahkan class active ke card yang dipilih
-                if(cards[radio.value]) {
-                    cards[radio.value].classList.add('active');
+                if (cards[radio.value]) cards[radio.value].classList.add('active');
+                toggleOtp(radio.value);
+            });
+        });
+
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 1);
+                updateConnectionCode();
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
                 }
             });
         });
+
+        toggleOtp(document.querySelector('input[name="role"]:checked')?.value);
     </script>
 <script src="{{ asset('js/admin/auth.js') }}"></script>
 </body>

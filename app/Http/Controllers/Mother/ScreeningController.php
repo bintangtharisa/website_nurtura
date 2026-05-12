@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Mother;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\MLFeatureService;
+use App\Services\NotificationService;
 use App\Services\ScreeningValidatorService;
+use Illuminate\Support\Facades\Http;
 use MongoDB\Client;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
@@ -18,12 +20,10 @@ class ScreeningController extends Controller
         return $client->selectDatabase(config('database.connections.mongodb.database'));
     }
 
-    public function screening(
-        Request $request,
-        MLFeatureService $mlService,
-        ScreeningValidatorService $validator
-    ) {
+    public function screening(Request $request, MLFeatureService $mlService, NotificationService $notificationService, ScreeningValidatorService $validator)
+    {
         try {
+            $user = $request->user();
             $answers = $request->all();
 
             if (empty($answers)) {
@@ -33,13 +33,10 @@ class ScreeningController extends Controller
                 ], 422);
             }
 
-            // ✅ VALIDASI ENUM & FIELD
             $validator->validate($answers);
 
-            // ✅ CONVERT KE ML
             $features = $mlService->transform($answers);
 
-            // ✅ HIT FLASK
             $response = \Http::post('http://127.0.0.1:5000/predict', [
                 'features' => $features
             ]);
@@ -50,9 +47,6 @@ class ScreeningController extends Controller
 
             $mlResult = $response->json();
 
-            // =========================
-            // ✅ INSERT HEALTH RECORD
-            // =========================
             $db = $this->db();
             $healthCollection = $db->selectCollection('health_records');
 
@@ -68,7 +62,7 @@ class ScreeningController extends Controller
             ];
 
             $healthData = [
-                'mother_id' => new ObjectId($request->user()->id),
+                'mother_id' => new ObjectId((string) $user->_id),
                 'created_at' => new UTCDateTime(),
             ];
 
@@ -81,15 +75,11 @@ class ScreeningController extends Controller
             $healthInsert = $healthCollection->insertOne($healthData);
             $healthId = $healthInsert->getInsertedId();
 
-            // =========================
-            // ✅ INSERT PREDICTION
-            // =========================
             $predictionCollection = $db->selectCollection('prediction_results');
 
-            $result = $mlResult['result']; // "Ya" / "Tidak"
+            $result = $mlResult['result']; 
             $confidence = $mlResult['confidence'] ?? null;
 
-            // normalize confidence (0–1)
             if ($confidence !== null && $confidence > 1) {
                 $confidence = $confidence / 100;
             }
@@ -99,12 +89,21 @@ class ScreeningController extends Controller
             }
 
             $predictionCollection->insertOne([
-                'mother_id' => new ObjectId($request->user()->id),
+                'mother_id' => new ObjectId((string) $user->_id),
                 'health_record_id' => $healthId,
                 'result' => $result,
                 'confidence' => $confidence,
                 'created_at' => new UTCDateTime()
             ]);
+
+            $notificationService->createNotification(
+                $user->_id,
+                $user->role,
+                'Screening Selesai',
+                'Screening Anda telah selesai.',
+                'screening',
+                ['result' => $result]
+            );
 
             return response()->json([
                 'status' => true,

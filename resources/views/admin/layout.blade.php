@@ -8,6 +8,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Lora:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}" />
+  <style>
+      .topbar__notif-badge {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: #EF4444;
+          color: #fff;
+          font-size: 11px;
+          font-weight: 700;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          padding: 0 6px;
+      }
+      .topbar__notif-panel {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 10px);
+          width: 320px;
+          max-height: 420px;
+          overflow: hidden;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          z-index: 50;
+      }
+      .topbar__notif-list {
+          max-height: 320px;
+          overflow-y: auto;
+      }
+      .topbar__notif-item:hover {
+          background: rgba(15, 23, 42, 0.04);
+      }
+      .topbar__notif-item-unread {
+          background: rgba(239, 68, 68, 0.06);
+      }
+  </style>
   @stack('styles')
 </head>
 <body>
@@ -172,12 +213,22 @@
         @hasSection('topbar_actions')
           @yield('topbar_actions')
         @else
-          <button class="topbar__icon-btn" aria-label="Notifikasi">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </button>
+          <div class="topbar__notif-wrapper" style="position: relative;">
+            <button id="notificationButton" type="button" class="topbar__icon-btn topbar__notif-button" aria-label="Notifikasi">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <span id="notificationCount" class="topbar__notif-badge">0</span>
+            </button>
+            <div id="notificationPanel" class="topbar__notif-panel" hidden>
+              <div style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(15, 23, 42, 0.08);">
+                <span style="font-weight: 700; color: #0F172A;">Notifikasi</span>
+                <button id="markAllReadBtn" type="button" style="background: transparent; border: none; color: #4B5563; font-size: 12px; cursor: pointer;">Tandai semua</button>
+              </div>
+              <div id="notificationList" class="topbar__notif-list"></div>
+            </div>
+          </div>
           <a href="{{ route('admin.profile') }}" class="topbar__icon-btn" aria-label="Pengaturan">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">  
             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
@@ -197,6 +248,7 @@
   {{-- ===== END MAIN WRAPPER ===== --}}
 
   @stack('scripts')
+  <script src="{{ asset('js/shared/notifications.js') }}"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

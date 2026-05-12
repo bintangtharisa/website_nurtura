@@ -145,6 +145,8 @@
             border: none;
             transition: all 0.2s;
             text-decoration: none;
+            text-transform: lowercase;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -154,6 +156,12 @@
 
         .btn-primary:hover {
             background-color: #8da47e;
+        }
+
+        .btn:disabled {
+            background-color: #c3ccb3;
+            cursor: not-allowed;
+            opacity: 0.85;
         }
 
         /* ── LINKS ── */
@@ -265,7 +273,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Kirim Link Reset</button>
+                <button id="submitButton" type="submit" class="btn btn-primary">Kirim Link Reset</button>
                 <div id="message"></div>
             </form>
 
@@ -281,33 +289,98 @@
 
     </div>
 <script>
-document.getElementById("forgotForm").addEventListener("submit", function(e) {
-    e.preventDefault();
+(function() {
+    const form = document.getElementById("forgotForm");
+    if (!form) {
+        return;
+    }
 
-    const email = document.getElementById("email").value;
+    const emailInput = document.getElementById("email");
+    const submitButton = document.getElementById("submitButton");
+    const messageBox = document.getElementById("message");
+    const originalButtonText = submitButton ? submitButton.textContent.trim() : "kirim link reset";
+    let timerId = null;
 
-    fetch("/api/password/forgot", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({ email: email })
-    })
-    .then(res => res.json())
-    .then(data => {
-        const msg = document.getElementById("message");
+    function showMessage(text, color) {
+        if (!messageBox) return;
+        messageBox.innerHTML = `<p style="color:${color}; margin:0;">${text}</p>`;
+    }
 
-        if (data.status) {
-            msg.innerHTML = "<p style='color:green'>" + data.message + "</p>";
-        } else {
-            msg.innerHTML = "<p style='color:red'>" + data.message + "</p>";
+    function validateEmail(value) {
+        const email = value.trim();
+        if (!email) {
+            return "Email wajib diisi.";
         }
-    })
-    .catch(err => {
-        console.error(err);
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!pattern.test(email)) {
+            return "Format email tidak valid.";
+        }
+        return "";
+    }
+
+    function startCooldown(seconds) {
+        if (!submitButton) return;
+        submitButton.disabled = true;
+        submitButton.textContent = `kirim ulang dalam ${seconds} detik`;
+
+        timerId = setInterval(() => {
+            seconds -= 1;
+            if (seconds <= 0) {
+                clearInterval(timerId);
+                timerId = null;
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                return;
+            }
+            submitButton.textContent = `kirim ulang dalam ${seconds} detik`;
+        }, 1000);
+    }
+
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        if (!submitButton || submitButton.disabled) {
+            return;
+        }
+
+        const emailValue = emailInput.value;
+        const validationError = validateEmail(emailValue);
+        if (validationError) {
+            showMessage(validationError, "red");
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "mengirim...";
+        showMessage("", "");
+
+        fetch("/api/password/forgot", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ email: emailValue })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                showMessage(data.message, "green");
+                startCooldown(60);
+            } else {
+                showMessage(data.message || "Terjadi kesalahan. Coba lagi.", "red");
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showMessage("Terjadi kesalahan jaringan. Silakan coba lagi.", "red");
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        });
     });
-});
+})();
 </script>
 </body>
 </html>

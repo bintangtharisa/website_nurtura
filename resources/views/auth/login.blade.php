@@ -239,15 +239,22 @@
             color: #0f5132;
         }
 
-        /* LOADING */
-        #loadingOverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(247,246,242,0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
+        /* ── BUTTON LOADING SPINNER ── */
+        .button-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,0.8);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .loading-box {
@@ -307,6 +314,8 @@
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
+
+        <div id="loginError" class="alert alert-error" style="display: none;"></div>
 
         <form id="loginForm">
 
@@ -371,26 +380,6 @@
         </div>
 
     </div>
-
-    <!-- LOADING -->
-    <div id="loadingOverlay">
-        <div class="loading-box">
-            <img src="{{ asset('images/logo_nurtura.png') }}" alt="Logo Nurtura">
-            <p>Memproses login...</p>
-            <div class="spinner"></div>
-        </div>
-    </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("loginForm");
-    const loading = document.getElementById("loadingOverlay");
-
-    form.addEventListener("submit", function () {
-        loading.style.display = "flex";
-    });
-});
-</script>
 
 <script src="{{ asset('js/admin/auth.js') }}"></script>
 </body>
