@@ -32,6 +32,7 @@ client = MongoClient(mongo_uri)
 db = client['DBnurtura']
 health_records = db['health_records']
 prediction_results = db['prediction_results']
+users_collection = db['users']
 
 
 @app.route('/predict', methods=['POST'])
@@ -53,6 +54,39 @@ def predict():
             return jsonify({
                 "status": "error",
                 "message": "answers atau mother_id tidak ditemukan"
+            }), 400
+        
+        # Validasi mother_id ada di collection users
+        try:
+            print(f"DEBUG: Checking mother_id: {mother_id}")
+            mother_obj_id = ObjectId(mother_id)
+            print(f"DEBUG: Created ObjectId: {mother_obj_id}")
+            
+            mother = users_collection.find_one({"_id": mother_obj_id})
+            print(f"DEBUG: Found mother: {mother is not None}")
+            
+            if not mother:
+                print(f"DEBUG: Mother not found, returning 404")
+                return jsonify({
+                    "status": "error",
+                    "message": "Mother tidak ditemukan dalam sistem"
+                }), 404
+            
+            # Validasi mother memiliki role 'mother'
+            mother_role = mother.get('role')
+            print(f"DEBUG: Mother role: {mother_role}")
+            if mother_role != 'mother':
+                return jsonify({
+                    "status": "error",
+                    "message": "User bukan mother"
+                }), 403
+        except Exception as e:
+            print(f"DEBUG: Exception during validation: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "status": "error",
+                "message": f"Invalid mother_id: {str(e)}"
             }), 400
 
         # Map answers to features array based on ml_index

@@ -24,6 +24,35 @@ class ScreeningController extends Controller
     {
         try {
             $user = $request->user();
+            
+            // Validasi user ter-autentikasi
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User tidak ter-autentikasi'
+                ], 401);
+            }
+            
+            // Validasi user ada di database
+            $db = $this->db();
+            $usersCollection = $db->selectCollection('users');
+            $userExists = $usersCollection->findOne(['_id' => new ObjectId((string) $user->_id)]);
+            
+            if (!$userExists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User tidak ditemukan dalam sistem'
+                ], 404);
+            }
+            
+            // Validasi user adalah mother
+            if ($userExists['role'] !== 'mother') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Hanya mother yang bisa melakukan screening'
+                ], 403);
+            }
+            
             $answers = $request->all();
 
             if (empty($answers)) {
@@ -33,72 +62,63 @@ class ScreeningController extends Controller
                 ], 422);
             }
 
+            if (!isset($answers['mother_id'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Field mother_id wajib diisi pada payload'
+                ], 422);
+            }
+
+            try {
+                $motherObjectId = new ObjectId($answers['mother_id']);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Format mother_id tidak valid'
+                ], 400);
+            }
+
+            // Mencegah user menggunakan mother_id milik orang lain (spoofing)
+            if ((string) $motherObjectId !== (string) $user->_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Anda tidak bisa melakukan skrining untuk akun lain. mother_id tidak cocok dengan token.'
+                ], 403);
+            }
+
+            $motherCheck = $usersCollection->findOne([
+                '_id' => $motherObjectId,
+                'role' => 'mother'
+            ]);
+
+            if (!$motherCheck) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'mother_id tidak ditemukan pada database atau bukan sebagai mother'
+                ], 404);
+            }
+
             $validator->validate($answers);
 
             $features = $mlService->transform($answers);
 
             $response = \Http::post('http://127.0.0.1:5000/predict', [
-                'features' => $features
+                'features' => $features,
+                'answers' => $answers,
+                'mother_id' => (string) $motherObjectId
             ]);
 
             if (!$response->ok()) {
-                throw new \Exception('ML tidak merespon');
+                throw new \Exception('ML Error (' . $response->status() . '): ' . $response->body());
             }
 
             $mlResult = $response->json();
 
-            $db = $this->db();
-            $healthCollection = $db->selectCollection('health_records');
-
-            $allowedFields = [
-                'perasaan_sedih_atau_mudah_menangis',
-                'mudah_marah_terhadap_bayi_dan_pasangan',
-                'kesulitan_tidur_di_malam_hari',
-                'kesulitan_konsentrasi_atau_mengambil_keputusan',
-                'makan_berlebihan_atau_kehilangan_nafsu_makan',
-                'perasaan_bersalah',
-                'kesulitan_membangun_ikatan_dengan_bayi',
-                'merasa_cemas'
-            ];
-
-            $healthData = [
-                'mother_id' => new ObjectId((string) $user->_id),
-                'created_at' => new UTCDateTime(),
-            ];
-
-            foreach ($allowedFields as $field) {
-                if (isset($answers[$field])) {
-                    $healthData[$field] = $answers[$field];
-                }
-            }
-
-            $healthInsert = $healthCollection->insertOne($healthData);
-            $healthId = $healthInsert->getInsertedId();
-
-            $predictionCollection = $db->selectCollection('prediction_results');
-
-            $result = $mlResult['result']; 
-            $confidence = $mlResult['confidence'] ?? null;
-
-            if ($confidence !== null && $confidence > 1) {
-                $confidence = $confidence / 100;
-            }
-
-            if (!in_array($result, ['Ya', 'Tidak'])) {
-                throw new \Exception("Format result ML tidak valid");
-            }
-
-            $predictionCollection->insertOne([
-                'mother_id' => new ObjectId((string) $user->_id),
-                'health_record_id' => $healthId,
-                'result' => $result,
-                'confidence' => $confidence,
-                'created_at' => new UTCDateTime()
-            ]);
+            $result = $mlResult['result'];
 
             $notificationService->createNotification(
-                $user->_id,
-                $user->role,
+                (string) $motherObjectId,
+                'mother',
                 'Screening Selesai',
                 'Screening Anda telah selesai.',
                 'screening',
