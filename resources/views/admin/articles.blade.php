@@ -297,25 +297,45 @@
     let currentStatusFilter = 'all';
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadCategories();
-        loadArticles();
+    loadCategories();
+    loadArticles();
 
-        document.getElementById('articleTitle').addEventListener('input', function(e) {
-            const slug = e.target.value.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
-            document.getElementById('articleSlug').value = slug;
-            updatePreview();
-        });
+    // Listener untuk slug otomatis
+    document.getElementById('articleTitle').addEventListener('input', function(e) {
+        const slug = e.target.value.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
+        document.getElementById('articleSlug').value = slug;
+        updatePreview();
     });
 
+    // LOGIKA BARU: Jika toggle di-klik, langsung jalankan saveArticle
+    document.getElementById('is_published').addEventListener('change', function() {
+        // Hanya auto-save jika minimal Judul sudah diisi
+        if (document.getElementById('articleTitle').value.trim() !== "") {
+            saveArticle();
+        }
+    });
+});
+
     async function loadCategories() {
+    try {
         const res = await fetch(CAT_URL, { headers: { 'Authorization': `Bearer ${token}` }});
         const cats = await res.json();
         const select = document.getElementById('category_id');
+        
         select.innerHTML = '<option value="">Select Category</option>';
+        
         cats.forEach(c => {
-            select.innerHTML += `<option value="${c._id}">${c.name}</option>`;
+            // PERBAIKAN FATAL: Pakai c._id || c.id supaya pasti dapet 24 karakternya
+            const catId = c._id || c.id; 
+            select.innerHTML += `<option value="${catId}">${c.name}</option>`; 
         });
+        
+        return true; 
+    } catch (e) {
+        console.error("Gagal load kategori:", e);
+        return false;
     }
+}
 
     async function loadArticles() {
     const grid = document.getElementById('articlesGrid');
@@ -363,56 +383,72 @@
     loadArticles(); // Jalankan fungsi load yang baru
 }
 
-    function openEditor(mode, id = null) {
+    async function openEditor(mode, id = null) {
     console.log("Opening editor mode:", mode, "ID:", id);
 
     const overlay = document.getElementById('editorOverlay');
     const form = document.getElementById('articleForm');
+    const btnDelete = document.getElementById('btnDelete');
+    const saveStatus = document.getElementById('saveStatus');
     
-    // 1. Tampilkan Overlay
     overlay.style.display = 'flex';
     
-    // 2. BERSIHKAN FORM TOTAL (Penting agar New Article tidak bawa data lama)
+    // 1. BERSIHKAN SEMUA (Reset Form & Preview)
     form.reset(); 
     document.getElementById('articleId').value = '';
+    document.getElementById('inputUrlField').value = '';
+    document.getElementById('thumbnailUrl').value = '';
+    document.getElementById('thumbPreviewArea').innerHTML = `<p>No thumbnail selected</p>`;
     
-    // 3. BERSIHKAN PREVIEW (Agar tidak muncul "Testaa" saat klik New)
+    // Reset Tampilan Preview di Sisi Kanan
     document.getElementById('prevTitle').innerText = 'Article Title Preview';
-    document.getElementById('prevDescription').innerText = 'Brief summary will appear here as you type...';
-    document.getElementById('prevCategory').innerText = 'SELECT CATEGORY';
+    document.getElementById('prevDesc').innerText = 'Brief summary will appear here as you type...';
+    document.getElementById('prevCatName').innerText = 'CATEGORY';
     document.getElementById('prevImg').src = 'https://placehold.co/600x400?text=No+Image';
 
-    // 4. JIKA MODE EDIT, BARU ISI DATA
-    if (mode === 'edit' && id && id !== 'null') {
-        document.getElementById('editorTitle').innerText = 'Edit Article'; // Ubah Judul Modal
+    // WAJIB: Tunggu kategori selesai dimuat dulu sebelum lanjut
+    await loadCategories();
 
-        fetch(`${API_URL}/${id}`, { 
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(a => {
+    if (mode === 'edit' && id && id !== 'null') {
+        saveStatus.innerText = 'Edit Article';
+        btnDelete.style.display = 'block';
+
+        try {
+            const res = await fetch(`${API_URL}/${id}`, { 
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+            const a = await res.json();
+            
             console.log("Data diterima untuk Edit:", a);
             
-            // Isi Field Form
+            // 2. ISI FIELD FORM (Sekarang aman karena kategori sudah siap)
             document.getElementById('articleId').value = a._id || a.id;
             document.getElementById('articleTitle').value = a.title || '';
             document.getElementById('articleSlug').value = a.slug || '';
             document.getElementById('articleDescription').value = a.description || '';
+            
+            // Set kategori (pasti muncul karena sudah di-await tadi)
             document.getElementById('category_id').value = a.category_id || '';
+            
             document.getElementById('thumbnailUrl').value = a.thumbnail || '';
+            document.getElementById('inputUrlField').value = a.thumbnail || '';
             document.getElementById('is_published').checked = (a.status === 'published');
             
-            // Jalankan fungsi update preview agar tampilan kanan terisi data artikel tersebut
+            if(a.thumbnail) {
+                document.getElementById('thumbPreviewArea').innerHTML = `<img src="${a.thumbnail}">`;
+            }
+
+            // Update preview kanan
             updatePreview(); 
-        })
-        .catch(err => console.error("Gagal load data edit:", err));
+        } catch (err) {
+            console.error("Gagal load data edit:", err);
+        }
     } else {
-        // JIKA MODE CREATE
-        document.getElementById('editorTitle').innerText = 'Create New Article';
-        console.log("Form cleared for New Article");
+        saveStatus.innerText = 'New Article';
+        btnDelete.style.display = 'none';
     }
 }
 
@@ -449,55 +485,84 @@
     }
 
     function updatePreview() {
-        const title = document.getElementById('articleTitle').value;
-        const desc = document.getElementById('articleDescription').value;
-        const cat = document.getElementById('category_id');
-        const catName = cat.options[cat.selectedIndex]?.text || "CATEGORY";
-        const thumb = document.getElementById('thumbnailUrl').value;
+    const title = document.getElementById('articleTitle').value;
+    const desc = document.getElementById('articleDescription').value;
+    const cat = document.getElementById('category_id');
+    const catName = cat.options[cat.selectedIndex]?.text || "CATEGORY";
+    const thumb = document.getElementById('thumbnailUrl').value;
 
-        document.getElementById('prevTitle').innerText = title || "Article Title Preview";
-        document.getElementById('prevDesc').innerText = desc || "Brief summary will appear here as you type...";
-        document.getElementById('prevCatName').innerText = catName;
-        
-        if(thumb) document.getElementById('prevImg').src = thumb;
-        else document.getElementById('prevImg').src = "https://via.placeholder.com/600x350?text=No+Image";
-    }
+    document.getElementById('prevTitle').innerText = title || "Article Title Preview";
+    document.getElementById('prevDesc').innerText = desc || "Brief summary will appear here as you type...";
+    document.getElementById('prevCatName').innerText = catName;
+    
+    const imgElement = document.getElementById('prevImg');
+    // GANTI via.placeholder.com jadi placehold.co biar nggak ERR_CONNECTION_CLOSED
+    const fallbackImg = "https://placehold.co/600x350?text=No+Image";
+
+    imgElement.src = thumb || fallbackImg;
+
+    imgElement.onerror = function() {
+        this.src = fallbackImg;
+    };
+}
 
     async function saveArticle() {
-        const id = document.getElementById('articleId').value;
-        const tagsInput = document.getElementById('articleTags').value;
-        
-        const payload = {
-            title: document.getElementById('articleTitle').value,
-            slug: document.getElementById('articleSlug').value,
-            description: document.getElementById('articleDescription').value,
-            category_id: document.getElementById('category_id').value,
-            thumbnail: document.getElementById('thumbnailUrl').value || 'https://via.placeholder.com/800x400',
-            status: document.getElementById('is_published').checked ? 'published' : 'draft',
-            tags: tagsInput ? tagsInput.split(',').map(t => t.trim()) : []
-        };
+    const id = document.getElementById('articleId').value;
+    const categoryId = document.getElementById('category_id').value;
 
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `${API_URL}/${id}` : API_URL;
+    if (!categoryId) {
+        alert("Pilih kategori dulu ya!");
+        return;
+    }
+    
+    // Ambil semua data dari form
+    const payload = {
+        title: document.getElementById('articleTitle').value,
+        slug: document.getElementById('articleSlug').value,
+        description: document.getElementById('articleDescription').value,
+        category_id: categoryId,
+        thumbnail: document.getElementById('thumbnailUrl').value || 'https://placehold.co/800x400?text=No+Image',
+        // Logika status: Jika checkbox ON = published, jika OFF = draft
+        status: document.getElementById('is_published').checked ? 'published' : 'draft',
+        tags: document.getElementById('articleTags').value ? 
+               document.getElementById('articleTags').value.split(',').map(t => t.trim()) : []
+    };
 
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `${API_URL}/${id}` : API_URL;
+
+    try {
         const res = await fetch(url, {
             method: method,
             headers: { 
                 'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${token}`, // PASTIKAN TOKEN MASIH VALID
                 'Accept': 'application/json' 
             },
             body: JSON.stringify(payload)
         });
 
         const result = await res.json();
+
         if (res.ok) {
+            console.log("Berhasil simpan dengan status:", payload.status);
+            // Optional: jangan pakai alert kalau mau simpan otomatis agar tidak mengganggu user
+            // alert("Artikel berhasil disimpan!"); 
             closeEditor();
             loadArticles();
         } else {
-            alert(result.message || "Gagal menyimpan artikel.");
+            if (res.status === 401) {
+                alert("Sesi login habis, silakan login ulang!");
+                window.location.href = '/login'; // Arahkan ke login jika unauthenticated
+            } else {
+                const errorMessages = result.errors ? Object.values(result.errors).flat().join('\n') : result.message;
+                alert("Gagal simpan:\n" + errorMessages);
+            }
         }
+    } catch (error) {
+        console.error("Fetch Error:", error);
     }
+}
 
     async function deleteArticle() {
         const id = document.getElementById('articleId').value;
