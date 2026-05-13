@@ -14,15 +14,18 @@ class QuestionsSeeder extends Seeder
 
         $now = new \MongoDB\BSON\UTCDateTime();
 
+        // Delete existing questions to avoid duplicates and validation issues
+        $collection->deleteMany([]);
+
         $questions = [
             [
                 "field_key" => "perasaan_sedih_atau_mudah_menangis",
                 "question_text" => "Apakah Anda merasa sedih atau mudah menangis?",
-                "options" => ["Ya", "Tidak", "Kadang-kadang"],
+                "options" => ["Yes", "Not at all", "Sometimes"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Kadang-kadang" => 1,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Sometimes" => 2,
+                    "Not at all" => 0
                 ],
                 "category" => "emosional",
                 "ml_index" => 0,
@@ -34,11 +37,11 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "mudah_marah_terhadap_bayi_dan_pasangan",
                 "question_text" => "Apakah Anda mudah marah terhadap bayi atau pasangan?",
-                "options" => ["Ya", "Tidak", "Kadang-kadang"],
+                "options" => ["Yes", "Not at all", "Sometimes"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Kadang-kadang" => 1,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Sometimes" => 2,
+                    "Not at all" => 0
                 ],
                 "category" => "emosional",
                 "ml_index" => 1,
@@ -50,11 +53,11 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "kesulitan_tidur_di_malam_hari",
                 "question_text" => "Apakah Anda mengalami kesulitan tidur di malam hari?",
-                "options" => ["Ya", "Tidak", "Sering"],
+                "options" => ["Yes", "Not at all", "Often"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Sering" => 2,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Often" => 3,
+                    "Not at all" => 0
                 ],
                 "category" => "tidur",
                 "ml_index" => 2,
@@ -66,11 +69,11 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "kesulitan_konsentrasi_atau_mengambil_keputusan",
                 "question_text" => "Apakah Anda kesulitan berkonsentrasi atau mengambil keputusan?",
-                "options" => ["Ya", "Tidak", "Sering"],
+                "options" => ["Yes", "Not at all", "Often"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Sering" => 2,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Often" => 3,
+                    "Not at all" => 0
                 ],
                 "category" => "kognitif",
                 "ml_index" => 3,
@@ -82,11 +85,11 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "makan_berlebihan_atau_kehilangan_nafsu_makan",
                 "question_text" => "Apakah Anda makan berlebihan atau kehilangan nafsu makan?",
-                "options" => ["Ya", "Tidak", "Tidak sama sekali"],
+                "options" => ["Yes", "Not at all", "Sometimes"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Tidak" => 1,
-                    "Tidak sama sekali" => 0
+                    "Yes" => 4,
+                    "Sometimes" => 2,
+                    "Not at all" => 0
                 ],
                 "category" => "fisik",
                 "ml_index" => 4,
@@ -98,11 +101,11 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "perasaan_bersalah",
                 "question_text" => "Apakah Anda merasa bersalah?",
-                "options" => ["Ya", "Tidak", "Mungkin"],
+                "options" => ["Yes", "Not at all", "Maybe"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Mungkin" => 1,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Maybe" => 1,
+                    "Not at all" => 0
                 ],
                 "category" => "emosional",
                 "ml_index" => 6,
@@ -112,13 +115,29 @@ class QuestionsSeeder extends Seeder
                 "updated_at" => null
             ],
             [
+                "field_key" => "merasa_cemas",
+                "question_text" => "Apakah Anda merasa cemas?",
+                "options" => ["Yes", "Not at all", "Sometimes"],
+                "value_map" => [
+                    "Yes" => 4,
+                    "Sometimes" => 2,
+                    "Not at all" => 0
+                ],
+                "category" => "emosional",
+                "ml_index" => 5,
+                "order" => 6,
+                "version" => 1,
+                "created_at" => $now,
+                "updated_at" => null
+            ],
+            [
                 "field_key" => "kesulitan_membangun_ikatan_dengan_bayi",
                 "question_text" => "Apakah Anda mengalami kesulitan membangun ikatan dengan bayi?",
-                "options" => ["Ya", "Tidak", "Kadang-kadang"],
+                "options" => ["Yes", "Not at all", "Sometimes"],
                 "value_map" => [
-                    "Ya" => 2,
-                    "Kadang-kadang" => 1,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "Sometimes" => 2,
+                    "Not at all" => 0
                 ],
                 "category" => "ikatan",
                 "ml_index" => 7,
@@ -130,10 +149,10 @@ class QuestionsSeeder extends Seeder
             [
                 "field_key" => "percobaan_bunuh_diri",
                 "question_text" => "Apakah Anda pernah memiliki pikiran atau melakukan percobaan bunuh diri?",
-                "options" => ["Ya", "Tidak"],
+                "options" => ["Yes", "No"],
                 "value_map" => [
-                    "Ya" => 3,
-                    "Tidak" => 0
+                    "Yes" => 4,
+                    "No" => 0
                 ],
                 "category" => "kritis",
                 "ml_index" => 8,

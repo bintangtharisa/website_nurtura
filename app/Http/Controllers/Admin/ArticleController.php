@@ -10,18 +10,55 @@ use MongoDB\BSON\ObjectId;
 
 class ArticleController extends Controller
 {
+    private function getApiUser()
+    {
+        return auth('api')->user();
+    }
+
     public function index(Request $request)
     {
+        $user = $this->getApiUser();
         $query = Article::with(['category', 'author']);
 
-        if (!auth()->check() || !auth()->user()->hasRole('admin')) {
+        if (!$user || $user->role !== 'admin') {
             $query->where('status', 'published');
-        } elseif ($request->has('status')) {
+        } elseif ($request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
         if ($request->has('category_id')) {
             $query->where('category_id', new ObjectId($request->category_id));
+        }
+
+        return response()->json($query->get());
+    }
+
+    public function all(Request $request)
+    {
+        $user = $this->getApiUser();
+        $query = Article::with(['category', 'author']);
+
+        if (!$user || $user->role !== 'admin') {
+            $query->where('status', 'published');
+        }
+
+        if ($request->has('category_id')) {
+            $query->where('category_id', new ObjectId($request->category_id));
+        }
+
+        return response()->json($query->get());
+    }
+
+    public function category(ArticleCategory $category, Request $request)
+    {
+        $user = $this->getApiUser();
+        $query = Article::with(['category', 'author'])
+            ->where('category_id', $category->_id);
+
+        if (!$user || $user->role !== 'admin') {
+            $query->where('status', 'published');
+        } elseif ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
         return response()->json($query->get());
@@ -97,7 +134,8 @@ class ArticleController extends Controller
 
     public function show(Article $article)
     {
-        if ((!auth()->check() || !auth()->user()->hasRole('admin')) && $article->status !== 'published') {
+        $user = $this->getApiUser();
+        if ((!$user || $user->role !== 'admin') && $article->status !== 'published') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

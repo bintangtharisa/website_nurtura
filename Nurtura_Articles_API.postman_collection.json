@@ -322,12 +322,57 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "ML API",
+            "item": [
+                {
+                    "name": "Predict Screening",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"answers\": {\n    \"perasaan_sedih_atau_mudah_menangis\": \"Yes\",\n    \"mudah_marah_terhadap_bayi_dan_pasangan\": \"Not at all\",\n    \"kesulitan_tidur_di_malam_hari\": \"Often\",\n    \"kesulitan_konsentrasi_atau_mengambil_keputusan\": \"Sometimes\",\n    \"makan_berlebihan_atau_kehilangan_nafsu_makan\": \"Not at all\",\n    \"merasa_cemas\": \"Yes\",\n    \"perasaan_bersalah\": \"Maybe\",\n    \"kesulitan_membangun_ikatan_dengan_bayi\": \"Not at all\",\n    \"percobaan_bunuh_diri\": \"No\"\n  },\n  \"mother_id\": \"507f1f77bcf86cd799439011\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{ml_base_url}}/predict",
+                            "host": ["{{ml_base_url}}"],
+                            "path": ["predict"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Health Check ML API",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{ml_base_url}}/health",
+                            "host": ["{{ml_base_url}}"],
+                            "path": ["health"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "variable": [
         {
             "key": "base_url",
             "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "ml_base_url",
+            "value": "http://127.0.0.1:8080",
             "type": "string"
         },
         {
