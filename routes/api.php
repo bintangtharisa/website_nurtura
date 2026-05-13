@@ -64,6 +64,8 @@ Route::prefix('article-categories')->group(function () {
 // Articles
 Route::prefix('articles')->group(function () {
     Route::get('/', [ArticleController::class, 'index']);
+    Route::get('/all', [ArticleController::class, 'all']);
+    Route::get('/category/{category}', [ArticleController::class, 'category']);
     Route::get('/{article}', [ArticleController::class, 'show']);
     Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('/', [ArticleController::class, 'store']);
