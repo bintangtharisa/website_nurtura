@@ -34,14 +34,8 @@
             <div style="display: flex; gap: 24px; align-items: center;">
                 {{-- Avatar --}}
                 <div style="position: relative; flex-shrink: 0;">
-                    <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--clr-bg); border: 2.5px solid var(--clr-border-light); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        @if(Auth::user()->photo ?? false)
-                            <img src="{{ asset('storage/' . Auth::user()->photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        @else
-                            <span style="font-size: 28px; font-weight: 600; color: var(--clr-primary);">
-                                {{ strtoupper(substr(Auth::user()->name ?? 'B', 0, 1)) }}
-                            </span>
-                        @endif
+                    <div id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: var(--clr-bg); border: 2.5px solid var(--clr-border-light); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <span id="avatarInitial" style="font-size: 28px; font-weight: 600; color: var(--clr-primary);">B</span>
                     </div>
                     <button type="button" style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--clr-primary); color: white; border: 2px solid white; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -51,22 +45,30 @@
                 </div>
 
                 {{-- Form Fields --}}
-                <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <form id="fatherProfileForm" style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
-                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Nama Lengkap</label>
-                        <input type="text" value="{{ Auth::user()->name ?? 'Budi Santoso' }}" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); outline: none;">
+                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Username</label>
+                        <input id="profileUsername" name="username" type="text" placeholder="Masukkan username" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); outline: none;">
                     </div>
                     <div>
-                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Alamat Email</label>
-                        <input type="email" value="{{ Auth::user()->email ?? 'budi.santoso@email.com' }}" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); outline: none;">
+                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Email</label>
+                        <div id="profileEmail" style="width: 100%; min-height: 42px; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); background: #F8F9FA; display: flex; align-items: center;">
+                            Loading...
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            {{-- Action Buttons --}}
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                <button type="button" class="btn btn--outline" style="padding: 8px 20px; font-size: 13px;">Batalkan</button>
-                <button type="button" class="btn btn--primary" style="padding: 8px 20px; font-size: 13px;">Simpan Perubahan</button>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Password Lama</label>
+                        <input id="profileOldPassword" name="old_password" type="password" placeholder="••••••••" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); outline: none;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Password Baru</label>
+                        <input id="profileNewPassword" name="new_password" type="password" placeholder="••••••••" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--clr-border-light); font-size: 13px; color: var(--clr-text-heading); outline: none;">
+                    </div>
+                    <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                        <button type="button" id="cancelProfile" class="btn btn--outline" style="padding: 8px 20px; font-size: 13px;">Batalkan</button>
+                        <button type="submit" class="btn btn--primary" style="padding: 8px 20px; font-size: 13px;">Simpan Perubahan</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -120,3 +122,159 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const form = document.getElementById('fatherProfileForm');
+        const btnCancel = document.getElementById('cancelProfile');
+
+        form.addEventListener('submit', handleSubmit);
+        btnCancel.addEventListener('click', function () {
+            form.reset();
+        });
+
+        fetch('/api/profile', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.status && data.data) {
+                const profile = data.data;
+                const username = profile.username || '';
+                const email = profile.email || '';
+                const photo = profile.photo || null;
+
+                document.getElementById('profileUsername').value = username;
+                document.getElementById('profileEmail').textContent = maskEmail(email);
+                document.getElementById('avatarInitial').innerText = (username || email || 'B').charAt(0).toUpperCase();
+
+                if (photo) {
+                    document.getElementById('profileAvatar').innerHTML = `<img src="${photo.startsWith('http') ? photo : '/storage/' + photo}" style="width:100%; height:100%; object-fit:cover;" alt="Avatar">`;
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Gagal memuat profil:', err);
+        });
+    });
+
+    function maskEmail(email) {
+        if (!email || email.indexOf('@') === -1) {
+            return email;
+        }
+
+        const [local, domain] = email.split('@');
+        if (local.length <= 2) {
+            return local[0] + '*@' + domain;
+        }
+
+        const firstChar = local[0];
+        const lastChar = local[local.length - 1];
+        const maskedMiddle = '*'.repeat(Math.max(1, local.length - 2));
+        return `${firstChar}${maskedMiddle}${lastChar}@${domain}`;
+    }
+
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const oldPassword = document.getElementById('profileOldPassword').value.trim();
+        const newPassword = document.getElementById('profileNewPassword').value.trim();
+
+        if (oldPassword && newPassword) {
+            changePassword(token);
+        } else {
+            updateProfile(token);
+        }
+    }
+
+    function updateProfile(token) {
+        const username = document.getElementById('profileUsername').value.trim();
+        const oldPassword = document.getElementById('profileOldPassword').value.trim();
+
+        if (!username) {
+            alert('Username tidak boleh kosong.');
+            return;
+        }
+
+        const payload = {
+            username
+        };
+
+        if (oldPassword) {
+            payload.old_password = oldPassword;
+        }
+
+        fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok || !data.status) {
+                throw new Error(data.message || 'Gagal memperbarui profil.');
+            }
+            alert('Profil berhasil diperbarui!');
+            window.location.reload();
+        })
+        .catch(error => {
+            alert(error.message || 'Terjadi kesalahan saat memperbarui profil.');
+        });
+    }
+
+    function changePassword(token) {
+        const oldPassword = document.getElementById('profileOldPassword').value.trim();
+        const newPassword = document.getElementById('profileNewPassword').value.trim();
+
+        if (!oldPassword || !newPassword) {
+            alert('Password lama dan password baru harus diisi untuk mengganti password.');
+            return;
+        }
+
+        fetch('/api/change-password', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword
+            })
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok || !data.status) {
+                throw new Error(data.message || 'Gagal mengganti password.');
+            }
+            alert('Password berhasil diubah, silakan login ulang.');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        })
+        .catch(error => {
+            alert(error.message || 'Terjadi kesalahan saat mengganti password.');
+        });
+    }
+</script>
+@endpush
