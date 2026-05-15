@@ -226,7 +226,7 @@
 
       <div class="p-form-group">
         <label class="p-form-label" for="profileEmail">Alamat Email</label>
-        <input type="email" id="profileEmail" class="p-form-control" required placeholder="Masukkan email">
+        <div id="profileEmail" class="p-form-control" style="background: #F8FAFC; cursor: not-allowed;">Memuat...</div>
       </div>
 
       {{-- PASSWORD LAMA (Dengan Toggle) --}}
@@ -299,6 +299,24 @@ function togglePassword(inputId, btnElement) {
     }
 }
 
+let adminOriginalUsername = '';
+
+function maskEmail(email) {
+    if (!email || email.indexOf('@') === -1) {
+        return email;
+    }
+
+    const [local, domain] = email.split('@');
+    if (local.length <= 2) {
+        return local[0] + '*@' + domain;
+    }
+
+    const firstChar = local[0];
+    const lastChar = local[local.length - 1];
+    const maskedMiddle = '*'.repeat(Math.max(1, local.length - 2));
+    return `${firstChar}${maskedMiddle}${lastChar}@${domain}`;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const token = localStorage.getItem("token");
 
@@ -314,16 +332,17 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(res => res.json())
     .then(data => {
         if (data && data.data) {
-            document.getElementById("largeAvatar").innerText = data.data.username.charAt(0).toUpperCase();
-            document.getElementById("cardUsername").innerText = data.data.username;
-            document.getElementById("cardId").innerText = "ID: " + data.data.id;
-            
-            if(data.data.email) {
-                document.getElementById("cardEmail").innerText = data.data.email;
-                document.getElementById("profileEmail").value = data.data.email;
-            }
+            const username = data.data.username || '';
+            const email = data.data.email || '';
 
-            document.getElementById("profileUsername").value = data.data.username;
+            adminOriginalUsername = username;
+
+            document.getElementById("largeAvatar").innerText = username.charAt(0).toUpperCase();
+            document.getElementById("cardUsername").innerText = username;
+            document.getElementById("cardEmail").innerText = maskEmail(email);
+            document.getElementById("cardId").innerText = "ID: " + data.data.id;
+            document.getElementById("profileEmail").textContent = maskEmail(email);
+            document.getElementById("profileUsername").value = username;
         }
     })
     .catch(err => console.error("Gagal mengambil data profil:", err));
@@ -349,20 +368,26 @@ function updateProfile(e) {
     const token = localStorage.getItem("token");
     const btn = document.getElementById("btnSubmit");
     
-    const username = document.getElementById("profileUsername").value;
-    const email = document.getElementById("profileEmail").value;
-    const passwordLama = document.getElementById("profilePasswordLama").value;
+    const username = document.getElementById("profileUsername").value.trim();
+    const passwordLama = document.getElementById("profilePasswordLama").value.trim();
 
-    if (passwordLama.trim() === "") {
-        alert("Password lama wajib diisi untuk konfirmasi perubahan.");
+    if (!username) {
+        alert("Username tidak boleh kosong.");
         return;
     }
 
     const payload = {
-        username: username,
-        email: email,
-        old_password: passwordLama
+        username: username
     };
+
+    if (username !== adminOriginalUsername && passwordLama === "") {
+        alert("Password lama wajib diisi untuk mengubah username.");
+        return;
+    }
+
+    if (passwordLama !== "") {
+        payload.old_password = passwordLama;
+    }
 
     btn.disabled = true;
     btn.innerText = "Menyimpan...";
@@ -382,7 +407,7 @@ function updateProfile(e) {
             alert("Profil berhasil diperbarui!");
             location.reload();
         } else {
-            alert(data.message);
+            alert(data.message || "Gagal memperbarui profil.");
         }
     })
     .catch(() => alert("Terjadi kesalahan"))
