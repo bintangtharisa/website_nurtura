@@ -24,6 +24,10 @@ class AuthController extends Controller
 
     public function register(Request $request, NotificationService $notificationService)
     {
+        $request->merge([
+            'email' => strtolower($request->email)
+        ]);
+
         $request->validate([
             'name' => ['required', 'string', 'min:4', 'max:50'],
             'email' => [
@@ -40,7 +44,19 @@ class AuthController extends Controller
                 'string',
                 'size:6'
             ]
+        ], [
+            'email.unique' => 'Email sudah digunakan oleh akun lain.'
         ]);
+
+        if (User::where('email', $request->email)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Email sudah digunakan oleh akun lain.',
+                'errors' => [
+                    'email' => ['Email sudah digunakan oleh akun lain.']
+                ]
+            ], 422);
+        }
 
         $role = match ($request->role) {
             'ayah' => 'father',
@@ -149,6 +165,10 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $request->merge([
+            'email' => strtolower($request->email)
+        ]);
+
         $request->validate([
             'email' => [
                 'required',
