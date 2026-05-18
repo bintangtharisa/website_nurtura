@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mother;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Screening;
 use App\Services\MLFeatureService;
 use App\Services\NotificationService;
 use App\Services\ScreeningValidatorService;
@@ -124,6 +125,13 @@ class ScreeningController extends Controller
                 'screening',
                 ['result' => $result]
             );
+
+            Screening::create([
+                'mother_id' => (string) $motherObjectId,
+                'anonymous_id' => strtoupper($user->anonymous_id ?? ''),
+                'result' => strtolower($result),
+                'prediction' => $mlResult
+            ]);
 
             return response()->json([
                 'status' => true,

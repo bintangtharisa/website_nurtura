@@ -117,8 +117,8 @@
                 </li>
 
                 {{-- Data Section --}}
-                <li class="sidebar__nav-item {{ request()->routeIs('admin.skrining*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.skrining') }}" class="sidebar__nav-link">
+                <li class="sidebar__nav-item {{ request()->routeIs('admin.riwayat*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.riwayat') }}" class="sidebar__nav-link">
                         <span class="sidebar__nav-icon">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 2L4 5v7c0 5.25 3.5 10.15 8 11 4.5-.85 8-5.75 8-11V5l-8-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>

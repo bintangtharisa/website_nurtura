@@ -102,24 +102,22 @@
 <section class="table-section">
   <div class="table-section__header">
     <div class="table-section__title">Recent Anonymous Screenings</div>
-    <a href="{{ route('admin.skrining') }}" class="table-section__viewall">View All Data</a>
+    <a href="{{ route('admin.riwayat') }}" class="table-section__viewall">View All Data</a>
   </div>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th>Unique Code</th>
-        <th>Timestamp</th>
-        <th>Model Version</th>
-        <th>Risk Level</th>
-        <th>Status</th>
+        <th>Kode Ibu Anonim</th>
+        <th>Tanggal</th>
+        <th>Kategori Resiko</th>
       </tr>
     </thead>
     <tbody id="screeningTable">
-  <tr>
-    <td colspan="5">Loading...</td>
-  </tr>
-</tbody>
+      <tr>
+        <td colspan="3">Loading...</td>
+      </tr>
+    </tbody>
   </table>
 </section>
 <script src="{{ asset('js/admin/dashboard.js') }}"></script>

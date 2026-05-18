@@ -27,6 +27,7 @@ Route::prefix('password')->group(function () {
 
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/dashboard', [DashboardAdminController::class, 'dashboard']);
+    Route::get('/screenings', [DashboardAdminController::class, 'screenings']);
     Route::get('/questions', [QuestionsControllerAdmin::class, 'index']);
     Route::put('/questions/reorder', [QuestionsControllerAdmin::class, 'reorder']);
     Route::put('/questions/{id}/toggle', [QuestionsControllerAdmin::class, 'toggle']);

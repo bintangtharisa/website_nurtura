@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RiwayatController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use Illuminate\Http\Request;
@@ -45,7 +46,7 @@ Route::get('/auth/google', function () {
 
 // Admin views - proteksi via JS
 Route::get('/admin/dashboard', function () { return view('admin.dashboard'); })->name('admin.dashboard');
-Route::get('/admin/skrining', function () { return view('admin.skrining'); })->name('admin.skrining');
+Route::get('/admin/riwayat', [RiwayatController::class, 'index'])->name('admin.riwayat');
 Route::get('/admin/manajemen', function () { return view('admin.manajemen'); })->name('admin.manajemen');
 Route::get('/admin/model', function () { return view('admin.model'); })->name('admin.model');
 Route::get('/admin/exportdata', function () { return view('admin.exportdata'); })->name('admin.exportdata');
