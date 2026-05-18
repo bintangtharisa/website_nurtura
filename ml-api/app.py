@@ -117,7 +117,7 @@ def predict():
         cluster = model.predict(input_scaled)[0]
 
         # mapping hasil
-        result = "Ya" if cluster == CLUSTER_BERESIKO else "Tidak"
+        result = "Beresiko Depresi" if cluster == CLUSTER_BERESIKO else "Tidak Beresiko Depresi"
 
         # Simpan ke health_records
         health_record = {
