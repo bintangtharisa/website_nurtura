@@ -4,316 +4,242 @@
 
 @section('content')
 
-{{-- Page Header --}}
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+<div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px;">
     <div>
-        <h1 style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading);">
-            Monitoring Kondisi Istri
-        </h1>
-        <p style="font-size: 12.5px; color: var(--clr-text-muted); margin-top: 3px;">Data diperbarui secara berkala</p>
+        <h1 style="font-family: var(--font-display); font-size:22px; font-weight:700; color:var(--clr-text-heading); margin:0; line-height:1.2;">Monitoring Kondisi Istri</h1>
+        <p style="font-size:13px; color:var(--clr-text-muted); margin-top:6px; line-height:1.6; max-width:760px;">Lihat riwayat skrining ibu dengan username terdaftar, bukan anonymous_id. Header dan tabel dirancang mirip admin riwayat.</p>
     </div>
-    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; background: #E6F4EA; color: #2E7D32; padding: 4px 10px; border-radius: 20px;">
-        <span style="width: 6px; height: 6px; background: #2E7D32; border-radius: 50%; display: inline-block;"></span>
-        LIVE UPDATE
-    </span>
+    <div style="display:inline-flex; align-items:center; gap:8px; background:#EFF6FF; color:#1D4ED8; border-radius:999px; padding:8px 14px; font-size:12px; font-weight:700;">HISTORY MODE</div>
 </div>
 
-{{-- Grid Utama --}}
-<div style="display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start;">
+<style>
+  .monitoring-wrapper{width:100%; max-width:none; margin:0; padding:12px; box-sizing:border-box;}
+  .monitoring-grid{display:grid; gap:18px; width:100%;}
+  .cards-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; width:100%;}
+  .monitoring-controls{display:grid; grid-template-columns:1fr minmax(140px,220px) minmax(140px,220px); gap:12px; align-items:center; margin-top:18px; width:100%; min-width:0;}
+  .monitoring-controls > *{min-width:0;}
+  .monitoring-controls input, .monitoring-controls select{min-width:0;}
+  .table-scroll{overflow-x:auto; width:100%;}
+  .monitoring-table{width:100%; border-collapse:collapse; min-width:0; table-layout: auto}
+  .monitoring-table th, .monitoring-table td{padding:10px 12px; vertical-align: middle; word-break: break-word; white-space: normal;}
+  .monitoring-table th{font-size:11px; font-weight:700; text-transform:uppercase; color:var(--clr-text-muted)}
+  @media (max-width: 880px) {
+    .cards-grid{grid-template-columns:1fr}
+    .monitoring-controls{grid-template-columns:1fr;}
+    .monitoring-grid{grid-auto-rows:auto}
+    .monitoring-wrapper{padding:10px}
+  }
+  @media (max-width: 640px) {
+    .monitoring-table th, .monitoring-table td{padding:8px 8px; font-size:12px;}
+    .monitoring-wrapper{padding:8px;}
+  }
+</style>
 
-    {{-- Kolom Kiri --}}
-    <div style="display: flex; flex-direction: column; gap: 18px;">
+<div class="monitoring-wrapper monitoring-grid">
+  <div class="cards-grid">
+        <div style="background:#FFFFFF; border:1px solid rgba(15, 23, 42, 0.08); border-radius:24px; padding:20px;">
+            <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-text-muted); margin-bottom:10px;">Total Skrining</div>
+            <div style="font-size:28px; font-weight:700; color:var(--clr-text-heading);">{{ number_format($totalScreenings) }}</div>
+            <div style="font-size:12px; color:var(--clr-text-muted); margin-top:10px;">Berdasarkan collection prediction_results</div>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid rgba(15, 23, 42, 0.08); border-radius:24px; padding:20px;">
+            <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-text-muted); margin-bottom:10px;">Total Beresiko</div>
+            <div style="font-size:28px; font-weight:700; color:var(--clr-text-heading);">{{ number_format($highRiskCount) }}</div>
+            <div style="font-size:12px; color:var(--clr-text-muted); margin-top:10px;">Hasil skrining berisiko tinggi</div>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid rgba(15, 23, 42, 0.08); border-radius:24px; padding:20px;">
+            <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-text-muted); margin-bottom:10px;">Total Tidak Beresiko</div>
+            <div style="font-size:28px; font-weight:700; color:var(--clr-text-heading);">{{ number_format($lowRiskCount) }}</div>
+            <div style="font-size:12px; color:var(--clr-text-muted); margin-top:10px;">Hasil skrining berisiko rendah</div>
+        </div>
+    </div>
 
-        {{-- Card: Ringkasan Kesehatan Mingguan --}}
-        <div class="card">
-            <div class="card__header">
+    <div style="background:#FFFFFF; border:1px solid rgba(15, 23, 42, 0.08); border-radius:24px; overflow:hidden;">
+        <div style="padding:20px; border-bottom:1px solid rgba(15, 23, 42, 0.08);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
                 <div>
-                    <div class="card__title">Ringkasan Kesehatan Mingguan</div>
-                    <div class="card__subtitle">Tren kondisi istri 7 hari terakhir</div>
+                    <div style="font-size:18px; font-weight:700; color:var(--clr-text-heading);">Riwayat Skrining Istri</div>
+                    <div style="font-size:13px; color:var(--clr-text-muted); margin-top:6px; max-width:720px;">Menampilkan hasil skrining ibu dengan nama pengguna yang terdaftar, bukan anonymous_id.</div>
                 </div>
-                <select class="period-select" id="periodSelect" onchange="updateChart()">
-                    <option value="mingguan">Mingguan</option>
-                    <option value="bulanan">Bulanan</option>
+                <a href="javascript:void(0)" style="font-size:13px; font-weight:700; color:var(--clr-primary);">Lihat Semua →</a>
+            </div>
+            <div class="monitoring-controls">
+                <div style="display:flex; align-items:center; gap:10px; background:#F8FAFC; border:1px solid rgba(15, 23, 42, 0.08); border-radius:14px; padding:10px 14px; min-width:0;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input id="searchInput" type="text" placeholder="Cari nama ibu atau hasil skrining..." style="width:100%; min-width:0; border:none; outline:none; background:transparent; font-size:13px; color:var(--clr-text-heading);" />
+                </div>
+                <select id="filterWaktu" style="width:100%; min-width:0; padding:10px 14px; border-radius:14px; border:1px solid rgba(15, 23, 42, 0.12); background:#fff; font-size:13px; color:var(--clr-text-heading);">
+                    <option value="30">Waktu: 30 Hari</option>
+                    <option value="7">7 Hari</option>
+                    <option value="90">90 Hari</option>
+                    <option value="0">Semua</option>
+                </select>
+                <select id="perPageSelect" style="width:100%; min-width:0; padding:10px 14px; border-radius:14px; border:1px solid rgba(15, 23, 42, 0.12); background:#fff; font-size:13px; color:var(--clr-text-heading);">
+                    <option value="10">Tampilkan 10</option>
+                    <option value="25">Tampilkan 25</option>
+                    <option value="50">Tampilkan 50</option>
                 </select>
             </div>
-            <div class="card__body">
-                {{-- Status Summary --}}
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div style="background: var(--clr-bg); border-radius: var(--radius-sm); padding: 14px 16px;">
-                        <div style="font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Status 7 Hari</div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading);" id="statusLabel">Stabil</span>
-                            <span style="font-size: 11.5px; font-weight: 500; background: #E6F4EA; color: #2E7D32; padding: 3px 8px; border-radius: 20px;" id="statusDelta">↗ 5%</span>
-                        </div>
-                    </div>
-                    <div style="background: var(--clr-bg); border-radius: var(--radius-sm); padding: 14px 16px;">
-                        <div style="font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tren Bulanan</div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading);">Meningkat</span>
-                            <span style="font-size: 11.5px; font-weight: 500; background: var(--clr-high-bg); color: var(--clr-high-text); padding: 3px 8px; border-radius: 20px;">↘ 2%</span>
-                        </div>
-                    </div>
-                </div>
-                {{-- Chart --}}
-                <div class="chart-wrapper">
-                    <canvas id="monitoringChart"></canvas>
-                </div>
+          <div class="table-scroll" style="padding:0 6px 20px;">
+                <table class="monitoring-table" style="width:100%; border-collapse:collapse; min-width:0;">
+                <thead>
+                    <tr style="background:#F8FAFC; border-bottom:1px solid rgba(15, 23, 42, 0.08);">
+                        <th style="text-align:left; letter-spacing:0.08em;">Nama Ibu</th>
+                        <th style="text-align:left; letter-spacing:0.08em;">Tanggal Skrining</th>
+                        <th style="text-align:left; letter-spacing:0.08em;">Kategori Risiko</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div id="emptyState" style="display:none; text-align:center; padding:40px 0; color:var(--clr-text-muted); font-size:13px;">
+                <div style="font-size:14px; font-weight:600; margin-bottom:8px;">Tidak ada riwayat skrining</div>
+                <div>Gunakan pencarian atau ubah filter untuk melihat lebih banyak data.</div>
             </div>
         </div>
-
-        {{-- Card: Riwayat Hasil Singkat --}}
-        <div class="card">
-            <div class="card__header" style="margin-bottom: 0;">
-                <div>
-                    <div class="card__title">Riwayat Hasil Singkat</div>
-                    <div class="card__subtitle">Pemeriksaan terakhir istri</div>
-                </div>
-                <a href="#" class="btn-viewall" style="display: inline-flex; align-items: center; gap: 4px;">
-                    Lihat Semua →
-                </a>
-            </div>
-
-            {{-- Table --}}
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: var(--clr-bg); border-top: 1px solid var(--clr-border-light); border-bottom: 1px solid var(--clr-border-light);">
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tanggal Skrining</th>
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Kategori Risiko</th>
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tindakan</th>
-                        </tr>
-                    </thead>
-                    <tbody id="riwayatTable">
-                        {{-- Diisi JavaScript --}}
-                    </tbody>
-                </table>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:0 20px 20px;">
+            <div id="paginationInfo" style="font-size:13px; color:var(--clr-text-muted);">Menampilkan 0 hasil</div>
+            <div style="display:inline-flex; gap:10px;">
+                <button id="btnPrev" type="button" style="border:1px solid rgba(15, 23, 42, 0.12); border-radius:14px; padding:10px 14px; background:#fff; color:var(--clr-text-heading); cursor:pointer;" disabled>Previous</button>
+                <button id="btnNext" type="button" style="border:1px solid rgba(15, 23, 42, 0.12); border-radius:14px; padding:10px 14px; background:#fff; color:var(--clr-text-heading); cursor:pointer;" disabled>Next</button>
             </div>
         </div>
-
     </div>
-
-    {{-- Kolom Kanan --}}
-    <div style="display: flex; flex-direction: column; gap: 18px;">
-
-        {{-- Card: Preferensi Notifikasi --}}
-        <div class="card">
-            <div class="card__header">
-                <div>
-                    <div class="card__title">Preferensi</div>
-                    <div class="card__subtitle">Mode notifikasi kondisi istri</div>
-                </div>
-                <span style="font-size: 18px;">🔔</span>
-            </div>
-            <div class="card__body">
-                <div style="font-size: 12.5px; font-weight: 500; color: var(--clr-text-label); margin-bottom: 12px;">Mode Notifikasi</div>
-
-                {{-- Option 1 --}}
-                <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--clr-border); border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s;" id="optionRendah" onclick="selectNotif('rendah')">
-                    <div>
-                        <div style="font-size: 13px; font-weight: 500; color: var(--clr-text-heading);">Hanya Risiko Tinggi</div>
-                        <div style="font-size: 11.5px; color: var(--clr-text-muted); margin-top: 2px;">Peringatan untuk kondisi kritis</div>
-                    </div>
-                    <div style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--clr-border); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;" id="radioRendah"></div>
-                </label>
-
-                {{-- Option 2 --}}
-                <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--clr-primary); border-radius: var(--radius-sm); margin-bottom: 16px; cursor: pointer; background: var(--clr-primary-light); transition: border-color 0.15s;" id="optionSemua" onclick="selectNotif('semua')">
-                    <div>
-                        <div style="font-size: 13px; font-weight: 500; color: var(--clr-text-heading);">Semua Perubahan</div>
-                        <div style="font-size: 11.5px; color: var(--clr-text-muted); margin-top: 2px;">Update setiap tren kesehatan</div>
-                    </div>
-                    <div style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--clr-primary); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; background: var(--clr-primary);" id="radioSemua">
-                        <div style="width: 7px; height: 7px; background: white; border-radius: 50%;"></div>
-                    </div>
-                </label>
-
-                <button class="btn btn--primary" style="width: 100%; justify-content: center;" onclick="simpanPengaturan()">
-                    Simpan Pengaturan
-                </button>
-                <div id="notifSaved" style="display: none; text-align: center; font-size: 12px; color: var(--clr-low-text); margin-top: 8px;">✓ Pengaturan tersimpan</div>
-            </div>
-        </div>
-
-        {{-- Card: Status Risiko Saat Ini --}}
-        <div class="card">
-            <div class="card__header">
-                <div>
-                    <div class="card__title">Status Saat Ini</div>
-                    <div class="card__subtitle">Kondisi terkini istri</div>
-                </div>
-            </div>
-            <div class="card__body">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--clr-low-bg); border-radius: var(--radius-sm);">
-                        <span style="font-size: 13px; font-weight: 500; color: var(--clr-low-text);">Risiko Rendah</span>
-                        <span style="font-size: 20px; font-weight: 700; color: var(--clr-low-text);">25%</span>
-                    </div>
-                    <div style="font-size: 12px; color: var(--clr-text-muted); line-height: 1.6;">
-                        Kondisi istri dalam batas normal. Tetap pantau secara rutin dan berikan dukungan emosional.
-                    </div>
-                    <a href="{{ route('father.support') }}" class="btn btn--outline" style="justify-content: center;">
-                        Lihat Tips Dukungan
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
 </div>
 
 @endsection
 
 @push('scripts')
 <script>
-// ── Data dummy ──────────────────────────────────────────────
-const dataMingguan = {
-    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-    values: [30, 45, 38, 55, 50, 42, 60]
-};
+  const DEFAULT_PER_PAGE = 10;
+  let currentPage = 1;
+  let perPage = DEFAULT_PER_PAGE;
+  let searchKw = '';
+  let filterDays = 30;
+  const screenings = @json($screenings ?? []);
 
-const dataBulanan = {
-    labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'],
-    values: [40, 52, 47, 63]
-};
+  const tableBody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+  const paginationInfo = document.getElementById('paginationInfo');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
 
-const riwayatData = [
-    { tanggal: '24 Okt 2023', waktu: '09:15 WIB', risiko: 'Rendah' },
-    { tanggal: '22 Okt 2023', waktu: '18:30 WIB', risiko: 'Sedang' },
-    { tanggal: '18 Okt 2023', waktu: '14:20 WIB', risiko: 'Tinggi' },
-    { tanggal: '15 Okt 2023', waktu: '08:00 WIB', risiko: 'Rendah' },
-];
-
-// ── Chart ────────────────────────────────────────────────────
-let chart;
-
-function buildChart(data) {
-    const ctx = document.getElementById('monitoringChart').getContext('2d');
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.values,
-                borderColor: '#A3B18A',
-                backgroundColor: 'rgba(163,177,138,0.12)',
-                borderWidth: 2,
-                pointBackgroundColor: '#A3B18A',
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11, family: 'DM Sans' }, color: '#9CA3AF' }
-                },
-                y: {
-                    grid: { color: '#F0EDE8' },
-                    ticks: { font: { size: 11, family: 'DM Sans' }, color: '#9CA3AF' },
-                    min: 0, max: 100
-                }
-            }
-        }
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) return dateString;
+    return parsed.toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-}
+  }
 
-function updateChart() {
-    const val = document.getElementById('periodSelect').value;
-    buildChart(val === 'bulanan' ? dataBulanan : dataMingguan);
-}
+  function renderBadge(result) {
+    const normalized = String(result || '').toLowerCase();
+    if (normalized.includes('ya') || normalized.includes('beresiko') || normalized.includes('tinggi')) {
+      return '<span style="display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;background:#FEE2E2;color:#B91C1C;">Beresiko Depresi</span>';
+    }
+    if (normalized.includes('tidak') || normalized.includes('rendah')) {
+      return '<span style="display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;background:#ECFDF5;color:#166534;">Tidak Beresiko Depresi</span>';
+    }
+    return '<span style="display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;background:#E5E7EB;color:#374151;">Tidak Diketahui</span>';
+  }
 
-// ── Tabel Riwayat ────────────────────────────────────────────
-function buildTable() {
-    const badgeMap = {
-        'Rendah': `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;background:var(--clr-low-bg);color:var(--clr-low-text);">Rendah</span>`,
-        'Sedang': `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;background:var(--clr-med-bg);color:var(--clr-med-text);">Sedang</span>`,
-        'Tinggi': `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;background:var(--clr-high-bg);color:var(--clr-high-text);">Tinggi</span>`,
-    };
+  function filteredData() {
+    const keyword = searchKw.trim().toLowerCase();
+    const cutoff = filterDays === 0 ? null : Date.now() - filterDays * 24 * 60 * 60 * 1000;
+    return screenings.filter(item => {
+      const rowText = `${item.mother_username} ${item.result} ${item.risk_category}`.toLowerCase();
+      const matchesSearch = !keyword || rowText.includes(keyword);
+      const matchesTime = !cutoff || new Date(item.created_at).getTime() >= cutoff;
+      return matchesSearch && matchesTime;
+    });
+  }
 
-    const tbody = document.getElementById('riwayatTable');
-    tbody.innerHTML = riwayatData.map(r => `
-        <tr style="border-bottom: 1px solid var(--clr-border-light); transition: background 0.12s;" onmouseover="this.style.background='var(--clr-bg)'" onmouseout="this.style.background=''">
-            <td style="padding: 13px 22px;">
-                <div style="font-size: 13px; font-weight: 500; color: var(--clr-text-heading);">${r.tanggal}</div>
-                <div style="font-size: 11px; color: var(--clr-text-muted);">${r.waktu}</div>
-            </td>
-            <td style="padding: 13px 22px;">${badgeMap[r.risiko]}</td>
-            <td style="padding: 13px 22px;">
-                <button onclick="lihatDetail('${r.tanggal}')" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--clr-primary);font-weight:500;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--clr-primary-light);background:var(--clr-primary-light);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--clr-primary)';this.style.color='white'" onmouseout="this.style.background='var(--clr-primary-light)';this.style.color='var(--clr-primary)'">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    Detail
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
+  function renderRow(item) {
+    return `
+      <tr style="border-bottom: 1px solid rgba(15, 23, 42, 0.08);">
+        <td style="padding:12px 12px; vertical-align:middle;">
+          <div style="font-weight:600; color:var(--clr-text-heading);">${item.mother_username || 'Tidak tersedia'}</div>
+          <div style="font-size:12px; color:var(--clr-text-muted); margin-top:4px;">${item.result || '-'}</div>
+        </td>
+        <td style="padding:12px 12px; vertical-align:middle; color:var(--clr-text-muted);">${formatDate(item.created_at)}</td>
+        <td style="padding:12px 12px; vertical-align:middle;">${renderBadge(item.risk_category)}</td>
+      </tr>`;
+  }
 
-// ── Notifikasi Preferensi ────────────────────────────────────
-let notifMode = 'semua';
+  function renderTable() {
+    const rows = filteredData();
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / perPage));
+    currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+    const start = (currentPage - 1) * perPage;
+    const pageRows = rows.slice(start, start + perPage);
 
-function selectNotif(mode) {
-    notifMode = mode;
-    const optR = document.getElementById('optionRendah');
-    const optS = document.getElementById('optionSemua');
-    const radR = document.getElementById('radioRendah');
-    const radS = document.getElementById('radioSemua');
+    if (tableBody) tableBody.innerHTML = pageRows.map(renderRow).join('');
+    if (emptyState) emptyState.style.display = total === 0 ? '' : 'none';
+    if (paginationInfo) paginationInfo.textContent = total === 0
+      ? 'Tidak ada hasil'
+      : `Menampilkan ${Math.min(start + 1, total)}–${Math.min(start + perPage, total)} dari ${total} hasil`;
+    if (btnPrev) btnPrev.disabled = currentPage <= 1;
+    if (btnNext) btnNext.disabled = currentPage >= pageCount;
+  }
 
-    if (mode === 'rendah') {
-        optR.style.borderColor = 'var(--clr-primary)';
-        optR.style.background  = 'var(--clr-primary-light)';
-        radR.style.borderColor = 'var(--clr-primary)';
-        radR.style.background  = 'var(--clr-primary)';
-        radR.innerHTML = '<div style="width:7px;height:7px;background:white;border-radius:50%;"></div>';
+  function applyFilters() {
+    currentPage = 1;
+    renderTable();
+  }
 
-        optS.style.borderColor = 'var(--clr-border)';
-        optS.style.background  = 'transparent';
-        radS.style.borderColor = 'var(--clr-border)';
-        radS.style.background  = 'transparent';
-        radS.innerHTML = '';
-    } else {
-        optS.style.borderColor = 'var(--clr-primary)';
-        optS.style.background  = 'var(--clr-primary-light)';
-        radS.style.borderColor = 'var(--clr-primary)';
-        radS.style.background  = 'var(--clr-primary)';
-        radS.innerHTML = '<div style="width:7px;height:7px;background:white;border-radius:50%;"></div>';
+  document.addEventListener('DOMContentLoaded', function () {
+    const perPageSelect = document.getElementById('perPageSelect');
+    const filterWaktu = document.getElementById('filterWaktu');
+    const searchInput = document.getElementById('searchInput');
 
-        optR.style.borderColor = 'var(--clr-border)';
-        optR.style.background  = 'transparent';
-        radR.style.borderColor = 'var(--clr-border)';
-        radR.style.background  = 'transparent';
-        radR.innerHTML = '';
+    if (perPageSelect) {
+      perPageSelect.addEventListener('change', function () {
+        perPage = Number(this.value);
+        currentPage = 1;
+        applyFilters();
+      });
     }
 
-    document.getElementById('notifSaved').style.display = 'none';
-}
+    if (filterWaktu) {
+      filterWaktu.addEventListener('change', function () {
+        filterDays = Number(this.value);
+        applyFilters();
+      });
+    }
 
-function simpanPengaturan() {
-    localStorage.setItem('notifMode', notifMode);
-    const el = document.getElementById('notifSaved');
-    el.style.display = 'block';
-    setTimeout(() => el.style.display = 'none', 2500);
-}
+    if (searchInput) {
+      let debounce;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          searchKw = this.value.trim();
+          applyFilters();
+        }, 200);
+      });
+    }
 
-function lihatDetail(tanggal) {
-    alert('Detail pemeriksaan: ' + tanggal);
-    // Ganti dengan modal atau redirect ke halaman detail
-}
+    if (btnPrev) {
+      btnPrev.addEventListener('click', function () {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderTable();
+        }
+      });
+    }
 
-// ── Init ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function () {
-    buildChart(dataMingguan);
-    buildTable();
+    if (btnNext) {
+      btnNext.addEventListener('click', function () {
+        currentPage += 1;
+        renderTable();
+      });
+    }
 
-    const saved = localStorage.getItem('notifMode');
-    if (saved) selectNotif(saved);
-});
+    renderTable();
+  });
 </script>
-@endpush
+@endpush'''); Path(r'c:\laragon\www\semester_4\nurtura-web\resources\views\father\monitoring.blade.php').write_text(content, encoding='utf-8')"

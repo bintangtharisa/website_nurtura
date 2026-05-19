@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RiwayatController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ForgotPasswordController;
+use App\Http\Controllers\Father\MonitoringController;
 use App\Http\Controllers\Father\SupportController;
 use Illuminate\Http\Request;
 
@@ -56,7 +57,7 @@ Route::get('/admin/article-categories', function () { return view('admin.article
 Route::get('/admin/articles', function () { return view('admin.articles'); })->name('admin.articles');
 
 Route::get('/father/dashboard', function () { return view('father.dashboard'); })->name('father.dashboard');
-Route::get('/father/monitoring', function () { return view('father.monitoring'); })->name('father.monitoring');
+Route::get('/father/monitoring', [MonitoringController::class, 'index'])->name('father.monitoring');
 Route::get('/father/profile', function () { return view('father.profile'); })->name('father.profile');
 Route::get('/father/support', function () { return view('father.support'); })->name('father.support');
 Route::get('/father/support/article/{slug}', [SupportController::class, 'show'])->name('father.support.article');
