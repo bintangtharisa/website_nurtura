@@ -12,6 +12,7 @@ use App\Http\Controllers\Mother\QuestionsController as QuestionsControllerMother
 use App\Http\Controllers\Mother\ScreeningController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\Father\DashboardController;
+use App\Http\Controllers\Father\MonitoringController;
 
 
 Route::prefix('auth')->group(function () {
@@ -36,6 +37,7 @@ Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function (
 
 Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard']);
+    Route::get('/monitoring', [MonitoringController::class, 'history']);
 });
 
 Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
