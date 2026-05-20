@@ -8,6 +8,9 @@ use App\Services\NotificationService;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
+use MongoDB\Client;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends Controller
@@ -26,7 +29,8 @@ class ProfileController extends Controller
                     'username' => $user->username ?? null,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'photo' => $user->photo ?? null
+                    'photo' => $user->photo ?? null,
+                    'connection' => $this->fatherConnection($user)
                 ]
             ]);
         } catch (\Exception $e) {
@@ -92,7 +96,8 @@ class ProfileController extends Controller
                     'username' => $user->username ?? null,
                     'email' => $user->email,
                     'role' => $user->role,
-                    'photo' => $user->photo ?? null
+                    'photo' => $user->photo ?? null,
+                    'connection' => $this->fatherConnection($user)
                 ]
             ]);
         } catch (\Exception $e) {
@@ -153,5 +158,95 @@ class ProfileController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function fatherConnection($user): ?array
+    {
+        if (($user->role ?? null) !== 'father') {
+            return null;
+        }
+
+        $db = $this->db();
+        $fatherId = (string) $user->_id;
+        $fatherObjectId = $this->toObjectId($fatherId);
+        $fatherFilters = [['father_id' => $fatherId]];
+
+        if ($fatherObjectId) {
+            $fatherFilters[] = ['father_id' => $fatherObjectId];
+        }
+
+        $relationship = $db->selectCollection('relationships')->findOne([
+            'status' => 'active',
+            '$or' => $fatherFilters,
+        ], [
+            'sort' => ['connected_at' => -1, 'created_at' => -1],
+        ]);
+
+        if (!$relationship || empty($relationship['mother_id'])) {
+            return [
+                'is_connected' => false,
+                'mother' => null,
+                'connected_at' => null,
+            ];
+        }
+
+        $motherId = $relationship['mother_id'];
+        $motherObjectId = $this->toObjectId($motherId);
+        $motherFilters = [['_id' => (string) $motherId, 'role' => 'mother']];
+
+        if ($motherObjectId) {
+            $motherFilters[] = ['_id' => $motherObjectId, 'role' => 'mother'];
+        }
+
+        $mother = $db->selectCollection('users')->findOne([
+            '$or' => $motherFilters,
+        ]);
+
+        return [
+            'is_connected' => (bool) $mother,
+            'mother' => $mother ? [
+                'id' => (string) ($mother['_id'] ?? $motherId),
+                'username' => $mother['username'] ?? null,
+                'anonymous_id' => $mother['anonymous_id'] ?? null,
+            ] : null,
+            'connected_at' => $this->formatDateTime($relationship['connected_at'] ?? $relationship['created_at'] ?? null),
+        ];
+    }
+
+    private function db()
+    {
+        $client = new Client(config('database.connections.mongodb.dsn'));
+        return $client->selectDatabase(config('database.connections.mongodb.database'));
+    }
+
+    private function toObjectId($value): ?ObjectId
+    {
+        try {
+            if ($value instanceof ObjectId) {
+                return $value;
+            }
+
+            $stringValue = (string) $value;
+            return preg_match('/^[a-f\d]{24}$/i', $stringValue) ? new ObjectId($stringValue) : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function formatDateTime($value): ?string
+    {
+        if ($value instanceof UTCDateTime) {
+            return $value->toDateTime()->format(\DateTime::ATOM);
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(\DateTime::ATOM);
+        }
+
+        if (!empty($value)) {
+            return (string) $value;
+        }
+
+        return null;
     }
 }

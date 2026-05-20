@@ -238,6 +238,7 @@ class MonitoringController extends Controller
                 'id' => (string) ($mother['_id'] ?? $motherId),
                 'anonymous_id' => $anonymousId,
                 'username' => $mother['username'] ?? null,
+                'connected_at' => $this->formatDateTime($relationship['connected_at'] ?? $relationship['created_at'] ?? null),
             ]);
         }
 
@@ -284,6 +285,12 @@ class MonitoringController extends Controller
         }
 
         return null;
+    }
+
+    private function formatDateTime($value): ?string
+    {
+        $dateTime = $this->toDateTime($value);
+        return $dateTime ? $dateTime->format(\DateTime::ATOM) : null;
     }
 
     private function formatPredictionResult($item, array $mother)

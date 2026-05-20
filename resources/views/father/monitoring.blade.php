@@ -161,6 +161,14 @@ function formatTimeLabel(value) {
     return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatFullDateLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '-';
+    }
+    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
 function updateChart() {
     loadMonitoringData();
 }
@@ -269,13 +277,23 @@ function buildTable() {
 
 function updateConnectedMotherLabel(mother) {
     const label = document.getElementById('connectedMotherLabel');
+    const nameEl = document.getElementById('connectedMotherName');
+    const anonymousEl = document.getElementById('connectedMotherAnonymousId');
+    const connectedSinceEl = document.getElementById('connectedSince');
+
     if (!mother) {
         label.textContent = 'Belum ada koneksi ibu aktif';
+        if (nameEl) nameEl.textContent = '-';
+        if (anonymousEl) anonymousEl.textContent = '-';
+        if (connectedSinceEl) connectedSinceEl.textContent = '-';
         return;
     }
 
     const username = mother.username ? `${mother.username} - ` : '';
     label.textContent = `Laporan untuk ${username}${mother.anonymous_id}`;
+    if (nameEl) nameEl.textContent = mother.username || '-';
+    if (anonymousEl) anonymousEl.textContent = mother.anonymous_id || '-';
+    if (connectedSinceEl) connectedSinceEl.textContent = formatFullDateLabel(mother.connected_at);
 }
 
 function updateSummary(entries, latestResult = null) {

@@ -77,40 +77,36 @@
     <div class="card">
         <div class="card__header" style="display: flex; justify-content: space-between; align-items: center;">
             <div class="card__title">Status Koneksi</div>
-            <span style="font-size: 10px; font-weight: 700; background: #E6F4EA; color: #2E7D32; padding: 3px 10px; border-radius: 20px;">TERHUBUNG</span>
+            <span id="connectionBadge" style="font-size: 10px; font-weight: 700; background: #F3F4F6; color: #6B7280; padding: 4px 10px; border-radius: 20px;">MEMUAT</span>
         </div>
-        <div class="card__body" style="padding: 20px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+        <div class="card__body" style="padding: 0 15px 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
                 
                 {{-- Profil Istri --}}
-                <div style="display: flex; align-items: center; gap: 12px; min-width: 200px;">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--clr-primary-light); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        @if(isset($wife) && $wife->photo)
-                            <img src="{{ asset('storage/' . $wife->photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        @else
-                            <span style="font-weight: 600; color: var(--clr-primary);">{{ strtoupper(substr($wife->name ?? 'S', 0, 1)) }}</span>
-                        @endif
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 210px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--clr-primary-light); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <span id="connectedMotherInitial" style="font-weight: 600; color: var(--clr-primary);">-</span>
                     </div>
                     <div>
-                        <div style="font-size: 14px; font-weight: 600; color: var(--clr-text-heading);">{{ $wife->name ?? 'Siti Aminah' }}</div>
-                        <div style="font-size: 11px; color: var(--clr-text-muted);">Terhubung Sejak {{ isset($wife) ? \Carbon\Carbon::parse($wife->connected_at)->translatedFormat('d M Y') : '12 Jan 2024' }}</div>
+                        <div id="connectedMotherName" style="font-size: 14px; font-weight: 600; color: var(--clr-text-heading);">Memuat...</div>
+                        <div id="connectedMotherMeta" style="font-size: 11px; color: var(--clr-text-muted); margin-top: 2px;">Memeriksa relasi di database</div>
                     </div>
                 </div>
 
                 {{-- Indikator Fitur --}}
-                <div style="display: flex; gap: 8px; flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--clr-text-heading); background: var(--clr-bg); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--clr-border-light);">
+                <div style="display: flex; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--clr-text-heading); background: var(--clr-bg); padding: 7px 11px; border-radius: 6px; border: 1px solid var(--clr-border-light);">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        Kesehatan Aktif
+                        Monitoring Aktif
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--clr-text-heading); background: var(--clr-bg); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--clr-border-light);">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Notifikasi Janji
+                    <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--clr-text-heading); background: var(--clr-bg); padding: 7px 11px; border-radius: 6px; border: 1px solid var(--clr-border-light);">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Relasi Aktif
                     </div>
                 </div>
 
                 {{-- Warning Ringkas --}}
-                <div style="padding: 8px 12px; background: #FFF4E5; border-radius: 8px; border-left: 3px solid #FF9800; max-width: 280px;">
+                <div style="padding: 8px 11px; background: #FFF4E5; border-radius: 8px; border-left: 3px solid #FF9800; max-width: 260px;">
                     <p style="font-size: 10px; color: #856404; margin: 0; line-height: 1.3;">
                         <b>Peringatan:</b> Update harian akan berhenti jika koneksi diputus.
                     </p>
@@ -157,6 +153,7 @@
                 document.getElementById('profileUsername').value = username;
                 document.getElementById('profileEmail').textContent = maskEmail(email);
                 document.getElementById('avatarInitial').innerText = (username || email || 'B').charAt(0).toUpperCase();
+                renderConnectionStatus(profile.connection || null);
 
                 if (photo) {
                     document.getElementById('profileAvatar').innerHTML = `<img src="${photo.startsWith('http') ? photo : '/storage/' + photo}" style="width:100%; height:100%; object-fit:cover;" alt="Avatar">`;
@@ -167,6 +164,47 @@
             console.error('Gagal memuat profil:', err);
         });
     });
+
+    function renderConnectionStatus(connection) {
+        const badge = document.getElementById('connectionBadge');
+        const initial = document.getElementById('connectedMotherInitial');
+        const name = document.getElementById('connectedMotherName');
+        const meta = document.getElementById('connectedMotherMeta');
+
+        if (!connection || !connection.is_connected || !connection.mother) {
+            badge.textContent = 'BELUM TERHUBUNG';
+            badge.style.background = '#F3F4F6';
+            badge.style.color = '#6B7280';
+            initial.textContent = '-';
+            name.textContent = 'Belum ada koneksi ibu';
+            meta.textContent = 'Hubungkan akun dengan anonymous ID ibu';
+            return;
+        }
+
+        const motherName = connection.mother.username || 'Ibu';
+        const anonymousId = connection.mother.anonymous_id || '-';
+        const connectedAt = formatConnectionDate(connection.connected_at);
+
+        badge.textContent = 'TERHUBUNG';
+        badge.style.background = '#E6F4EA';
+        badge.style.color = '#2E7D32';
+        initial.textContent = motherName.charAt(0).toUpperCase();
+        name.textContent = motherName;
+        meta.textContent = `ID ${anonymousId} - Terhubung sejak ${connectedAt}`;
+    }
+
+    function formatConnectionDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return '-';
+        }
+
+        return date.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    }
 
     function maskEmail(email) {
         if (!email || email.indexOf('@') === -1) {
