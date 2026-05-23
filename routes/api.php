@@ -50,6 +50,7 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
 
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
     Route::post('/screening', [ScreeningController::class, 'screening']);
+    Route::get('/screening-history', [ScreeningController::class, 'history']);
 
 });
 

@@ -147,4 +147,83 @@ class ScreeningController extends Controller
             ], 500);
         }
     }
+
+    public function history(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User tidak ter-autentikasi'
+                ], 401);
+            }
+
+            $db = $this->db();
+            $collection = $db->selectCollection('prediction_results');
+
+            $filter = ['mother_id' => new ObjectId((string) $user->_id)];
+
+            if ($request->filled('result')) {
+                $filter['result'] = new \MongoDB\BSON\Regex('^' . preg_quote(strtolower($request->result), '/') . '$', 'i');
+            }
+
+            if ($request->filled('since_days') && is_numeric($request->since_days) && (int) $request->since_days > 0) {
+                $threshold = new UTCDateTime(now()->subDays((int) $request->since_days)->timestamp * 1000);
+                $filter['created_at'] = ['$gte' => $threshold];
+            }
+
+            $options = ['sort' => ['created_at' => -1]];
+            $cursor = $collection->find($filter, $options);
+
+            $data = [];
+            foreach ($cursor as $item) {
+                $createdAt = null;
+                if (isset($item['created_at']) && $item['created_at'] instanceof \MongoDB\BSON\UTCDateTime) {
+                    $createdAt = $item['created_at']->toDateTime()->format(\DateTime::ATOM);
+                } elseif (isset($item['_id']) && method_exists($item['_id'], 'getTimestamp')) {
+                    $createdAt = $item['_id']->getTimestamp()->format(\DateTime::ATOM);
+                }
+
+                $anonymousId = null;
+                if (!empty($item['anonymous_id'])) {
+                    $anonymousId = strtoupper((string) $item['anonymous_id']);
+                } elseif (!empty($item['mother_id'])) {
+                    $anonymousId = strtoupper($user->anonymous_id ?? 'ANON-' . strtoupper(substr(md5((string) $item['mother_id']), 0, 8)));
+                } elseif (!empty($item['_id'])) {
+                    $anonymousId = 'ANON-' . strtoupper(substr(md5((string) $item['_id']), 0, 8));
+                }
+
+                $result = isset($item['result']) ? (string) $item['result'] : null;
+                $normalizedResult = strtolower($result);
+                $riskCategory = 'Tidak Diketahui';
+                if (str_contains($normalizedResult, 'tidak')) {
+                    $riskCategory = 'Rendah';
+                } elseif (str_contains($normalizedResult, 'ya') || str_contains($normalizedResult, 'depresi')) {
+                    $riskCategory = 'Tinggi';
+                }
+
+                $data[] = [
+                    'anonymous_id' => $anonymousId,
+                    'result' => $result,
+                    'risk_category' => $riskCategory,
+                    'prediction' => $item['prediction'] ?? null,
+                    'created_at' => $createdAt,
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal mengambil riwayat screening',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
