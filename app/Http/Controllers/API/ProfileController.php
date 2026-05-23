@@ -30,6 +30,7 @@ class ProfileController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'photo' => $user->photo ?? null,
+                    'connection_code' => $user->anonymous_id ?? null,
                     'connection' => $this->fatherConnection($user)
                 ]
             ]);
@@ -97,6 +98,7 @@ class ProfileController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'photo' => $user->photo ?? null,
+                    'connection_code' => $user->anonymous_id ?? null,
                     'connection' => $this->fatherConnection($user)
                 ]
             ]);
