@@ -300,6 +300,32 @@
         line-height: 1.5;
     }
 
+    .msg-retry-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        margin-top: 12px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: var(--radius-sm);
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-primary);
+        color: var(--clr-primary-dark);
+        font-size: 12px;
+        font-weight: 700;
+        transition: background .15s, color .15s;
+    }
+
+    .msg-retry-btn:hover {
+        background: var(--clr-primary-light);
+    }
+
+    .msg-retry-btn:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
     .cb-footer {
         padding: 16px 22px 18px;
         border-top: 1px solid var(--clr-border-light);
@@ -618,6 +644,30 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    function retryMessageHtml(messageText, errorMessage = '') {
+        const retryId = 'retry-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+        return `
+            <div class="msg-row msg-row--bot" id="${retryId}">
+                <div class="msg-avatar msg-avatar--bot">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                </div>
+                <div class="msg-content-wrapper">
+                    <div class="msg-bubble">
+                        <span class="msg-priority msg-priority--perhatian">perhatian</span>
+                        Maaf, pesan belum bisa dikirim. Coba kirim ulang tanpa perlu mengetik lagi.
+                        ${errorMessage ? `<br><small>${escapeHtml(errorMessage)}</small>` : ''}
+                        <br>
+                        <button type="button" class="msg-retry-btn" data-retry-message="${escapeHtml(messageText)}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                            Kirim ulang
+                        </button>
+                    </div>
+                    <span class="msg-time">${formatTime()}</span>
+                </div>
+            </div>
+        `;
+    }
+
     function setSending(state) {
         isSending = state;
         input.disabled = state;
@@ -729,10 +779,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function sendMessage(messageText) {
+    async function sendMessage(messageText, options = {}) {
+        const isRetry = Boolean(options.isRetry);
+        const retryElement = options.retryElement || null;
         setSending(true);
-        chatBody.insertAdjacentHTML('beforeend', messageHtml('user', messageText));
+        if (!isRetry) {
+            chatBody.insertAdjacentHTML('beforeend', messageHtml('user', messageText));
+        }
         input.value = '';
+        if (retryElement) retryElement.remove();
         renderTyping();
 
         try {
@@ -759,12 +814,28 @@ document.addEventListener('DOMContentLoaded', function () {
             await loadSessions();
         } catch (error) {
             removeTyping();
-            chatBody.insertAdjacentHTML('beforeend', messageHtml('assistant', 'Maaf, pesan belum bisa dikirim. Coba beberapa saat lagi.', null, { priority: 'perhatian' }));
+            chatBody.insertAdjacentHTML('beforeend', retryMessageHtml(messageText, error.message || ''));
+            bindRetryButtons();
+            scrollToBottom();
             console.error(error);
         } finally {
             setSending(false);
             input.focus();
         }
+    }
+
+    function bindRetryButtons() {
+        chatBody.querySelectorAll('.msg-retry-btn').forEach(button => {
+            if (button.dataset.bound === 'true') return;
+            button.dataset.bound = 'true';
+            button.addEventListener('click', function () {
+                if (isSending) return;
+                const messageText = this.dataset.retryMessage || '';
+                const retryElement = this.closest('.msg-row');
+                this.disabled = true;
+                sendMessage(messageText, { isRetry: true, retryElement });
+            });
+        });
     }
 
     async function deleteSession(sessionId) {
