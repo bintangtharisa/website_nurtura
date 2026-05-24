@@ -5,6 +5,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\ChatbotController;
 use App\Http\Controllers\Admin\QuestionsController as QuestionsControllerAdmin;
 use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
@@ -85,4 +86,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::get('/chatbot/sessions', [ChatbotController::class, 'sessions']);
+    Route::get('/chatbot/sessions/{sessionId}/messages', [ChatbotController::class, 'messages']);
+    Route::delete('/chatbot/sessions/{sessionId}', [ChatbotController::class, 'deleteSession']);
+    Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->middleware('throttle:chatbot');
 });

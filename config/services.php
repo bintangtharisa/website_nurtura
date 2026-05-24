@@ -39,4 +39,10 @@ return [
         'url' => env('ML_API_URL', 'http://127.0.0.1:8080'),
     ],
 
+    'chatbot' => [
+        'max_message_length' => (int) env('CHATBOT_MAX_MESSAGE_LENGTH', 1000),
+        'retention_days' => (int) env('CHATBOT_RETENTION_DAYS', 180),
+        'purge_deleted_days' => (int) env('CHATBOT_PURGE_DELETED_DAYS', 30),
+    ],
+
 ];

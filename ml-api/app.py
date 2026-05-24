@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')
 
 from services.recommendation_service import get_ai_recommendation
+from services.chatbot_service import get_chatbot_reply
 from utils.screening_features import build_features
 
 app = Flask(__name__)
@@ -144,6 +145,54 @@ def health():
     return jsonify({
         "status": "ok"
     })
+
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "JSON tidak ditemukan"
+            }), 400
+
+        message = str(data.get("message", "")).strip()
+        user_role = str(data.get("user_role", "")).strip().lower()
+
+        if not message:
+            return jsonify({
+                "status": "error",
+                "message": "message wajib diisi"
+            }), 400
+
+        if user_role not in ["mother", "father"]:
+            return jsonify({
+                "status": "error",
+                "message": "user_role harus mother atau father"
+            }), 400
+
+        reply = get_chatbot_reply(
+            message,
+            user_role,
+            data.get("context", {}),
+            data.get("history", [])
+        )
+
+        return jsonify({
+            "status": "success",
+            **reply
+        })
+    except Exception as e:
+        print(f"Chatbot error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 if __name__ == "__main__":
