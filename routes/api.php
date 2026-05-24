@@ -52,6 +52,7 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
 
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
     Route::post('/screening', [ScreeningController::class, 'screening']);
+    Route::patch('/father/accept', [MotherRelationshipController::class, 'acceptFather']);
     Route::patch('/father/block', [MotherRelationshipController::class, 'blockFather']);
 
 });
