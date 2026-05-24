@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Mother\QuestionsController as QuestionsControllerMother;
 use App\Http\Controllers\Mother\ScreeningController;
+use App\Http\Controllers\Mother\RelationshipController as MotherRelationshipController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\Father\DashboardController;
 use App\Http\Controllers\Father\MonitoringController;
@@ -51,6 +52,7 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
 
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
     Route::post('/screening', [ScreeningController::class, 'screening']);
+    Route::patch('/father/block', [MotherRelationshipController::class, 'blockFather']);
 
 });
 
