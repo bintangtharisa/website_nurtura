@@ -25,17 +25,20 @@
     </div>
 
     <div class="welcome-card__illustration">
-        <img src="https://placehold.co/260x180/EDE0D4/A3B18A?text=Nurtura"
+        {{-- UBAH: Gambar dipanggil dari public/images/ibu.jpg menggunakan asset() --}}
+        <img src="{{ asset('images/ibu.jpg') }}"
              onerror="this.style.display='none'"
-             alt="Ilustrasi">
+             alt="Ilustrasi Ibu">
     </div>
 </div>
 
 {{-- ── Dashboard Grid ── --}}
-<div class="dashboard-grid">
+{{-- UBAH: Tambahkan align-items: stretch agar card sejajar ke bawah --}}
+<div class="dashboard-grid" style="align-items: stretch;">
 
     {{-- Chart Card --}}
-    <div class="card">
+    {{-- UBAH: Set height 100% agar otomatis penuh ke bawah mengikuti tinggi grid --}}
+    <div class="card" style="height: 100%;">
         <div class="card__header">
             <div>
                 <div class="card__title">Frekuensi Skrining Hari Ini</div>
@@ -50,7 +53,8 @@
     </div>
 
     {{-- History Card --}}
-    <div class="card" style="display:flex; flex-direction:column;">
+    {{-- UBAH: Set height 100% dan flex column --}}
+    <div class="card" style="height: 100%; display:flex; flex-direction:column;">
         <div class="card__header">
             <div>
                 <div class="card__title">Riwayat Risiko</div>
@@ -59,6 +63,7 @@
         </div>
         <div class="card__body" style="flex:1; display:flex; flex-direction:column;">
             <ul id="riskHistory" class="risk-list"></ul>
+            {{-- margin-top: auto; otomatis mendorong tombol ini ke paling bawah --}}
             <a href="{{ route('father.monitoring') }}" class="btn-viewall" style="margin-top:auto;">
                 Lihat Riwayat Lengkap
             </a>
