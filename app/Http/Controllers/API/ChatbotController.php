@@ -50,6 +50,15 @@ class ChatbotController extends Controller
 
             $userId = $this->toObjectId($user->_id);
             $context = $this->buildContext($db, $user);
+            if (empty($context['latest_prediction'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $user->role === 'father'
+                        ? 'Belum ada hasil skrining istri yang bisa digunakan untuk chatbot.'
+                        : 'Belum ada hasil skrining yang bisa digunakan untuk chatbot.'
+                ], 422);
+            }
+
             $session = $this->resolveSession($db, $request->input('session_id'), $user, $context);
             $sessionId = $session['_id'];
             $now = new UTCDateTime(now()->timestamp * 1000);
