@@ -173,10 +173,17 @@ def chatbot():
                 "message": "user_role harus mother atau father"
             }), 400
 
+        context = data.get("context", {})
+        if not isinstance(context, dict) or not context.get("latest_prediction"):
+            return jsonify({
+                "status": "error",
+                "message": "latest_prediction wajib tersedia untuk menggunakan chatbot"
+            }), 400
+
         reply = get_chatbot_reply(
             message,
             user_role,
-            data.get("context", {}),
+            context,
             data.get("history", [])
         )
 
