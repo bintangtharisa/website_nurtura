@@ -93,7 +93,8 @@ def build_out_of_scope_reply(user_role):
 
 def build_local_reply(message, user_role, context):
     emergency = has_emergency_signal(message)
-    latest_result = context.get("latest_prediction", {}).get("result")
+    latest_prediction = context.get("latest_prediction") or {}
+    latest_result = latest_prediction.get("result")
 
     if not emergency and not is_in_scope(message):
         return build_out_of_scope_reply(user_role)
