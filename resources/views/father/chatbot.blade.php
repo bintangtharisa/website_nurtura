@@ -30,7 +30,7 @@
 
     /* ===== PANEL KIRI: RIWAYAT CHAT ===== */
     .cb-sidebar {
-        width: 300px;
+        width: 250px; /* <--- LEBAR DIKECILKAN DARI 300px */
         background: var(--color-beige);
         border-radius: 20px;
         padding: 20px 14px;
@@ -309,28 +309,6 @@
         border: 1px solid rgba(237, 224, 212, 0.5);
     }
 
-    .input-actions-left {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        color: var(--color-text-muted);
-    }
-
-    .input-btn-icon {
-        background: transparent;
-        border: none;
-        color: inherit;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        padding: 0;
-        transition: color 0.2s;
-    }
-
-    .input-btn-icon:hover {
-        color: var(--color-sage-green);
-    }
-
     .chat-input-field {
         flex-grow: 1;
         background: transparent;
@@ -477,14 +455,7 @@
         <footer class="cb-footer">
             <form id="formSendMessage" autocomplete="off">
                 <div class="input-bar-container">
-                    <div class="input-actions-left">
-                        <button type="button" class="input-btn-icon" aria-label="Lampirkan File">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                        </button>
-                        <button type="button" class="input-btn-icon" aria-label="Pesan Suara">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                        </button>
-                    </div>
+                    {{-- TOMBOL VOICE DAN ATTACHMENT SUDAH DIHAPUS DARI SINI --}}
                     
                     <input type="text" id="inputChat" class="chat-input-field" placeholder="Tulis pesan untuk Asisten Ayah...">
                     
