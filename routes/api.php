@@ -40,19 +40,19 @@ Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function
     Route::get('/monitoring', [MonitoringController::class, 'history']);
 });
 
-Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
-    Route::get('/dashboard', function () {
-        return response()->json([
-            'status' => true,
-            'message' => 'Welcome Mother'
-        ]);
-    });
+// Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
+//     Route::get('/dashboard', function () {
+//         return response()->json([
+//             'status' => true,
+//             'message' => 'Welcome Mother'
+//         ]);
+//     });
 
-    Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
-    Route::post('/screening', [ScreeningController::class, 'screening']);
-    Route::get('/screening-history', [ScreeningController::class, 'history']);
+//     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
+//     Route::post('/screening', [ScreeningController::class, 'screening']);
+//     Route::get('/screening-history', [ScreeningController::class, 'history']);
 
-});
+// });
 
 // Article Categories
 Route::prefix('article-categories')->group(function () {
@@ -86,4 +86,23 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+});
+
+Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
+
+    Route::get('/dashboard', function () {
+        return response()->json([
+            'status' => true,
+            'message' => 'Welcome Mother'
+        ]);
+    });
+
+    Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
+
+    Route::post('/screening', [ScreeningController::class, 'screening']);
+
+    Route::get(
+        '/screening-history',
+        [ScreeningController::class, 'screeningHistory']
+    );
 });

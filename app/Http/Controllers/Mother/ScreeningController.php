@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Mother;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Screening;
 use App\Services\MLFeatureService;
 use App\Services\NotificationService;
 use App\Services\ScreeningValidatorService;
@@ -21,39 +20,43 @@ class ScreeningController extends Controller
         return $client->selectDatabase(config('database.connections.mongodb.database'));
     }
 
-    public function screening(Request $request, MLFeatureService $mlService, NotificationService $notificationService, ScreeningValidatorService $validator)
-    {
+    public function screening(
+        Request $request,
+        MLFeatureService $mlService,
+        NotificationService $notificationService,
+        ScreeningValidatorService $validator
+    ) {
         try {
             $user = $request->user();
-            
-            // Validasi user ter-autentikasi
+
             if (!$user) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'User tidak ter-autentikasi'
+                    'message' => 'User tidak terautentikasi'
                 ], 401);
             }
-            
-            // Validasi user ada di database
+
             $db = $this->db();
             $usersCollection = $db->selectCollection('users');
-            $userExists = $usersCollection->findOne(['_id' => new ObjectId((string) $user->_id)]);
-            
+
+            $userExists = $usersCollection->findOne([
+                '_id' => new ObjectId((string) $user->_id)
+            ]);
+
             if (!$userExists) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'User tidak ditemukan dalam sistem'
+                    'message' => 'User tidak ditemukan'
                 ], 404);
             }
-            
-            // Validasi user adalah mother
+
             if ($userExists['role'] !== 'mother') {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Hanya mother yang bisa melakukan screening'
+                    'message' => 'Hanya mother yang bisa screening'
                 ], 403);
             }
-            
+
             $answers = $request->all();
 
             if (empty($answers)) {
@@ -63,62 +66,90 @@ class ScreeningController extends Controller
                 ], 422);
             }
 
-            if (!isset($answers['mother_id'])) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Field mother_id wajib diisi pada payload'
-                ], 422);
-            }
-
-            try {
-                $motherObjectId = new ObjectId($answers['mother_id']);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Format mother_id tidak valid'
-                ], 400);
-            }
-
-            // Mencegah user menggunakan mother_id milik orang lain (spoofing)
-            if ((string) $motherObjectId !== (string) $user->_id) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Anda tidak bisa melakukan skrining untuk akun lain. mother_id tidak cocok dengan token.'
-                ], 403);
-            }
-
-            $motherCheck = $usersCollection->findOne([
-                '_id' => $motherObjectId,
-                'role' => 'mother'
-            ]);
-
-            if (!$motherCheck) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'mother_id tidak ditemukan pada database atau bukan sebagai mother'
-                ], 404);
-            }
-
+            // VALIDASI
             $validator->validate($answers);
 
+            // FEATURES
             $features = $mlService->transform($answers);
 
-            $response = \Http::post('http://127.0.0.1:5000/predict', [
-                'features' => $features,
-                'answers' => $answers,
-                'mother_id' => (string) $motherObjectId
-            ]);
+            // ML CALL
+            $response = Http::post(
+                config('services.ml.url', 'https://web-production-f1df64.up.railway.app') . '/predict',
+                ['features' => $features]
+            );
 
             if (!$response->ok()) {
-                throw new \Exception('ML Error (' . $response->status() . '): ' . $response->body());
+                throw new \Exception('ML Error: ' . $response->body());
             }
 
             $mlResult = $response->json();
 
-            $result = $mlResult['result'];
+            $result = $mlResult['result'] == 'Beresiko'
+                ? 'Beresiko Depresi'
+                : 'Tidak Beresiko Depresi';
 
+            // FIXED: pakai ID user login saja (INI KUNCI UTAMA)
+            $motherId = new ObjectId((string) $user->_id);
+
+            // SAVE HEALTH RECORD
+            $healthRecordsCollection = $db->selectCollection('health_records');
+
+            $healthInsert = $healthRecordsCollection->insertOne([
+                'mother_id' => $motherId,
+
+                'perasaan_sedih_atau_mudah_menangis' => $answers['perasaan_sedih_atau_mudah_menangis'],
+                'mudah_marah_terhadap_bayi_dan_pasangan' => $answers['mudah_marah_terhadap_bayi_dan_pasangan'],
+                'kesulitan_tidur_di_malam_hari' => $answers['kesulitan_tidur_di_malam_hari'],
+                'kesulitan_konsentrasi_atau_mengambil_keputusan' => $answers['kesulitan_konsentrasi_atau_mengambil_keputusan'],
+                'makan_berlebihan_atau_kehilangan_nafsu_makan' => $answers['makan_berlebihan_atau_kehilangan_nafsu_makan'],
+                'perasaan_bersalah' => $answers['perasaan_bersalah'],
+                'kesulitan_membangun_ikatan_dengan_bayi' => $answers['kesulitan_membangun_ikatan_dengan_bayi'],
+                'merasa_cemas' => $answers['merasa_cemas'],
+                'percobaan_bunuh_diri' => $answers['percobaan_bunuh_diri'],
+
+                'created_at' => new UTCDateTime()
+            ]);
+
+            $healthRecordId = $healthInsert->getInsertedId();
+
+            // SAVE PREDICTION
+            $predictionCollection = $db->selectCollection('prediction_results');
+
+            $predictionCollection->insertOne([
+                'mother_id' => $motherId,
+                'health_record_id' => $healthRecordId,
+                'cluster' => (int) ($mlResult['cluster'] ?? 0),
+                'result' => $result,
+
+                'recommendation' => [
+                    'source' => 'AI System',
+                    'priority' => $result === 'Beresiko Depresi' ? 'tinggi' : 'rendah',
+                    'summary' => $result === 'Beresiko Depresi'
+                        ? 'Terdapat indikasi depresi pasca melahirkan.'
+                        : 'Tidak ditemukan indikasi depresi pasca melahirkan.',
+                    'focus_areas' => [],
+                    'action_steps' => [
+                        'Jaga pola tidur',
+                        'Komunikasi dengan pasangan',
+                        'Pantau kondisi emosional'
+                    ],
+                    'partner_support' => [
+                        'Berikan dukungan emosional',
+                        'Bantu pekerjaan rumah'
+                    ],
+                    'professional_help' => $result === 'Beresiko Depresi'
+                        ? 'Disarankan konsultasi dengan psikolog atau tenaga medis.'
+                        : '',
+                    'emergency_note' => '',
+                    'disclaimer' => 'Hasil ini bukan diagnosis medis resmi.'
+                ],
+
+                'created_at' => new UTCDateTime()
+            ]);
+
+            // NOTIFIKASI
             $notificationService->createNotification(
-                (string) $motherObjectId,
+                (string) $motherId,
                 'mother',
                 'Screening Selesai',
                 'Screening Anda telah selesai.',
@@ -126,17 +157,10 @@ class ScreeningController extends Controller
                 ['result' => $result]
             );
 
-            Screening::create([
-                'mother_id' => (string) $motherObjectId,
-                'anonymous_id' => strtoupper($user->anonymous_id ?? ''),
-                'result' => strtolower($result),
-                'prediction' => $mlResult
-            ]);
-
             return response()->json([
                 'status' => true,
-                'features' => $features,
-                'prediction' => $mlResult
+                'message' => 'Screening berhasil',
+                'result' => $result
             ]);
 
         } catch (\Exception $e) {
@@ -148,82 +172,57 @@ class ScreeningController extends Controller
         }
     }
 
-    public function history(Request $request)
-    {
-        try {
-            $user = $request->user();
-            
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'User tidak ter-autentikasi'
-                ], 401);
-            }
+    // =========================
+    // HISTORY FIXED
+    // =========================
+   public function screeningHistory(Request $request)
+{
+    try {
+        $user = $request->user();
 
-            $db = $this->db();
-            $collection = $db->selectCollection('prediction_results');
-
-            $filter = ['mother_id' => new ObjectId((string) $user->_id)];
-
-            if ($request->filled('result')) {
-                $filter['result'] = new \MongoDB\BSON\Regex('^' . preg_quote(strtolower($request->result), '/') . '$', 'i');
-            }
-
-            if ($request->filled('since_days') && is_numeric($request->since_days) && (int) $request->since_days > 0) {
-                $threshold = new UTCDateTime(now()->subDays((int) $request->since_days)->timestamp * 1000);
-                $filter['created_at'] = ['$gte' => $threshold];
-            }
-
-            $options = ['sort' => ['created_at' => -1]];
-            $cursor = $collection->find($filter, $options);
-
-            $data = [];
-            foreach ($cursor as $item) {
-                $createdAt = null;
-                if (isset($item['created_at']) && $item['created_at'] instanceof \MongoDB\BSON\UTCDateTime) {
-                    $createdAt = $item['created_at']->toDateTime()->format(\DateTime::ATOM);
-                } elseif (isset($item['_id']) && method_exists($item['_id'], 'getTimestamp')) {
-                    $createdAt = $item['_id']->getTimestamp()->format(\DateTime::ATOM);
-                }
-
-                $anonymousId = null;
-                if (!empty($item['anonymous_id'])) {
-                    $anonymousId = strtoupper((string) $item['anonymous_id']);
-                } elseif (!empty($item['mother_id'])) {
-                    $anonymousId = strtoupper($user->anonymous_id ?? 'ANON-' . strtoupper(substr(md5((string) $item['mother_id']), 0, 8)));
-                } elseif (!empty($item['_id'])) {
-                    $anonymousId = 'ANON-' . strtoupper(substr(md5((string) $item['_id']), 0, 8));
-                }
-
-                $result = isset($item['result']) ? (string) $item['result'] : null;
-                $normalizedResult = strtolower($result);
-                $riskCategory = 'Tidak Diketahui';
-                if (str_contains($normalizedResult, 'tidak')) {
-                    $riskCategory = 'Rendah';
-                } elseif (str_contains($normalizedResult, 'ya') || str_contains($normalizedResult, 'depresi')) {
-                    $riskCategory = 'Tinggi';
-                }
-
-                $data[] = [
-                    'anonymous_id' => $anonymousId,
-                    'result' => $result,
-                    'risk_category' => $riskCategory,
-                    'prediction' => $item['prediction'] ?? null,
-                    'created_at' => $createdAt,
-                ];
-            }
-
-            return response()->json([
-                'status' => true,
-                'data' => $data
-            ]);
-
-        } catch (\Exception $e) {
+        if (!$user) {
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal mengambil riwayat screening',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Unauthorized'
+            ], 401);
         }
+
+        $db = $this->db();
+        $collection = $db->selectCollection('prediction_results');
+
+        // ✅ WAJIB ObjectId (sesuai saat insert)
+        $motherId = new ObjectId((string) $user->_id);
+
+        $data = $collection->find(
+            ['mother_id' => $motherId],
+            ['sort' => ['created_at' => -1]]
+        )->toArray();
+
+        // ✅ FORMAT UNTUK FLUTTER
+        $formatted = array_map(function ($item) {
+
+            $isRisk = ($item['result'] ?? '') === 'Beresiko Depresi';
+
+            return [
+                'result' => $item['result'] ?? '',
+                'risk_category' => $isRisk ? 'tinggi' : 'rendah',
+                'created_at' => isset($item['created_at'])
+                    ? $item['created_at']->toDateTime()->format('Y-m-d H:i:s')
+                    : null,
+            ];
+        }, $data);
+
+        return response()->json([
+            'status' => true,
+            'data' => $formatted
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Gagal mengambil history',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 }
