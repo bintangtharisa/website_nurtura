@@ -83,7 +83,9 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $existingRelationship = Relationship::where('mother_id', new ObjectId((string) $mother->_id))->exists();
+            $existingRelationship = Relationship::where('mother_id', new ObjectId((string) $mother->_id))
+                ->where('status', 'active')
+                ->exists();
 
             if ($existingRelationship) {
                 return response()->json([
