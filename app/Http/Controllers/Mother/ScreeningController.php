@@ -103,7 +103,9 @@ class ScreeningController extends Controller
 
             $features = $mlService->transform($answers);
 
-            $response = \Http::post('http://127.0.0.1:5000/predict', [
+            $mlApiUrl = rtrim(config('services.ml_api.url'), '/');
+
+            $response = \Http::post($mlApiUrl . '/predict', [
                 'features' => $features,
                 'answers' => $answers,
                 'mother_id' => (string) $motherObjectId
@@ -136,7 +138,8 @@ class ScreeningController extends Controller
             return response()->json([
                 'status' => true,
                 'features' => $features,
-                'prediction' => $mlResult
+                'prediction' => $mlResult,
+                'recommendation' => $mlResult['recommendation'] ?? null
             ]);
 
         } catch (\Exception $e) {
