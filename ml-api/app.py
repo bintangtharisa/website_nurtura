@@ -5,6 +5,14 @@ import os
 from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')
+
+from services.recommendation_service import get_ai_recommendation
+from services.chatbot_service import get_chatbot_reply
+from utils.screening_features import build_features
 
 app = Flask(__name__)
 
@@ -13,18 +21,6 @@ model = joblib.load("model_kmeans.pkl")
 scaler = joblib.load("scaler.pkl")
 
 CLUSTER_BERESIKO = 0
-
-# Mapping for answers to numerical values
-mapping = {
-    'Not at all': 0,
-    'No': 0,
-    'Maybe': 1,
-    'Not interested to say': 1,
-    'Sometimes': 2,
-    'Often': 3,
-    'Yes': 4,
-    'Two or more days a week': 4
-}
 
 # MongoDB connection
 mongo_uri = os.environ.get("MONGODB_URI", "mongodb+srv://userNurtura:nurturame123@cluster0.2vph2f5.mongodb.net/DBnurtura?authSource=admin")
@@ -90,22 +86,7 @@ def predict():
             }), 400
 
         # Map answers to features array based on ml_index
-        features = [0] * 9  # assuming 9 features
-        field_to_index = {
-            "perasaan_sedih_atau_mudah_menangis": 0,
-            "mudah_marah_terhadap_bayi_dan_pasangan": 1,
-            "kesulitan_tidur_di_malam_hari": 2,
-            "kesulitan_konsentrasi_atau_mengambil_keputusan": 3,
-            "makan_berlebihan_atau_kehilangan_nafsu_makan": 4,
-            "merasa_cemas": 5,
-            "perasaan_bersalah": 6,
-            "kesulitan_membangun_ikatan_dengan_bayi": 7,
-            "percobaan_bunuh_diri": 8
-        }
-
-        for field, answer in answers.items():
-            if field in field_to_index:
-                features[field_to_index[field]] = mapping.get(answer, 0)
+        features = build_features(answers)
 
         # ubah ke numpy array
         input_arr = np.array(features).reshape(1, -1)
@@ -119,6 +100,8 @@ def predict():
         # mapping hasil
         result = "Beresiko Depresi" if cluster == CLUSTER_BERESIKO else "Tidak Beresiko Depresi"
 
+        recommendation = get_ai_recommendation(result, answers, features, cluster)
+
         # Simpan ke health_records
         health_record = {
             "mother_id": ObjectId(mother_id),
@@ -131,16 +114,19 @@ def predict():
         # Simpan ke prediction_results
         prediction_result = {
             "mother_id": ObjectId(mother_id),
+            "health_record_id": health_id,
+            "cluster": int(cluster),
             "result": result,
-            "created_at": datetime.utcnow(),
-            "health_record_id": health_id
+            "recommendation": recommendation,
+            "created_at": datetime.utcnow()
         }
         prediction_results.insert_one(prediction_result)
 
         return jsonify({
             "status": "success",
             "cluster": int(cluster),
-            "result": result
+            "result": result,
+            "recommendation": recommendation
         })
 
     except Exception as e:
@@ -159,6 +145,61 @@ def health():
     return jsonify({
         "status": "ok"
     })
+
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "JSON tidak ditemukan"
+            }), 400
+
+        message = str(data.get("message", "")).strip()
+        user_role = str(data.get("user_role", "")).strip().lower()
+
+        if not message:
+            return jsonify({
+                "status": "error",
+                "message": "message wajib diisi"
+            }), 400
+
+        if user_role not in ["mother", "father"]:
+            return jsonify({
+                "status": "error",
+                "message": "user_role harus mother atau father"
+            }), 400
+
+        context = data.get("context", {})
+        if not isinstance(context, dict) or not context.get("latest_prediction"):
+            return jsonify({
+                "status": "error",
+                "message": "latest_prediction wajib tersedia untuk menggunakan chatbot"
+            }), 400
+
+        reply = get_chatbot_reply(
+            message,
+            user_role,
+            context,
+            data.get("history", [])
+        )
+
+        return jsonify({
+            "status": "success",
+            **reply
+        })
+    except Exception as e:
+        print(f"Chatbot error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 if __name__ == "__main__":

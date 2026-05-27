@@ -49,6 +49,16 @@
     });
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[character]));
+  }
+
   function createCategoryButton(category) {
     const categoryId = getCategoryId(category);
     const button = document.createElement('button');
@@ -92,10 +102,14 @@
     }
 
     articlesContainer.innerHTML = allArticles.map(article => {
-      const categoryName = article.category?.name || 'Tanpa Kategori';
+      const categoryName = escapeHtml(article.category?.name || 'Tanpa Kategori');
       const publishedAt = formatDate(article.published_at || article.created_at || '');
-      const thumbnail = article.thumbnail ? `<div style="height: 180px; border-radius: 20px 20px 0 0; overflow: hidden; background: #f3f4f6;"><img src="${article.thumbnail}" alt="${article.title}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '';
-      const articleUrl = `/father/support/article/${encodeURIComponent(article.slug || article._id)}`;
+      const title = escapeHtml(article.title || 'Artikel tanpa judul');
+      const description = String(article.description || '');
+      const excerpt = escapeHtml(description.slice(0, 120));
+      const articleKey = String(article.slug || article._id || article.id || '');
+      const thumbnail = article.thumbnail ? `<div style="height: 180px; border-radius: 20px 20px 0 0; overflow: hidden; background: #f3f4f6;"><img src="${escapeHtml(article.thumbnail)}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : '';
+      const articleUrl = `/father/support/article/${encodeURIComponent(articleKey)}`;
       return `
         <a href="${articleUrl}" style="text-decoration: none; color: inherit; display: block; text-align: left;">
           <div style="display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 24px; overflow: hidden; background: #ffffff; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); min-height: 380px; transition: transform 0.18s ease, box-shadow 0.18s ease; text-align: left;">
@@ -106,8 +120,8 @@
                 <span style="font-size: 11px; color: var(--clr-text-muted);">${publishedAt}</span>
               </div>
               <div>
-                <h3 style="margin: 0 0 10px; font-size: 16px; line-height: 1.4; color: var(--clr-text-heading); text-align: left;">${article.title}</h3>
-                <p style="margin: 0; color: var(--clr-text-muted); font-size: 13px; line-height: 1.7; text-align: left;">${String(article.description || '').slice(0, 120)}${String(article.description || '').length > 120 ? '...' : ''}</p>
+                <h3 style="margin: 0 0 10px; font-size: 16px; line-height: 1.4; color: var(--clr-text-heading); text-align: left;">${title}</h3>
+                <p style="margin: 0; color: var(--clr-text-muted); font-size: 13px; line-height: 1.7; text-align: left;">${excerpt}${description.length > 120 ? '...' : ''}</p>
               </div>
               <div style="margin-top: auto; align-self: flex-start; padding: 12px 18px; border-radius: 999px; background: var(--clr-primary); color: #ffffff; font-weight: 700; font-size: 13px; width: fit-content; text-align: left;">Baca Selengkapnya →</div>
             </div>

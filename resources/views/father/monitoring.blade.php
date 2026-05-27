@@ -18,14 +18,15 @@
     </span>
 </div>
 
-{{-- Grid Utama --}}
-<div style="display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start;">
+{{-- Grid Utama (Untuk Chart dan Status Saja) --}}
+{{-- UBAH: align-items dari start menjadi stretch agar tinggi kolom sama --}}
+<div style="display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: stretch;">
 
     {{-- Kolom Kiri --}}
-    <div style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
 
         {{-- Card: Ringkasan Kesehatan Mingguan --}}
-        <div class="card">
+        <div class="card" style="height: 100%;">
             <div class="card__header">
                 <div>
                     <div class="card__title">Frekuensi Skrining</div>
@@ -61,64 +62,24 @@
             </div>
         </div>
 
-        {{-- Card: Riwayat Hasil Singkat --}}
-        <div class="card">
-            <div class="card__header" style="margin-bottom: 14px; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
-                <div>
-                    <div class="card__title">Riwayat Hasil Singkat</div>
-                    <div class="card__subtitle">Pemeriksaan terakhir istri</div>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-left: auto;">
-                    <select class="period-select" id="limitSelect" style="height: 36px; padding: 0 12px; min-width: 100px;">
-                        <option value="10">10 data</option>
-                        <option value="20">20 data</option>
-                        <option value="30">30 data</option>
-                    </select>
-                    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--clr-border-light); border-radius: var(--radius-sm); background: var(--clr-bg);">
-                        <input type="date" id="startDateFilter" style="height: 32px; border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 0 10px; font-size: 12px; color: var(--clr-text-heading); background: white;">
-                        <span style="font-size: 12px; color: var(--clr-text-muted);">sampai</span>
-                        <input type="date" id="endDateFilter" style="height: 32px; border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 0 10px; font-size: 12px; color: var(--clr-text-heading); background: white;">
-                    </div>
-                    <button type="button" id="applyFilterBtn" class="btn-viewall" style="height: 36px; border: 0; cursor: pointer; padding: 0 14px;">Filter</button>
-                    <a href="#" id="resetFilterBtn" class="btn-viewall" style="height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 14px;">
-                        Lihat Semua
-                    </a>
-                </div>
-            </div>
-
-            {{-- Table --}}
-            <div style="overflow: auto; max-height: 430px;">
-                <table style="width: 100%; min-width: 760px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: var(--clr-bg); border-top: 1px solid var(--clr-border-light); border-bottom: 1px solid var(--clr-border-light);">
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tanggal Skrining</th>
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Nama Ibu</th>
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Hasil Skrining</th>
-                            <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tindakan</th>
-                        </tr>
-                    </thead>
-                    <tbody id="riwayatTable">
-                        {{-- Diisi JavaScript --}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
     {{-- Kolom Kanan --}}
-    <div style="display: flex; flex-direction: column; gap: 18px;">
+    {{-- UBAH: Tambah height 100% --}}
+    <div style="display: flex; flex-direction: column; gap: 18px; height: 100%;">
 
         {{-- Card: Status Risiko Saat Ini --}}
-        <div class="card">
+        {{-- UBAH: Set card jadi flex column dan height 100% supaya full ke bawah --}}
+        <div class="card" style="height: 100%; display: flex; flex-direction: column;">
             <div class="card__header">
                 <div>
                     <div class="card__title">Status Saat Ini</div>
                     <div class="card__subtitle">Kondisi terkini istri</div>
                 </div>
             </div>
-            <div class="card__body">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+            {{-- UBAH: flex: 1 supaya body card mengisi sisa ruang --}}
+            <div class="card__body" style="flex: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; flex-direction: column; gap: 12px; height: 100%;">
                     <div id="currentResultBox" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--clr-low-bg); border-radius: var(--radius-sm);">
                         <span id="currentResultLabel" style="font-size: 13px; font-weight: 500; color: var(--clr-low-text);">Tidak Beresiko Depresi</span>
                         <span id="currentResultPercent" style="font-size: 20px; font-weight: 700; color: var(--clr-low-text);">25%</span>
@@ -126,7 +87,8 @@
                     <div id="currentResultDescription" style="font-size: 12px; color: var(--clr-text-muted); line-height: 1.6;">
                         Kondisi istri dalam batas normal. Tetap pantau secara rutin dan berikan dukungan emosional.
                     </div>
-                    <a href="{{ route('father.support') }}" class="btn btn--outline" style="justify-content: center;">
+                    {{-- UBAH: margin-top: auto supaya tombol terdorong ke paling bawah --}}
+                    <a href="{{ route('father.support') }}" class="btn btn--outline" style="justify-content: center; margin-top: auto;">
                         Lihat Tips Dukungan
                     </a>
                 </div>
@@ -135,6 +97,52 @@
 
     </div>
 
+</div> {{-- Akhir Grid Utama --}}
+
+{{-- Tabel Riwayat --}}
+<div style="margin-top: 18px;">
+    {{-- Card: Riwayat Hasil Singkat --}}
+    <div class="card">
+        <div class="card__header" style="margin-bottom: 14px; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+            <div>
+                <div class="card__title">Riwayat Hasil Singkat</div>
+                <div class="card__subtitle">Pemeriksaan terakhir istri</div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-left: auto;">
+                <select class="period-select" id="limitSelect" style="height: 36px; padding: 0 12px; min-width: 100px;">
+                    <option value="10">10 data</option>
+                    <option value="20">20 data</option>
+                    <option value="30">30 data</option>
+                </select>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--clr-border-light); border-radius: var(--radius-sm); background: var(--clr-bg);">
+                    <input type="date" id="startDateFilter" style="height: 32px; border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 0 10px; font-size: 12px; color: var(--clr-text-heading); background: white;">
+                    <span style="font-size: 12px; color: var(--clr-text-muted);">sampai</span>
+                    <input type="date" id="endDateFilter" style="height: 32px; border: 1px solid var(--clr-border); border-radius: var(--radius-sm); padding: 0 10px; font-size: 12px; color: var(--clr-text-heading); background: white;">
+                </div>
+                <button type="button" id="applyFilterBtn" class="btn-viewall" style="height: 36px; border: 0; cursor: pointer; padding: 0 14px;">Filter</button>
+                <a href="#" id="resetFilterBtn" class="btn-viewall" style="height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 14px;">
+                    Lihat Semua
+                </a>
+            </div>
+        </div>
+
+        {{-- Table --}}
+        <div style="overflow: auto; max-height: 430px;">
+            <table style="width: 100%; min-width: 760px; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--clr-bg); border-top: 1px solid var(--clr-border-light); border-bottom: 1px solid var(--clr-border-light);">
+                        <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tanggal Skrining</th>
+                        <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Nama Ibu</th>
+                        <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Hasil Skrining</th>
+                        <th style="padding: 9px 22px; font-size: 10.5px; font-weight: 500; color: var(--clr-text-muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em;">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody id="riwayatTable">
+                    {{-- Diisi JavaScript --}}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 @endsection

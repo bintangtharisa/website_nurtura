@@ -72,11 +72,14 @@ class ScreeningController extends Controller
             // FEATURES
             $features = $mlService->transform($answers);
 
-            // ML CALL
-            $response = Http::post(
-                config('services.ml.url', 'https://web-production-f1df64.up.railway.app') . '/predict',
-                ['features' => $features]
-            );
+            $motherId = new ObjectId((string) $user->_id);
+            $mlApiUrl = rtrim(config('services.ml_api.url'), '/');
+
+            $response = Http::timeout(30)->post($mlApiUrl . '/predict', [
+                'features' => $features,
+                'answers' => $answers,
+                'mother_id' => (string) $user->_id
+            ]);
 
             if (!$response->ok()) {
                 throw new \Exception('ML Error: ' . $response->body());
@@ -84,19 +87,40 @@ class ScreeningController extends Controller
 
             $mlResult = $response->json();
 
-            $result = $mlResult['result'] == 'Beresiko'
-                ? 'Beresiko Depresi'
-                : 'Tidak Beresiko Depresi';
-
-            // FIXED: pakai ID user login saja (INI KUNCI UTAMA)
-            $motherId = new ObjectId((string) $user->_id);
+            // ✅ DIPERBAIKI: pakai str_contains agar cocok dengan semua kemungkinan string ML
+            $mlResultText = strtolower($mlResult['result'] ?? '');
+            $result = str_contains($mlResultText, 'tidak beresiko')
+    ? 'Tidak Beresiko Depresi'
+    : (str_contains($mlResultText, 'beresiko') ? 'Beresiko Depresi' : 'Tidak Beresiko Depresi');
+            // ✅ DIPERBAIKI: pakai recommendation dari ML, bukan hardcode
+            $recommendation = $mlResult['recommendation'] ?? [
+                'source' => 'local',
+                'priority' => $result === 'Beresiko Depresi' ? 'tinggi' : 'rendah',
+                'summary' => $result === 'Beresiko Depresi'
+                    ? 'Terdapat indikasi depresi pasca melahirkan.'
+                    : 'Tidak ditemukan indikasi depresi pasca melahirkan.',
+                'focus_areas' => [],
+                'action_steps' => [
+                    'Jaga pola tidur',
+                    'Komunikasi dengan pasangan',
+                    'Pantau kondisi emosional'
+                ],
+                'partner_support' => [
+                    'Berikan dukungan emosional',
+                    'Bantu pekerjaan rumah'
+                ],
+                'professional_help' => $result === 'Beresiko Depresi'
+                    ? 'Disarankan konsultasi dengan psikolog atau tenaga medis.'
+                    : '',
+                'emergency_note' => '',
+                'disclaimer' => 'Hasil ini bukan diagnosis medis resmi.'
+            ];
 
             // SAVE HEALTH RECORD
             $healthRecordsCollection = $db->selectCollection('health_records');
 
             $healthInsert = $healthRecordsCollection->insertOne([
                 'mother_id' => $motherId,
-
                 'perasaan_sedih_atau_mudah_menangis' => $answers['perasaan_sedih_atau_mudah_menangis'],
                 'mudah_marah_terhadap_bayi_dan_pasangan' => $answers['mudah_marah_terhadap_bayi_dan_pasangan'],
                 'kesulitan_tidur_di_malam_hari' => $answers['kesulitan_tidur_di_malam_hari'],
@@ -106,7 +130,6 @@ class ScreeningController extends Controller
                 'kesulitan_membangun_ikatan_dengan_bayi' => $answers['kesulitan_membangun_ikatan_dengan_bayi'],
                 'merasa_cemas' => $answers['merasa_cemas'],
                 'percobaan_bunuh_diri' => $answers['percobaan_bunuh_diri'],
-
                 'created_at' => new UTCDateTime()
             ]);
 
@@ -120,30 +143,7 @@ class ScreeningController extends Controller
                 'health_record_id' => $healthRecordId,
                 'cluster' => (int) ($mlResult['cluster'] ?? 0),
                 'result' => $result,
-
-                'recommendation' => [
-                    'source' => 'AI System',
-                    'priority' => $result === 'Beresiko Depresi' ? 'tinggi' : 'rendah',
-                    'summary' => $result === 'Beresiko Depresi'
-                        ? 'Terdapat indikasi depresi pasca melahirkan.'
-                        : 'Tidak ditemukan indikasi depresi pasca melahirkan.',
-                    'focus_areas' => [],
-                    'action_steps' => [
-                        'Jaga pola tidur',
-                        'Komunikasi dengan pasangan',
-                        'Pantau kondisi emosional'
-                    ],
-                    'partner_support' => [
-                        'Berikan dukungan emosional',
-                        'Bantu pekerjaan rumah'
-                    ],
-                    'professional_help' => $result === 'Beresiko Depresi'
-                        ? 'Disarankan konsultasi dengan psikolog atau tenaga medis.'
-                        : '',
-                    'emergency_note' => '',
-                    'disclaimer' => 'Hasil ini bukan diagnosis medis resmi.'
-                ],
-
+                'recommendation' => $recommendation,
                 'created_at' => new UTCDateTime()
             ]);
 
@@ -160,7 +160,10 @@ class ScreeningController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Screening berhasil',
-                'result' => $result
+                'result' => $result,
+                'features' => $features,
+                'prediction' => $mlResult,
+                'recommendation' => $recommendation
             ]);
 
         } catch (\Exception $e) {
@@ -172,57 +175,51 @@ class ScreeningController extends Controller
         }
     }
 
-    // =========================
-    // HISTORY FIXED
-    // =========================
-   public function screeningHistory(Request $request)
-{
-    try {
-        $user = $request->user();
+    public function screeningHistory(Request $request)
+    {
+        try {
+            $user = $request->user();
 
-        if (!$user) {
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            $db = $this->db();
+            $collection = $db->selectCollection('prediction_results');
+
+            $motherId = new ObjectId((string) $user->_id);
+
+            $data = $collection->find(
+                ['mother_id' => $motherId],
+                ['sort' => ['created_at' => -1]]
+            )->toArray();
+
+            $formatted = array_map(function ($item) {
+                $isRisk = ($item['result'] ?? '') === 'Beresiko Depresi';
+
+                return [
+                    'result' => $item['result'] ?? '',
+                    'risk_category' => $isRisk ? 'tinggi' : 'rendah',
+                    'created_at' => isset($item['created_at'])
+                        ? $item['created_at']->toDateTime()->format('Y-m-d H:i:s')
+                        : null,
+                ];
+            }, $data);
+
+            return response()->json([
+                'status' => true,
+                'data' => $formatted
+            ]);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthorized'
-            ], 401);
+                'message' => 'Gagal mengambil history',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $db = $this->db();
-        $collection = $db->selectCollection('prediction_results');
-
-        // ✅ WAJIB ObjectId (sesuai saat insert)
-        $motherId = new ObjectId((string) $user->_id);
-
-        $data = $collection->find(
-            ['mother_id' => $motherId],
-            ['sort' => ['created_at' => -1]]
-        )->toArray();
-
-        // ✅ FORMAT UNTUK FLUTTER
-        $formatted = array_map(function ($item) {
-
-            $isRisk = ($item['result'] ?? '') === 'Beresiko Depresi';
-
-            return [
-                'result' => $item['result'] ?? '',
-                'risk_category' => $isRisk ? 'tinggi' : 'rendah',
-                'created_at' => isset($item['created_at'])
-                    ? $item['created_at']->toDateTime()->format('Y-m-d H:i:s')
-                    : null,
-            ];
-        }, $data);
-
-        return response()->json([
-            'status' => true,
-            'data' => $formatted
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Gagal mengambil history',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 }

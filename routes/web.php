@@ -60,6 +60,7 @@ Route::get('/father/monitoring', function () { return view('father.monitoring');
 Route::get('/father/profile', function () { return view('father.profile'); })->name('father.profile');
 Route::get('/father/support', function () { return view('father.support'); })->name('father.support');
 Route::get('/father/support/article/{slug}', [SupportController::class, 'show'])->name('father.support.article');
+Route::get('/father/chatbot', function () { return view('father.chatbot'); })->name('father.chatbot');
 Route::get('logout', function () { return view('father.logout'); })->name('father.logout');
 
 Route::get('/hubungkan-akun', function () {

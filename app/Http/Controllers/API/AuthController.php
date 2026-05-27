@@ -83,7 +83,9 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $existingRelationship = Relationship::where('mother_id', new ObjectId((string) $mother->_id))->exists();
+            $existingRelationship = Relationship::where('mother_id', new ObjectId((string) $mother->_id))
+                ->where('status', 'active')
+                ->exists();
 
             if ($existingRelationship) {
                 return response()->json([
@@ -129,36 +131,49 @@ class AuthController extends Controller
 
         if ($role === 'father') {
 
+            $now = $this->bsonDate();
+
             Relationship::create([
                 'mother_id' => new ObjectId((string) $mother->_id),
                 'father_id' => new ObjectId((string) $user->_id),
-                'status' => 'active',
-                'connected_at' => $this->bsonDate(),
+                'status' => 'pending',
+                'connected_at' => $now,
                 'disconnected_at' => null,
                 'disconnected_by' => null,
                 'reconnect_count' => 0,
                 'last_access_by_father' => null,
-                'created_at' => $this->bsonDate(),
+                'created_at' => $now,
                 'updated_at' => null,
             ]);
             $notificationService->createNotification(
                 $mother->_id,
                 'mother',
-                'Koneksi Berhasil',
-                'Ayah berhasil terhubung dengan Anda.',
+                'Permintaan Koneksi',
+                'Ayah mengirim permintaan koneksi. Terima permintaan agar ayah dapat melihat report Anda.',
                 'connection',
-                ['father_id' => (string) $user->_id]
-            );        }
+                [
+                    'father_id' => (string) $user->_id,
+                    'father_username' => $user->username,
+                    'relationship_status' => 'pending',
+                ]
+            );
+        }
+
+        $message = $role === 'father'
+            ? 'Register berhasil. Permintaan koneksi telah dikirim ke ibu dan menunggu persetujuan.'
+            : 'Register berhasil';
 
         return response()->json([
             'status' => true,
-            'message' => 'Register berhasil',
+            'message' => $message,
             'data' => [
                 'id' => (string) $user->_id,
                 'username' => $user->username,
                 'email' => $user->email,
                 'role' => $user->role,
-                'connection_code' => $user->anonymous_id ?? null
+                'connection_code' => $user->anonymous_id ?? null,
+                'is_connected' => false,
+                'connection_status' => $role === 'father' ? 'pending' : null,
             ]
         ], 201);
     }

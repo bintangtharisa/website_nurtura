@@ -21,7 +21,7 @@ class SupportController extends Controller
             abort(404);
         }
 
-        return view('father.article', [
+        return view('father.article-detail', [
             'article' => $article,
         ]);
     }
