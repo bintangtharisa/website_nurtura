@@ -20,7 +20,6 @@
           <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </div>
-      <span class="stat-card__delta stat-card__delta--up">+12.5%</span>
     </div>
     <div class="stat-card__label">Total Users</div>
     <div class="stat-card__value" id="totalUser">Loading...</div>
@@ -35,7 +34,6 @@
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
-      <span class="stat-card__delta stat-card__delta--up">+19.3%</span>
     </div>
     <div class="stat-card__label">Prediction Accuracy</div>
     <div class="stat-card__value">94.8%</div>
@@ -66,34 +64,19 @@
   <div class="chart-section__header">
     <div>
       <div class="chart-section__title">Prediction Trends</div>
-      <div class="chart-section__subtitle">Monthly screening activity volume</div>
+      <div class="chart-section__subtitle" id="predictionTrendSubtitle">Tren hasil prediksi ibu per kuartal</div>
     </div>
-    <button class="chart-section__filter">
-      Last 6 Months
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-        <polyline points="6 9 12 15 18 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      </svg>
-    </button>
+    <div class="chart-section__filter" id="predictionTrendYear">Tahun Ini</div>
   </div>
 
-  {{-- Bars --}}
-  <div class="bar-chart">
-    <div class="bar-wrap"><div class="bar bar--rose"  style="height: 42%"></div></div>
-    <div class="bar-wrap"><div class="bar bar--rose"  style="height: 55%"></div></div>
-    <div class="bar-wrap"><div class="bar bar--sand"  style="height: 48%"></div></div>
-    <div class="bar-wrap"><div class="bar bar--sand"  style="height: 78%"></div></div>
-    <div class="bar-wrap"><div class="bar bar--green" style="height: 72%"></div></div>
-    <div class="bar-wrap"><div class="bar bar--green" style="height: 96%"></div></div>
+  <div class="trend-chart" id="predictionTrendChart">
+    <div class="trend-chart__empty">Memuat grafik...</div>
   </div>
 
-  {{-- Month Labels --}}
-  <div class="bar-labels">
-    <span>Jan</span>
-    <span>Feb</span>
-    <span>Mar</span>
-    <span>Apr</span>
-    <span>May</span>
-    <span>Jun</span>
+  <div class="trend-legend">
+    <span><i class="trend-legend__dot trend-legend__dot--high"></i>Beresiko</span>
+    <span><i class="trend-legend__dot trend-legend__dot--low"></i>Tidak Beresiko</span>
+    <span><i class="trend-legend__dot trend-legend__dot--unknown"></i>Tidak Diketahui</span>
   </div>
 </section>
 

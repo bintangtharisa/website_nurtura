@@ -31,6 +31,7 @@ class DashboardAdminController extends Controller
             $client = new Client(config('database.connections.mongodb.dsn'));
             $db = $client->selectDatabase(config('database.connections.mongodb.database'));
             $collection = $db->selectCollection('prediction_results');
+            $usersCollection = $db->selectCollection('users');
 
             $options = [
                 'sort' => ['created_at' => -1],
@@ -48,6 +49,7 @@ class DashboardAdminController extends Controller
                 'totalUser' => $totalUser,
                 'totalPengguna' => $totalPengguna,
                 'recentScreenings' => $recentScreenings,
+                'predictionTrends' => $this->getPredictionTrends($collection, $usersCollection),
             ]);
 
         } catch (\Exception $e) {
@@ -57,6 +59,104 @@ class DashboardAdminController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function getPredictionTrends($collection, $usersCollection): array
+    {
+        $year = (int) now()->year;
+        $startOfYear = new UTCDateTime(now()->startOfYear()->timestamp * 1000);
+        $endOfYear = new UTCDateTime(now()->endOfYear()->timestamp * 1000);
+
+        $motherIds = [];
+        $motherCursor = $usersCollection->find(
+            ['role' => 'mother'],
+            ['projection' => ['_id' => 1]]
+        );
+
+        foreach ($motherCursor as $mother) {
+            if (!empty($mother['_id'])) {
+                $motherIds[] = $mother['_id'];
+            }
+        }
+
+        $quarters = [
+            1 => ['label' => 'Q1', 'high' => 0, 'low' => 0, 'unknown' => 0, 'total' => 0],
+            2 => ['label' => 'Q2', 'high' => 0, 'low' => 0, 'unknown' => 0, 'total' => 0],
+            3 => ['label' => 'Q3', 'high' => 0, 'low' => 0, 'unknown' => 0, 'total' => 0],
+            4 => ['label' => 'Q4', 'high' => 0, 'low' => 0, 'unknown' => 0, 'total' => 0],
+        ];
+
+        if (empty($motherIds)) {
+            return [
+                'year' => $year,
+                'labels' => array_column($quarters, 'label'),
+                'series' => $this->formatTrendSeries($quarters),
+                'quarters' => array_values($quarters),
+            ];
+        }
+
+        $cursor = $collection->find([
+            'mother_id' => ['$in' => $motherIds],
+            'created_at' => [
+                '$gte' => $startOfYear,
+                '$lte' => $endOfYear,
+            ],
+        ]);
+
+        foreach ($cursor as $item) {
+            $createdAt = null;
+            if (isset($item['created_at']) && $item['created_at'] instanceof UTCDateTime) {
+                $createdAt = $item['created_at']->toDateTime();
+            } elseif (isset($item['_id']) && method_exists($item['_id'], 'getTimestamp')) {
+                $timestamp = $item['_id']->getTimestamp();
+                $createdAt = $timestamp instanceof \DateTimeInterface
+                    ? $timestamp
+                    : (new \DateTimeImmutable())->setTimestamp((int) $timestamp);
+            }
+
+            if (!$createdAt) {
+                continue;
+            }
+
+            $month = (int) $createdAt->format('n');
+            $quarter = (int) ceil($month / 3);
+            $category = $this->trendCategory($item['result'] ?? null);
+
+            $quarters[$quarter][$category]++;
+            $quarters[$quarter]['total']++;
+        }
+
+        return [
+            'year' => $year,
+            'labels' => array_column($quarters, 'label'),
+            'series' => $this->formatTrendSeries($quarters),
+            'quarters' => array_values($quarters),
+        ];
+    }
+
+    private function formatTrendSeries(array $quarters): array
+    {
+        return [
+            'high' => array_column($quarters, 'high'),
+            'low' => array_column($quarters, 'low'),
+            'unknown' => array_column($quarters, 'unknown'),
+            'total' => array_column($quarters, 'total'),
+        ];
+    }
+
+    private function trendCategory($result): string
+    {
+        $normalizedResult = strtolower((string) $result);
+
+        if (str_contains($normalizedResult, 'tidak')) {
+            return 'low';
+        }
+
+        if (str_contains($normalizedResult, 'ya') || str_contains($normalizedResult, 'depresi')) {
+            return 'high';
+        }
+
+        return 'unknown';
     }
 
     private function formatPredictionResult($item)
