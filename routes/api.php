@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\DashboardAdminController;
+use App\Http\Controllers\API\AdminExportController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\ChatbotController;
 use App\Http\Controllers\Admin\QuestionsController as QuestionsControllerAdmin;
@@ -31,6 +32,10 @@ Route::prefix('password')->group(function () {
 Route::prefix('admin')->middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/dashboard', [DashboardAdminController::class, 'dashboard']);
     Route::get('/screenings', [DashboardAdminController::class, 'screenings']);
+    Route::get('/export/screenings', [AdminExportController::class, 'screeningHistory']);
+    Route::get('/export/trends', [AdminExportController::class, 'predictionTrends']);
+    Route::get('/export/research-dataset', [AdminExportController::class, 'researchDataset']);
+    Route::get('/export/summary-pdf', [AdminExportController::class, 'summaryPdf']);
     Route::get('/questions', [QuestionsControllerAdmin::class, 'index']);
     Route::put('/questions/reorder', [QuestionsControllerAdmin::class, 'reorder']);
     Route::put('/questions/{id}/toggle', [QuestionsControllerAdmin::class, 'toggle']);
