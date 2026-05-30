@@ -225,33 +225,15 @@ class AdminExportController extends Controller
             }
         }
 
-        $lines = [
-            'Nurtura Family - Ringkasan Export',
-            'Dibuat: ' . now()->format('Y-m-d H:i:s'),
-            'Kode ibu anonim: ' . ($request->filled('anonymous_id') ? strtoupper($request->input('anonymous_id')) : 'Semua'),
-            'Periode: ' . ($request->input('date_from') ?: '-') . ' sampai ' . ($request->input('date_to') ?: '-'),
-            'Filter hasil: ' . $this->resultFilterLabel($request->input('result', 'all')),
-            '',
-            'Total skrining: ' . $summary['total'],
-            'Beresiko: ' . $summary['high'],
-            'Tidak beresiko: ' . $summary['low'],
-            'Tidak diketahui: ' . $summary['unknown'],
-            '',
-            'Analitik Tren Per Kuartal',
-        ];
-
-        foreach ($quarters as $quarter) {
-            $lines[] = sprintf(
-                '%s | Beresiko: %d | Tidak Beresiko: %d | Tidak Diketahui: %d | Total: %d',
-                $quarter['label'],
-                $quarter['high'],
-                $quarter['low'],
-                $quarter['unknown'],
-                $quarter['total']
-            );
-        }
-
-        $pdf = $this->simplePdf($lines);
+        $pdf = $this->summaryReportPdf([
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+            'anonymous_id' => $request->filled('anonymous_id') ? strtoupper($request->input('anonymous_id')) : 'Semua ibu anonim',
+            'period' => ($request->input('date_from') ?: '-') . ' sampai ' . ($request->input('date_to') ?: '-'),
+            'result_filter' => $this->resultFilterLabel($request->input('result', 'all')),
+            'summary' => $summary,
+            'quarters' => $quarters,
+            'insights' => $this->summaryInsights($summary, $quarters),
+        ]);
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
@@ -434,42 +416,189 @@ class AdminExportController extends Controller
         };
     }
 
-    private function simplePdf(array $lines): string
+    private function summaryInsights(array $summary, array $quarters): array
     {
-        $content = "BT\n/F1 11 Tf\n50 790 Td\n14 TL\n";
+        $highestQuarter = array_reduce($quarters, function ($carry, $quarter) {
+            if ($carry === null || $quarter['total'] > $carry['total']) {
+                return $quarter;
+            }
 
-        foreach ($lines as $line) {
-            $content .= '(' . $this->escapePdfText($line) . ") Tj\nT*\n";
+            return $carry;
+        });
+
+        $riskRate = $summary['total'] > 0
+            ? round(($summary['high'] / $summary['total']) * 100, 1)
+            : 0;
+
+        return [
+            'Persentase beresiko: ' . $riskRate . '% dari total skrining.',
+            'Kuartal tertinggi: ' . (($highestQuarter['label'] ?? '-') . ' dengan ' . ($highestQuarter['total'] ?? 0) . ' skrining.'),
+            'Laporan ini hanya menampilkan data anonim tanpa email, username, atau relasi keluarga.',
+        ];
+    }
+
+    private function summaryReportPdf(array $report): string
+    {
+        $content = '';
+
+        $content .= $this->pdfRect(0, 760, 595, 82, [0.64, 0.69, 0.54]);
+        $content .= $this->pdfText('Nurtura Family', 42, 806, 18, [1, 1, 1], 'F2');
+        $content .= $this->pdfText('Laporan Ringkasan Skrining', 42, 782, 22, [1, 1, 1], 'F2');
+        $content .= $this->pdfText('Dibuat: ' . $report['generated_at'], 430, 808, 9, [1, 1, 1]);
+        $content .= $this->pdfText('Data anonim untuk kebutuhan monitoring admin', 42, 765, 10, [0.96, 0.98, 0.94]);
+
+        $content .= $this->pdfText('Filter Laporan', 42, 728, 13, [0.10, 0.10, 0.10], 'F2');
+        $content .= $this->pdfText('Kode ibu anonim: ' . $report['anonymous_id'], 42, 710, 10, [0.32, 0.32, 0.32]);
+        $content .= $this->pdfText('Periode: ' . $report['period'], 42, 694, 10, [0.32, 0.32, 0.32]);
+        $content .= $this->pdfText('Hasil prediksi: ' . $report['result_filter'], 42, 678, 10, [0.32, 0.32, 0.32]);
+
+        $cards = [
+            ['Total Skrining', $report['summary']['total'], [0.64, 0.69, 0.54]],
+            ['Beresiko', $report['summary']['high'], [0.78, 0.16, 0.16]],
+            ['Tidak Beresiko', $report['summary']['low'], [0.18, 0.49, 0.20]],
+            ['Tidak Diketahui', $report['summary']['unknown'], [0.63, 0.44, 0.00]],
+        ];
+        $cardPositions = [[42, 606], [306, 606], [42, 520], [306, 520]];
+
+        foreach ($cards as $index => $card) {
+            [$x, $y] = $cardPositions[$index];
+            $content .= $this->pdfRect($x, $y, 247, 68, [0.98, 0.98, 0.97]);
+            $content .= $this->pdfStrokeRect($x, $y, 247, 68, [0.90, 0.89, 0.86]);
+            $content .= $this->pdfRect($x, $y, 6, 68, $card[2]);
+            $content .= $this->pdfText($card[0], $x + 18, $y + 43, 10, [0.42, 0.45, 0.42], 'F2');
+            $content .= $this->pdfText((string) $card[1], $x + 18, $y + 17, 22, [0.10, 0.10, 0.10], 'F2');
         }
 
-        $content .= "ET";
+        $content .= $this->pdfText('Insight Singkat', 42, 478, 13, [0.10, 0.10, 0.10], 'F2');
+        $insightY = 459;
+        foreach ($report['insights'] as $insight) {
+            $content .= $this->pdfText('- ' . $insight, 42, $insightY, 10, [0.32, 0.32, 0.32]);
+            $insightY -= 15;
+        }
+
+        $tableX = 42;
+        $tableY = 354;
+        $rowH = 28;
+        $colWidths = [82, 92, 116, 116, 92];
+        $headers = ['Kuartal', 'Beresiko', 'Tidak Beresiko', 'Tidak Diketahui', 'Total'];
+
+        $content .= $this->pdfText('Analitik Tren Per Kuartal', 42, 386, 13, [0.10, 0.10, 0.10], 'F2');
+        $content .= $this->pdfRect($tableX, $tableY, array_sum($colWidths), $rowH, [0.64, 0.69, 0.54]);
+        $cursorX = $tableX;
+        foreach ($headers as $index => $header) {
+            $content .= $this->pdfText($header, $cursorX + 8, $tableY + 10, 9, [1, 1, 1], 'F2');
+            $cursorX += $colWidths[$index];
+        }
+
+        $rowY = $tableY - $rowH;
+        foreach ($report['quarters'] as $quarter) {
+            $content .= $this->pdfRect($tableX, $rowY, array_sum($colWidths), $rowH, [1, 1, 1]);
+            $content .= $this->pdfStrokeRect($tableX, $rowY, array_sum($colWidths), $rowH, [0.90, 0.89, 0.86]);
+
+            $values = [$quarter['label'], $quarter['high'], $quarter['low'], $quarter['unknown'], $quarter['total']];
+            $cursorX = $tableX;
+            foreach ($values as $index => $value) {
+                $content .= $this->pdfText((string) $value, $cursorX + 8, $rowY + 10, 9, [0.23, 0.23, 0.23]);
+                $cursorX += $colWidths[$index];
+            }
+
+            $rowY -= $rowH;
+        }
+
+        $content .= $this->pdfLine(42, 70, 553, 70, [0.90, 0.89, 0.86]);
+        $content .= $this->pdfText('Nurtura Family - Data bersifat anonim dan hanya untuk kebutuhan administratif.', 42, 50, 9, [0.45, 0.45, 0.45]);
+        $content .= $this->pdfText('Halaman 1', 505, 50, 9, [0.45, 0.45, 0.45]);
+
+        return $this->buildPdf($content);
+    }
+
+    private function buildPdf(string $content): string
+    {
         $objects = [];
         $objects[] = "<< /Type /Catalog /Pages 2 0 R >>";
         $objects[] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
-        $objects[] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>";
+        $objects[] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /ProcSet [/PDF /Text] /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>";
         $objects[] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
-        $objects[] = "<< /Length " . strlen($content) . " >>\nstream\n" . $content . "\nendstream";
+        $objects[] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
+        $objects[] = "<< /Length " . strlen($content) . " >>\r\nstream\r\n" . $content . "\r\nendstream";
 
-        $pdf = "%PDF-1.4\n";
+        $pdf = "%PDF-1.4\r\n%\xE2\xE3\xCF\xD3\r\n";
         $offsets = [0];
 
         foreach ($objects as $index => $object) {
             $offsets[] = strlen($pdf);
-            $pdf .= ($index + 1) . " 0 obj\n" . $object . "\nendobj\n";
+            $pdf .= ($index + 1) . " 0 obj\r\n" . $object . "\r\nendobj\r\n";
         }
 
         $xrefOffset = strlen($pdf);
-        $pdf .= "xref\n0 " . (count($objects) + 1) . "\n";
-        $pdf .= "0000000000 65535 f \n";
+        $pdf .= "xref\r\n0 " . (count($objects) + 1) . "\r\n";
+        $pdf .= "0000000000 65535 f \r\n";
 
         for ($i = 1; $i <= count($objects); $i++) {
-            $pdf .= str_pad((string) $offsets[$i], 10, '0', STR_PAD_LEFT) . " 00000 n \n";
+            $pdf .= str_pad((string) $offsets[$i], 10, '0', STR_PAD_LEFT) . " 00000 n \r\n";
         }
 
-        $pdf .= "trailer\n<< /Size " . (count($objects) + 1) . " /Root 1 0 R >>\n";
-        $pdf .= "startxref\n" . $xrefOffset . "\n%%EOF";
+        $pdf .= "trailer\r\n<< /Size " . (count($objects) + 1) . " /Root 1 0 R >>\r\n";
+        $pdf .= "startxref\r\n" . $xrefOffset . "\r\n%%EOF\r\n";
 
         return $pdf;
+    }
+
+    private function pdfText(string $text, float $x, float $y, float $size, array $color = [0, 0, 0], string $font = 'F1'): string
+    {
+        return sprintf(
+            "q %.3F %.3F %.3F rg BT /%s %.1F Tf %.1F %.1F Td (%s) Tj ET Q\n",
+            $color[0],
+            $color[1],
+            $color[2],
+            $font,
+            $size,
+            $x,
+            $y,
+            $this->escapePdfText($text)
+        );
+    }
+
+    private function pdfRect(float $x, float $y, float $width, float $height, array $color): string
+    {
+        return sprintf(
+            "q %.3F %.3F %.3F rg %.1F %.1F %.1F %.1F re f Q\n",
+            $color[0],
+            $color[1],
+            $color[2],
+            $x,
+            $y,
+            $width,
+            $height
+        );
+    }
+
+    private function pdfStrokeRect(float $x, float $y, float $width, float $height, array $color): string
+    {
+        return sprintf(
+            "q %.3F %.3F %.3F RG %.1F %.1F %.1F %.1F re S Q\n",
+            $color[0],
+            $color[1],
+            $color[2],
+            $x,
+            $y,
+            $width,
+            $height
+        );
+    }
+
+    private function pdfLine(float $x1, float $y1, float $x2, float $y2, array $color): string
+    {
+        return sprintf(
+            "q %.3F %.3F %.3F RG %.1F %.1F m %.1F %.1F l S Q\n",
+            $color[0],
+            $color[1],
+            $color[2],
+            $x1,
+            $y1,
+            $x2,
+            $y2
+        );
     }
 
     private function escapePdfText(string $text): string
