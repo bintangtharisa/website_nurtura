@@ -165,7 +165,7 @@
             <nav class="sidebar__nav">
                 <ul class="sidebar__nav-list">
                     <li class="sidebar__nav-item">
-                        <a href="#" onclick="event.preventDefault(); logout();" class="sidebar__nav-link" style="color: #EF4444;">
+                        <a href="#" onclick="event.preventDefault(); openLogoutConfirm();" class="sidebar__nav-link" style="color: #EF4444;">
                             <span class="sidebar__nav-icon">
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -244,10 +244,36 @@
 
     </div>
 
+    <div id="logoutConfirmModal" class="logout-modal" hidden>
+        <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
+            <div class="logout-modal__icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </div>
+            <h2 id="logoutConfirmTitle" class="logout-modal__title">Konfirmasi Logout</h2>
+            <p class="logout-modal__text">Anda yakin ingin keluar dari akun ini?</p>
+            <div class="logout-modal__actions">
+                <button type="button" class="logout-modal__btn logout-modal__btn--cancel" onclick="closeLogoutConfirm()">Batal</button>
+                <button type="button" class="logout-modal__btn logout-modal__btn--danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
     @stack('scripts')
     <script src="{{ asset('js/shared/notifications.js') }}"></script>
 
     <script>
+    function openLogoutConfirm() {
+        document.getElementById('logoutConfirmModal').hidden = false;
+    }
+
+    function closeLogoutConfirm() {
+        document.getElementById('logoutConfirmModal').hidden = true;
+    }
+
     function logout() {
         fetch('/api/auth/logout', {
             method: 'POST',
@@ -262,6 +288,15 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        const logoutModal = document.getElementById('logoutConfirmModal');
+        logoutModal.addEventListener('click', function (event) {
+            if (event.target === logoutModal) closeLogoutConfirm();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !logoutModal.hidden) closeLogoutConfirm();
+        });
+
         const token = localStorage.getItem("token");
         if (!token) {
             window.location.href = "/login";
