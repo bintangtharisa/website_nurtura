@@ -73,6 +73,19 @@ class NotificationService
         return $count;
     }
 
+    public function deleteNotification($user, string $notificationId): bool
+    {
+        $notification = Notification::where('_id', $this->toObjectId($notificationId))
+            ->where('user_id', $this->toObjectId($user->_id))
+            ->first();
+
+        if (!$notification) {
+            return false;
+        }
+
+        return (bool) $notification->delete();
+    }
+
     public function latestNotifications($user, int $limit = 5)
     {
         return Notification::where('user_id', $this->toObjectId($user->_id))

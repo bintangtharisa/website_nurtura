@@ -81,4 +81,28 @@ class NotificationController extends Controller
             ]
         ]);
     }
+
+    public function destroy(string $id, NotificationService $notificationService)
+    {
+        if (!preg_match('/^[0-9a-fA-F]{24}$/', $id)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'ID notification tidak valid'
+            ], 422);
+        }
+
+        $deleted = $notificationService->deleteNotification(auth()->user(), $id);
+
+        if (!$deleted) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Notification tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success'
+        ]);
+    }
 }

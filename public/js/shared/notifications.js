@@ -11,6 +11,68 @@ document.addEventListener("DOMContentLoaded", function () {
     const markAllBtn = document.getElementById("markAllReadBtn");
     const panelPlaceholder = document.getElementById("notificationPlaceholder");
 
+    function injectNotificationStyles() {
+        if (document.getElementById("notificationDeleteStyles")) return;
+
+        const style = document.createElement("style");
+        style.id = "notificationDeleteStyles";
+        style.textContent = `
+            .topbar__notif-row {
+                position: relative;
+                display: flex;
+                align-items: stretch;
+                background: transparent;
+                transition: background 0.15s;
+            }
+            .topbar__notif-row:hover,
+            .topbar__notif-row:focus-within {
+                background: rgba(15, 23, 42, 0.04);
+            }
+            .topbar__notif-content {
+                flex: 1;
+                min-width: 0;
+            }
+            .topbar__notif-delete {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 28px;
+                height: 28px;
+                border: none;
+                border-radius: 999px;
+                background: rgba(248, 250, 252, 0.96);
+                color: #94A3B8;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                opacity: 0;
+                transform: translateY(-2px);
+                transition: opacity 0.15s, transform 0.15s, color 0.15s, background 0.15s;
+                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            }
+            .topbar__notif-row:hover .topbar__notif-delete,
+            .topbar__notif-row:focus-within .topbar__notif-delete {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .topbar__notif-delete:hover {
+                background: #FEE2E2;
+                color: #DC2626;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
     function buildHeaders() {
         return {
             Authorization: "Bearer " + token,
@@ -90,6 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchNotifications() {
         if (!listContainer) return;
+        injectNotificationStyles();
         renderLoading();
 
         try {
@@ -111,14 +174,26 @@ document.addEventListener("DOMContentLoaded", function () {
                         ? ""
                         : "topbar__notif-item-unread";
                     const createdAt = formatRelativeDate(item.created_at);
+                    const title = escapeHtml(item.title);
+                    const message = escapeHtml(item.message);
                     return `
-                    <button type="button" data-notification-id="${item.id}" class="topbar__notif-item ${unreadClass}" style="width:100%; text-align:left; border:none; background:transparent; padding: 14px 14px; display:flex; flex-direction:column; gap: 6px; cursor:pointer; transition: background 0.15s;">
-                        <div style="display:flex; justify-content:space-between; gap: 10px; align-items:flex-start;">
-                            <span style="font-weight:700; color:#0F172A; font-size:14px; line-height:1.35;">${item.title}</span>
-                            <span style="font-size:11px; color:#64748B; white-space:nowrap;">${createdAt}</span>
-                        </div>
-                        <span style="font-size:13px; color:#475569; line-height:1.6;">${item.message}</span>
-                    </button>
+                    <div class="topbar__notif-row ${unreadClass}" data-notification-row="${item.id}">
+                        <button type="button" data-notification-id="${item.id}" class="topbar__notif-item topbar__notif-content" style="width:100%; text-align:left; border:none; background:transparent; padding: 14px 48px 14px 14px; display:flex; flex-direction:column; gap: 6px; cursor:pointer; transition: background 0.15s;">
+                            <div style="display:flex; justify-content:space-between; gap: 10px; align-items:flex-start;">
+                                <span style="font-weight:700; color:#0F172A; font-size:14px; line-height:1.35;">${title}</span>
+                                <span style="font-size:11px; color:#64748B; white-space:nowrap;">${createdAt}</span>
+                            </div>
+                            <span style="font-size:13px; color:#475569; line-height:1.6;">${message}</span>
+                        </button>
+                        <button type="button" data-notification-delete-id="${item.id}" class="topbar__notif-delete" aria-label="Hapus notifikasi">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M8 6V4.5A1.5 1.5 0 019.5 3h5A1.5 1.5 0 0116 4.5V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
                 `;
                 })
                 .join("");
@@ -132,7 +207,22 @@ document.addEventListener("DOMContentLoaded", function () {
                         );
                         if (!notificationId) return;
                         await markAsRead(notificationId);
-                        btn.classList.remove("topbar__notif-item-unread");
+                        btn.closest(".topbar__notif-row")?.classList.remove(
+                            "topbar__notif-item-unread",
+                        );
+                    });
+                });
+
+            listContainer
+                .querySelectorAll("button[data-notification-delete-id]")
+                .forEach((btn) => {
+                    btn.addEventListener("click", async (event) => {
+                        event.stopPropagation();
+                        const notificationId = btn.getAttribute(
+                            "data-notification-delete-id",
+                        );
+                        if (!notificationId) return;
+                        await deleteNotification(notificationId);
                     });
                 });
         } catch (err) {
@@ -142,6 +232,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
             `;
             console.warn(err);
+        }
+    }
+
+    async function deleteNotification(notificationId) {
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}`, {
+                method: "DELETE",
+                headers: buildHeaders(),
+            });
+            if (!response.ok) {
+                throw new Error("Delete notification failed");
+            }
+            await fetchNotifications();
+            await fetchUnreadCount();
+        } catch (err) {
+            console.warn("Notification delete error:", err);
         }
     }
 
