@@ -137,6 +137,7 @@ class ScreeningController extends Controller
 
             return response()->json([
                 'status' => true,
+                'result' => $result,
                 'features' => $features,
                 'prediction' => $mlResult,
                 'recommendation' => $mlResult['recommendation'] ?? null
