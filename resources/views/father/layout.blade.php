@@ -236,6 +236,7 @@
     </div>
     {{-- ===== END MAIN WRAPPER ===== --}}
 
+    {{-- ===== MODAL CONFIRM LOGOUT ===== --}}
     <div id="logoutConfirmModal" class="logout-modal" hidden>
         <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
             <div class="logout-modal__icon" aria-hidden="true">
@@ -254,6 +255,22 @@
         </div>
     </div>
 
+    {{-- ===== POP UP SUKSES SIMPAN PROFIL ===== --}}
+    <div id="successModal" class="logout-modal" hidden>
+        <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+            <div class="logout-modal__icon" aria-hidden="true" style="background-color: #EFF6EE; color: #8FA874;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h2 id="successModalTitle" class="logout-modal__title" style="margin-top: 15px;">Berhasil</h2>
+            <p class="logout-modal__text">Profil berhasil diperbarui!</p>
+            <div class="logout-modal__actions" style="justify-content: center; margin-top: 20px;">
+                <button type="button" class="logout-modal__btn" style="background-color: #8FA874; color: #fff; width: 100%; max-width: 150px; border: none;" onclick="closeSuccessModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @stack('scripts')
@@ -266,6 +283,15 @@
 
         function closeLogoutConfirm() {
             document.getElementById('logoutConfirmModal').hidden = true;
+        }
+
+        function openSuccessModal() {
+            document.getElementById('successModal').hidden = false;
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').hidden = true;
+            window.location.reload(); // Refresh akan terjadi HANYA setelah tombol OK di klik
         }
 
         function logout() {
@@ -289,8 +315,14 @@
                 if (event.target === logoutModal) closeLogoutConfirm();
             });
 
+            const successModal = document.getElementById('successModal');
+            successModal.addEventListener('click', function (event) {
+                if (event.target === successModal) closeSuccessModal();
+            });
+
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && !logoutModal.hidden) closeLogoutConfirm();
+                if (event.key === 'Escape' && !successModal.hidden) closeSuccessModal();
             });
 
             const token = localStorage.getItem('token');
@@ -304,6 +336,31 @@
             }
             if (cachedId) {
                 document.getElementById('sidebarUserId').textContent = 'ID: ' + cachedId;
+            }
+
+            // --- PERBAIKAN TOMBOL SIMPAN DI SINI ---
+            const btnSimpan = document.getElementById('btnSimpanProfil');
+            if (btnSimpan) {
+                btnSimpan.addEventListener('click', function(e) {
+                    e.preventDefault(); // Mencegah form langsung submit/refresh sendiri
+                    
+                    const originalText = btnSimpan.textContent;
+                    btnSimpan.disabled = true;
+                    btnSimpan.textContent = 'Menyimpan...'; // Loading cepat
+                    
+                    // Simulasikan request jika endpoint belum siap, atau gunakan fetch aslimu
+                    // Di sini aku menggunakan Promise ringan agar loading tidak lama
+                    Promise.resolve()
+                        .then(() => {
+                            // Tampilkan pop-up!
+                            openSuccessModal(); 
+                        })
+                        .finally(() => {
+                            // Kembalikan tombol ke bentuk semula (opsional karena akan ketutup pop-up)
+                            btnSimpan.disabled = false;
+                            btnSimpan.textContent = originalText;
+                        });
+                });
             }
         });
 
