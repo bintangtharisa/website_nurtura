@@ -9,9 +9,11 @@ use App\Services\MLFeatureService;
 use App\Services\NotificationService;
 use App\Services\FcmService;
 use App\Services\ScreeningValidatorService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use MongoDB\Client;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\Regex;
 use MongoDB\BSON\UTCDateTime;
 
 class ScreeningController extends Controller
@@ -181,6 +183,126 @@ class ScreeningController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function history(Request $request)
+    {
+        $mother = $request->user();
+        $db = $this->db();
+        $collection = $db->selectCollection('screenings');
+
+        $filter = $this->motherScreeningFilter($mother);
+
+        if ($request->filled('result')) {
+            $filter['result'] = new Regex('^' . preg_quote((string) $request->result, '/') . '$', 'i');
+        }
+
+        $dateFilter = [];
+
+        if ($request->filled('since_days') && is_numeric($request->since_days) && (int) $request->since_days > 0) {
+            $dateFilter['$gte'] = new UTCDateTime(now()->subDays((int) $request->since_days)->timestamp * 1000);
+        }
+
+        if ($request->filled('start_date')) {
+            $dateFilter['$gte'] = new UTCDateTime(Carbon::parse((string) $request->start_date)->startOfDay()->timestamp * 1000);
+        }
+
+        if ($request->filled('end_date')) {
+            $dateFilter['$lte'] = new UTCDateTime(Carbon::parse((string) $request->end_date)->endOfDay()->timestamp * 1000);
+        }
+
+        if (!empty($dateFilter)) {
+            $filter['created_at'] = $dateFilter;
+        }
+
+        $limit = $request->filled('limit') && in_array((int) $request->limit, [10, 20, 30, 50], true)
+            ? (int) $request->limit
+            : 20;
+
+        $cursor = $collection->find($filter, [
+            'sort' => ['created_at' => -1],
+            'limit' => $limit,
+        ]);
+
+        $data = [];
+        foreach ($cursor as $item) {
+            $data[] = $this->formatScreeningHistoryItem($item);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Riwayat skrining berhasil diambil.',
+            'mother' => [
+                'id' => (string) $mother->_id,
+                'username' => $mother->username ?? null,
+                'anonymous_id' => strtoupper((string) ($mother->anonymous_id ?? '')),
+            ],
+            'count' => count($data),
+            'latest_result' => $data[0] ?? null,
+            'data' => $data,
+        ]);
+    }
+
+    private function motherScreeningFilter($mother): array
+    {
+        $motherObjectId = new ObjectId((string) $mother->_id);
+
+        return [
+            '$or' => [
+                ['mother_id' => (string) $mother->_id],
+                ['mother_id' => $motherObjectId],
+                ['anonymous_id' => strtoupper((string) ($mother->anonymous_id ?? ''))],
+            ],
+        ];
+    }
+
+    private function formatScreeningHistoryItem($item): array
+    {
+        $prediction = $item['prediction'] ?? null;
+        $result = isset($item['result']) ? (string) $item['result'] : ($prediction['result'] ?? null);
+        $createdAt = $this->formatHistoryDate($item['created_at'] ?? null);
+
+        return [
+            'id' => isset($item['_id']) ? (string) $item['_id'] : null,
+            'anonymous_id' => isset($item['anonymous_id']) ? strtoupper((string) $item['anonymous_id']) : null,
+            'result' => $result,
+            'risk_category' => $this->riskCategory($result),
+            'prediction' => $prediction,
+            'recommendation' => is_array($prediction) ? ($prediction['recommendation'] ?? null) : null,
+            'created_at' => $createdAt,
+        ];
+    }
+
+    private function riskCategory($result): string
+    {
+        $normalized = strtolower((string) $result);
+
+        if ($normalized === '') {
+            return 'Tidak Diketahui';
+        }
+
+        if (str_contains($normalized, 'tidak')) {
+            return 'Rendah';
+        }
+
+        if (str_contains($normalized, 'berisiko') || str_contains($normalized, 'beresiko') || str_contains($normalized, 'depresi')) {
+            return 'Tinggi';
+        }
+
+        return 'Tidak Diketahui';
+    }
+
+    private function formatHistoryDate($value): ?string
+    {
+        if ($value instanceof UTCDateTime) {
+            return $value->toDateTime()->format(\DateTime::ATOM);
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(\DateTime::ATOM);
+        }
+
+        return $value ? (string) $value : null;
     }
 
     private function recommendationForResponse(array $mlResult, array $answers, array $features, string $result): array

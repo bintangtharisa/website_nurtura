@@ -57,6 +57,7 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
 
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
     Route::post('/screening', [ScreeningController::class, 'screening']);
+    Route::get('/screening-history', [ScreeningController::class, 'history']);
     Route::get('/connection-requests', [MotherRelationshipController::class, 'pendingRequests']);
     Route::patch('/connection-requests/{fatherId}/accept', [MotherRelationshipController::class, 'acceptFather']);
     Route::patch('/connection-requests/{fatherId}/reject', [MotherRelationshipController::class, 'rejectFather']);
