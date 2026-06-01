@@ -333,13 +333,12 @@
 @endsection
 
 @push('scripts')
+@push('scripts')
 <script>
     const API_URL = '/api/articles';
     const CAT_URL = '/api/article-categories';
     const token = localStorage.getItem('token');
     
-    // PERBAIKAN 1: Jadikan allArticles variabel global (di luar fungsi)
-    // Supaya fungsi filterByStatus bisa membaca data yang baru di-load
     let allArticles = []; 
     let currentStatusFilter = 'all';
 
@@ -358,6 +357,21 @@
         document.getElementById('is_published').addEventListener('change', function() {
             if (document.getElementById('articleTitle').value.trim() !== "") {
                 saveArticle();
+            }
+        });
+
+        // Handler untuk menutup modal kustom delete saat area luar overlay diklik
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function (event) {
+                if (event.target === deleteModal) closeDeleteConfirm();
+            });
+        }
+
+        // Handler untuk menutup modal kustom delete saat tombol Escape ditekan
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && deleteModal && deleteModal.style.display === 'flex') {
+                closeDeleteConfirm();
             }
         });
     });
@@ -380,38 +394,32 @@
     }
 
     async function loadArticles() {
-    const grid = document.getElementById('articlesGrid');
-    grid.innerHTML = '<p>Loading articles...</p>';
-    
-    try {
-        // PERBAIKAN: Tambahkan ?status=all supaya backend kirim semua data
-        // (Pastikan controllermu bisa menerima parameter status)
-        const res = await fetch(`${API_URL}?status=all`, { 
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-            }
-        });
+        const grid = document.getElementById('articlesGrid');
+        grid.innerHTML = '<p>Loading articles...</p>';
         
-        allArticles = await res.json();
-        
-        // Cek di console log: apakah datanya beneran ada 4?
-        console.log("Data dari API:", allArticles);
+        try {
+            const res = await fetch(`${API_URL}?status=all`, { 
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            allArticles = await res.json();
+            console.log("Data dari API:", allArticles);
 
-        // Update Stats
-        document.getElementById('statTotal').innerText = allArticles.length;
-        document.getElementById('statPublished').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'published').length;
-        document.getElementById('statDraft').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'draft').length;
+            // Update Stats
+            document.getElementById('statTotal').innerText = allArticles.length;
+            document.getElementById('statPublished').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'published').length;
+            document.getElementById('statDraft').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'draft').length;
 
-        renderGrid(); 
-    } catch (e) {
-        console.error("Fetch error:", e);
-        grid.innerHTML = '<p>Failed to load articles.</p>';
+            renderGrid(); 
+        } catch (e) {
+            console.error("Fetch error:", e);
+            grid.innerHTML = '<p>Failed to load articles.</p>';
+        }
     }
-}
 
-    // PERBAIKAN 4: Fungsi Render Terpisah
-    // Ini memastikan saat kamu klik tab "Draft", dia mengambil data dari allArticles yang sudah di-load
     function renderGrid() {
         const grid = document.getElementById('articlesGrid');
         
@@ -420,7 +428,6 @@
             displayData = allArticles.filter(a => String(a.status).toLowerCase() === currentStatusFilter.toLowerCase());
         }
 
-        // Tampilan jika data kosong (seperti yang kamu alami di tab Draft)
         if (displayData.length === 0) {
             grid.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #94A3B8;">
@@ -448,8 +455,6 @@
         currentStatusFilter = status; 
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-        
-        // Cukup panggil renderGrid, tidak perlu fetch ulang ke API tiap ganti tab
         renderGrid(); 
     }
 
@@ -485,7 +490,6 @@
                 document.getElementById('thumbnailUrl').value = a.thumbnail || '';
                 document.getElementById('inputUrlField').value = a.thumbnail || '';
                 
-                // Pastikan checkbox sinkron dengan status DB
                 document.getElementById('is_published').checked = (String(a.status).toLowerCase() === 'published');
                 
                 if(a.thumbnail) {
@@ -501,7 +505,6 @@
         }
     }
 
-    // --- LOGIKA THUMBNAIL & PREVIEW ---
     function handleUrlInput(url) {
         if (url.trim() !== "") {
             document.getElementById('thumbnailUrl').value = url;
@@ -568,9 +571,8 @@
             });
 
             if (res.ok) {
-                // Jangan lupakan loadArticles() untuk merefresh UI setelah simpan
                 await loadArticles(); 
-                if (!id) closeEditor(); // Hanya tutup jika artikel baru
+                if (!id) closeEditor();
             } else {
                 const result = await res.json();
                 alert("Gagal simpan: " + (result.message || "Error terjadi"));
@@ -580,14 +582,33 @@
         }
     }
 
+    // --- PERBAIKAN POP-UP: FORCE DISPLAY & LAYER TERATAS ---
+    function openDeleteConfirm() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeDeleteConfirm() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
     async function deleteArticle() {
+        openDeleteConfirm();
+    }
+
+    async function executeDeleteArticle() {
         const id = document.getElementById('articleId').value;
-        if (!confirm('Yakin ingin menghapus artikel ini?')) return;
         const res = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
+            closeDeleteConfirm();
             closeEditor();
             loadArticles();
         }
@@ -597,4 +618,25 @@
         document.getElementById('editorOverlay').style.display = 'none';
     }
 </script>
+@endpush
+
+{{-- ===== MODAL KONFIRMASI DELETE ARTIKEL KUSTOM (LAYER UTAMA TERATAS) ===== --}}
+<div id="deleteConfirmModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FEF2F2 !important; color: #EF4444 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        </div>
+        <h2 id="deleteConfirmTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Hapus Artikel</h2>
+        <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <div style="display: flex !important; gap: 12px !important; justify-content: center !important;">
+            <button type="button" onclick="closeDeleteConfirm()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: 1px solid #E2E8F0 !important; background: #ffffff !important; color: #475569 !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Batal</button>
+            <button type="button" onclick="executeDeleteArticle()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #EF4444 !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Hapus</button>
+        </div>
+    </div>
+</div>
 @endpush
