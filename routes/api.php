@@ -86,6 +86,8 @@ Route::prefix('articles')->group(function () {
     });
 });
 
+Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/profile', [ProfileController::class, 'me']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);

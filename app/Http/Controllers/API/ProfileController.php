@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 use App\Services\NotificationService;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends Controller
@@ -160,6 +163,85 @@ class ProfileController extends Controller
         }
     }
 
+    public function updatePhoto(Request $request)
+    {
+        $path = null;
+
+        try {
+            $user = $this->authenticateRequest($request);
+
+            $request->validate([
+                'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            ]);
+
+            $oldPhoto = $user->photo ?? null;
+            $path = $request->file('photo')->store('profile-photos', 'public');
+
+            if (!$path) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Gagal menyimpan foto profil'
+                ], 500);
+            }
+
+            $user->photo = $path;
+            $user->save();
+
+            $this->deleteOldProfilePhoto($oldPhoto, $path);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Foto profil berhasil diperbarui',
+                'data' => [
+                    'id' => (string) $user->_id,
+                    'name' => $user->name ?? $user->username,
+                    'username' => $user->username ?? null,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'photo' => $user->photo ?? null,
+                    'photo_url' => Storage::disk('public')->url($user->photo),
+                    'connection' => $this->fatherConnection($user)
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (JWTException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated.'
+            ], 401);
+        } catch (\Throwable $e) {
+            if ($path && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            Log::error('Profile photo upload failed', [
+                'error' => $e->getMessage(),
+                'user_id' => isset($user) && $user ? (string) $user->_id : null,
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal memperbarui foto profil'
+            ], 500);
+        }
+    }
+
+    private function authenticateRequest(Request $request)
+    {
+        $token = $request->bearerToken() ?: $request->input('token');
+
+        if ($token) {
+            return JWTAuth::setToken($token)->authenticate();
+        }
+
+        return JWTAuth::parseToken()->authenticate();
+    }
+
     private function fatherConnection($user): ?array
     {
         if (($user->role ?? null) !== 'father') {
@@ -248,5 +330,22 @@ class ProfileController extends Controller
         }
 
         return null;
+    }
+
+    private function deleteOldProfilePhoto($oldPhoto, ?string $newPhoto = null): void
+    {
+        if (empty($oldPhoto) || $oldPhoto === $newPhoto) {
+            return;
+        }
+
+        $oldPhoto = ltrim((string) $oldPhoto, '/');
+
+        if (preg_match('/^https?:\/\//i', $oldPhoto) || !str_starts_with($oldPhoto, 'profile-photos/')) {
+            return;
+        }
+
+        if (Storage::disk('public')->exists($oldPhoto)) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
     }
 }

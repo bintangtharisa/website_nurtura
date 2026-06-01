@@ -37,11 +37,12 @@
                     <div id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: var(--clr-bg); border: 2.5px solid var(--clr-border-light); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                         <span id="avatarInitial" style="font-size: 28px; font-weight: 600; color: var(--clr-primary);">B</span>
                     </div>
-                    <button type="button" style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--clr-primary); color: white; border: 2px solid white; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <button type="button" id="uploadPhotoButton" aria-label="Upload foto profil" style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--clr-primary); color: white; border: 2px solid white; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                     </button>
+                    <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
                 </div>
 
                 {{-- Form Fields --}}
@@ -117,10 +118,242 @@
     </div>
 </div>
 
+<div id="photoPreviewModal" class="photo-preview" aria-hidden="true">
+    <div class="photo-preview__dialog" role="dialog" aria-modal="true" aria-labelledby="photoPreviewTitle">
+        <div class="photo-preview__header">
+            <div>
+                <h2 id="photoPreviewTitle" class="photo-preview__title">Preview Foto Profil</h2>
+                <p class="photo-preview__subtitle">Geser dan ubah ukuran kotak crop sebelum diunggah.</p>
+            </div>
+            <button type="button" id="closePhotoPreview" class="photo-preview__icon-btn" aria-label="Tutup preview">&times;</button>
+        </div>
+
+        <div class="photo-preview__body">
+            <div id="photoCropStage" class="photo-preview__crop-stage">
+                <img id="photoCropImage" alt="Preview foto profil">
+                <div id="photoCropBox" class="photo-preview__crop-box">
+                    <span class="photo-preview__handle photo-preview__handle--nw" data-handle="nw"></span>
+                    <span class="photo-preview__handle photo-preview__handle--n" data-handle="n"></span>
+                    <span class="photo-preview__handle photo-preview__handle--ne" data-handle="ne"></span>
+                    <span class="photo-preview__handle photo-preview__handle--e" data-handle="e"></span>
+                    <span class="photo-preview__handle photo-preview__handle--se" data-handle="se"></span>
+                    <span class="photo-preview__handle photo-preview__handle--s" data-handle="s"></span>
+                    <span class="photo-preview__handle photo-preview__handle--sw" data-handle="sw"></span>
+                    <span class="photo-preview__handle photo-preview__handle--w" data-handle="w"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="photo-preview__footer">
+            <button type="button" id="cancelPhotoUpload" class="btn btn--outline">Batalkan</button>
+            <button type="button" id="confirmPhotoUpload" class="btn btn--primary">Upload Foto</button>
+        </div>
+    </div>
+</div>
+
+<div id="profileToast" class="profile-toast" role="status" aria-live="polite"></div>
+
 @endsection
+
+@push('styles')
+<style>
+    .photo-preview {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(17, 24, 39, 0.48);
+    }
+
+    .photo-preview.is-open {
+        display: flex;
+    }
+
+    .photo-preview__dialog {
+        width: min(680px, 100%);
+        max-height: calc(100vh - 36px);
+        overflow: auto;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+    }
+
+    .photo-preview__header,
+    .photo-preview__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--clr-border-light);
+    }
+
+    .photo-preview__footer {
+        justify-content: flex-end;
+        border-top: 1px solid var(--clr-border-light);
+        border-bottom: 0;
+    }
+
+    .photo-preview__title {
+        margin: 0;
+        color: var(--clr-text-heading);
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    .photo-preview__subtitle {
+        margin: 3px 0 0;
+        color: var(--clr-text-muted);
+        font-size: 12px;
+    }
+
+    .photo-preview__icon-btn {
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--clr-bg);
+        color: var(--clr-text-heading);
+        cursor: pointer;
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    .photo-preview__body {
+        padding: 18px;
+    }
+
+    .photo-preview__crop-stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 360px;
+        border: 1px solid var(--clr-border-light);
+        border-radius: 8px;
+        background: #111827;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+    }
+
+    #photoCropImage {
+        display: block;
+        max-width: 100%;
+        max-height: 520px;
+        object-fit: contain;
+        pointer-events: none;
+    }
+
+    .photo-preview__crop-box {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 9999px rgba(17, 24, 39, 0.52);
+        cursor: move;
+        touch-action: none;
+    }
+
+    .photo-preview__crop-box::before,
+    .photo-preview__crop-box::after {
+        content: "";
+        position: absolute;
+        inset: 33.333%;
+        border-color: rgba(255, 255, 255, 0.72);
+        border-style: solid;
+        pointer-events: none;
+    }
+
+    .photo-preview__crop-box::before {
+        border-width: 0 1px;
+        inset-block: 0;
+    }
+
+    .photo-preview__crop-box::after {
+        border-width: 1px 0;
+        inset-inline: 0;
+    }
+
+    .photo-preview__handle {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--clr-primary);
+        border-radius: 3px;
+        background: #fff;
+        box-shadow: 0 1px 5px rgba(15, 23, 42, 0.25);
+        z-index: 2;
+    }
+
+    .photo-preview__handle--nw { top: -8px; left: -8px; cursor: nwse-resize; }
+    .photo-preview__handle--n { top: -8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .photo-preview__handle--ne { top: -8px; right: -8px; cursor: nesw-resize; }
+    .photo-preview__handle--e { top: 50%; right: -8px; transform: translateY(-50%); cursor: ew-resize; }
+    .photo-preview__handle--se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+    .photo-preview__handle--s { bottom: -8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .photo-preview__handle--sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+    .photo-preview__handle--w { top: 50%; left: -8px; transform: translateY(-50%); cursor: ew-resize; }
+
+    .profile-toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 1100;
+        display: none;
+        max-width: min(360px, calc(100vw - 40px));
+        padding: 12px 14px;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
+        transform: translateY(10px);
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .profile-toast.is-visible {
+        display: block;
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .profile-toast--success {
+        background: #2E7D32;
+    }
+
+    .profile-toast--error {
+        background: #B42318;
+    }
+
+    @media (max-width: 680px) {
+        .photo-preview__crop-stage {
+            min-height: 300px;
+        }
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
+    const photoUploadState = {
+        token: null,
+        file: null,
+        image: null,
+        objectUrl: null,
+        crop: { x: 0, y: 0, width: 0, height: 0 },
+        imageBounds: { x: 0, y: 0, width: 0, height: 0 },
+        drag: null,
+        toastTimer: null,
+        isUploading: false
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -128,10 +361,37 @@
             return;
         }
 
+        photoUploadState.token = token;
+
         const form = document.getElementById('fatherProfileForm');
         const btnCancel = document.getElementById('cancelProfile');
+        const uploadPhotoButton = document.getElementById('uploadPhotoButton');
+        const profilePhotoInput = document.getElementById('profilePhotoInput');
+        const closePhotoPreview = document.getElementById('closePhotoPreview');
+        const cancelPhotoUpload = document.getElementById('cancelPhotoUpload');
+        const confirmPhotoUpload = document.getElementById('confirmPhotoUpload');
+        const cropStage = document.getElementById('photoCropStage');
+        const cropBox = document.getElementById('photoCropBox');
 
         form.addEventListener('submit', handleSubmit);
+        uploadPhotoButton.addEventListener('click', function () {
+            profilePhotoInput.click();
+        });
+        profilePhotoInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                openPhotoPreview(this.files[0]);
+            }
+        });
+        closePhotoPreview.addEventListener('click', closePhotoPreviewModal);
+        cancelPhotoUpload.addEventListener('click', closePhotoPreviewModal);
+        confirmPhotoUpload.addEventListener('click', uploadPreviewedPhoto);
+        cropStage.addEventListener('pointerdown', startPhotoCropInteraction);
+        cropStage.addEventListener('pointermove', movePhotoCropInteraction);
+        cropStage.addEventListener('pointerup', endPhotoCropInteraction);
+        cropStage.addEventListener('pointercancel', endPhotoCropInteraction);
+        cropBox.addEventListener('dragstart', function (event) {
+            event.preventDefault();
+        });
         btnCancel.addEventListener('click', function () {
             form.reset();
         });
@@ -156,7 +416,7 @@
                 renderConnectionStatus(profile.connection || null);
 
                 if (photo) {
-                    document.getElementById('profileAvatar').innerHTML = `<img src="${photo.startsWith('http') ? photo : '/storage/' + photo}" style="width:100%; height:100%; object-fit:cover;" alt="Avatar">`;
+                    renderProfileAvatar(photo, username, email);
                 }
             }
         })
@@ -164,6 +424,334 @@
             console.error('Gagal memuat profil:', err);
         });
     });
+
+    function renderProfileAvatar(photo, username = '', email = '') {
+        const avatar = document.getElementById('profileAvatar');
+
+        if (photo) {
+            const src = photo.startsWith('http') ? photo : '/storage/' + photo;
+            avatar.innerHTML = `<img src="${src}" style="width:100%; height:100%; object-fit:cover;" alt="Avatar">`;
+            return;
+        }
+
+        avatar.innerHTML = `<span id="avatarInitial" style="font-size: 28px; font-weight: 600; color: var(--clr-primary);">${(username || email || 'B').charAt(0).toUpperCase()}</span>`;
+    }
+
+    function openPhotoPreview(file) {
+        if (!validatePhotoFile(file)) {
+            resetPhotoInput();
+            return;
+        }
+
+        const image = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        image.onload = function () {
+            clearPhotoObjectUrl();
+            photoUploadState.file = file;
+            photoUploadState.image = image;
+            photoUploadState.objectUrl = objectUrl;
+
+            document.getElementById('photoPreviewModal').classList.add('is-open');
+            document.getElementById('photoPreviewModal').setAttribute('aria-hidden', 'false');
+            document.getElementById('photoCropImage').src = objectUrl;
+            requestAnimationFrame(initializePhotoCrop);
+        };
+
+        image.onerror = function () {
+            URL.revokeObjectURL(objectUrl);
+            resetPhotoInput();
+            showProfileToast('Foto profil tidak bisa dibaca.', 'error');
+        };
+
+        image.src = objectUrl;
+    }
+
+    function validatePhotoFile(file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const maxSize = 2 * 1024 * 1024;
+
+        if (!allowedTypes.includes(file.type)) {
+            showProfileToast('Foto profil harus berupa JPG, PNG, atau WEBP.', 'error');
+            return false;
+        }
+
+        if (file.size > maxSize) {
+            showProfileToast('Ukuran foto profil maksimal 2MB.', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    function initializePhotoCrop() {
+        const stage = document.getElementById('photoCropStage');
+        const image = document.getElementById('photoCropImage');
+        const stageRect = stage.getBoundingClientRect();
+        const imageRect = image.getBoundingClientRect();
+        const size = Math.min(imageRect.width, imageRect.height) * 0.72;
+
+        photoUploadState.imageBounds = {
+            x: imageRect.left - stageRect.left,
+            y: imageRect.top - stageRect.top,
+            width: imageRect.width,
+            height: imageRect.height
+        };
+
+        photoUploadState.crop = {
+            x: photoUploadState.imageBounds.x + (photoUploadState.imageBounds.width - size) / 2,
+            y: photoUploadState.imageBounds.y + (photoUploadState.imageBounds.height - size) / 2,
+            width: size,
+            height: size
+        };
+
+        renderPhotoCropBox();
+    }
+
+    function renderPhotoCropBox() {
+        const cropBox = document.getElementById('photoCropBox');
+        const crop = photoUploadState.crop;
+
+        cropBox.style.left = crop.x + 'px';
+        cropBox.style.top = crop.y + 'px';
+        cropBox.style.width = crop.width + 'px';
+        cropBox.style.height = crop.height + 'px';
+    }
+
+    function startPhotoCropInteraction(event) {
+        if (!photoUploadState.image) {
+            return;
+        }
+
+        const handle = event.target.dataset.handle || null;
+        const cropBox = document.getElementById('photoCropBox');
+
+        if (!handle && event.target !== cropBox) {
+            return;
+        }
+
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+
+        photoUploadState.drag = {
+            handle: handle || 'move',
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            crop: { ...photoUploadState.crop }
+        };
+    }
+
+    function movePhotoCropInteraction(event) {
+        const drag = photoUploadState.drag;
+
+        if (!drag || drag.pointerId !== event.pointerId) {
+            return;
+        }
+
+        const deltaX = event.clientX - drag.startX;
+        const deltaY = event.clientY - drag.startY;
+
+        photoUploadState.crop = drag.handle === 'move'
+            ? movePhotoCrop(drag.crop, deltaX, deltaY)
+            : resizePhotoCrop(drag.crop, drag.handle, deltaX, deltaY);
+
+        renderPhotoCropBox();
+    }
+
+    function endPhotoCropInteraction(event) {
+        if (!photoUploadState.drag || photoUploadState.drag.pointerId !== event.pointerId) {
+            return;
+        }
+
+        photoUploadState.drag = null;
+        event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    function movePhotoCrop(crop, deltaX, deltaY) {
+        const bounds = photoUploadState.imageBounds;
+
+        return {
+            ...crop,
+            x: clamp(crop.x + deltaX, bounds.x, bounds.x + bounds.width - crop.width),
+            y: clamp(crop.y + deltaY, bounds.y, bounds.y + bounds.height - crop.height)
+        };
+    }
+
+    function resizePhotoCrop(crop, handle, deltaX, deltaY) {
+        const bounds = photoUploadState.imageBounds;
+        const minSize = 80;
+        let left = crop.x;
+        let top = crop.y;
+        let right = crop.x + crop.width;
+        let bottom = crop.y + crop.height;
+
+        if (handle.includes('w')) {
+            left = clamp(crop.x + deltaX, bounds.x, right - minSize);
+        }
+
+        if (handle.includes('e')) {
+            right = clamp(crop.x + crop.width + deltaX, left + minSize, bounds.x + bounds.width);
+        }
+
+        if (handle.includes('n')) {
+            top = clamp(crop.y + deltaY, bounds.y, bottom - minSize);
+        }
+
+        if (handle.includes('s')) {
+            bottom = clamp(crop.y + crop.height + deltaY, top + minSize, bounds.y + bounds.height);
+        }
+
+        return {
+            x: left,
+            y: top,
+            width: right - left,
+            height: bottom - top
+        };
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function uploadPreviewedPhoto() {
+        if (photoUploadState.isUploading || !photoUploadState.image) {
+            return;
+        }
+
+        const confirmButton = document.getElementById('confirmPhotoUpload');
+        const uploadButton = document.getElementById('uploadPhotoButton');
+
+        setPhotoUploading(true, confirmButton, uploadButton);
+
+        createCroppedPhotoBlob(function (blob) {
+            if (!blob) {
+                setPhotoUploading(false, confirmButton, uploadButton);
+                closePhotoPreviewModal(true);
+                showProfileToast('Gagal membuat crop foto.', 'error');
+                return;
+            }
+
+            const resizedFile = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' });
+            uploadProfilePhoto(photoUploadState.token, resizedFile)
+                .then(function () {
+                    closePhotoPreviewModal(true);
+                    showProfileToast('Foto profil berhasil diperbarui.', 'success');
+                })
+                .catch(function (error) {
+                    closePhotoPreviewModal(true);
+                    showProfileToast(error.message || 'Terjadi kesalahan saat mengunggah foto profil.', 'error');
+                })
+                .finally(function () {
+                    setPhotoUploading(false, confirmButton, uploadButton);
+                });
+        });
+    }
+
+    function createCroppedPhotoBlob(callback) {
+        const image = photoUploadState.image;
+        const crop = photoUploadState.crop;
+        const bounds = photoUploadState.imageBounds;
+        const scaleX = image.naturalWidth / bounds.width;
+        const scaleY = image.naturalHeight / bounds.height;
+        const sourceX = (crop.x - bounds.x) * scaleX;
+        const sourceY = (crop.y - bounds.y) * scaleY;
+        const sourceWidth = crop.width * scaleX;
+        const sourceHeight = crop.height * scaleY;
+        const maxOutputSize = 1024;
+        const outputScale = Math.min(1, maxOutputSize / Math.max(sourceWidth, sourceHeight));
+        const outputWidth = Math.max(128, Math.round(sourceWidth * outputScale));
+        const outputHeight = Math.max(128, Math.round(sourceHeight * outputScale));
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = outputWidth;
+        canvas.height = outputHeight;
+        context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+        canvas.toBlob(callback, 'image/jpeg', 0.9);
+    }
+
+    function uploadProfilePhoto(token, file) {
+        const formData = new FormData();
+        formData.append('photo', file);
+        formData.append('token', token);
+
+        return fetch('/api/profile/photo', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok || !data.status) {
+                const firstError = data.errors ? Object.values(data.errors).flat()[0] : null;
+                throw new Error(firstError || data.message || 'Gagal memperbarui foto profil.');
+            }
+
+            const profile = data.data || {};
+            renderProfileAvatar(profile.photo || null, profile.username || '', profile.email || '');
+        });
+    }
+
+    function setPhotoUploading(isUploading, confirmButton, uploadButton) {
+        photoUploadState.isUploading = isUploading;
+        confirmButton.disabled = isUploading;
+        uploadButton.disabled = isUploading;
+        confirmButton.textContent = isUploading ? 'Mengunggah...' : 'Upload Foto';
+        uploadButton.style.opacity = isUploading ? '0.65' : '1';
+    }
+
+    function closePhotoPreviewModal(force = false) {
+        if (photoUploadState.isUploading && !force) {
+            return;
+        }
+
+        photoUploadState.isUploading = false;
+        document.getElementById('photoPreviewModal').classList.remove('is-open');
+        document.getElementById('photoPreviewModal').setAttribute('aria-hidden', 'true');
+        photoUploadState.file = null;
+        photoUploadState.image = null;
+        clearPhotoObjectUrl();
+        resetPhotoInput();
+    }
+
+    function clearPhotoObjectUrl() {
+        if (photoUploadState.objectUrl) {
+            URL.revokeObjectURL(photoUploadState.objectUrl);
+            photoUploadState.objectUrl = null;
+        }
+    }
+
+    function resetPhotoInput() {
+        document.getElementById('profilePhotoInput').value = '';
+    }
+
+    function showProfileToast(message, type = 'success') {
+        const toast = document.getElementById('profileToast');
+
+        if (photoUploadState.toastTimer) {
+            clearTimeout(photoUploadState.toastTimer);
+        }
+
+        toast.textContent = message;
+        toast.className = 'profile-toast profile-toast--' + type;
+        toast.style.display = 'block';
+
+        requestAnimationFrame(function () {
+            toast.classList.add('is-visible');
+        });
+
+        photoUploadState.toastTimer = setTimeout(function () {
+            toast.classList.remove('is-visible');
+
+            setTimeout(function () {
+                toast.style.display = 'none';
+            }, 220);
+        }, 2200);
+    }
 
     function renderConnectionStatus(connection) {
         const badge = document.getElementById('connectionBadge');

@@ -21,6 +21,7 @@ class User extends Authenticatable implements JWTSubject
         'linked_mother_id',
         'anonymous_id',
         'notification_enabled',
+        'photo',
         'created_at',
         'updated_at',
         'last_login'
