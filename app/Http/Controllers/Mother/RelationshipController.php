@@ -15,8 +15,9 @@ class RelationshipController extends Controller
     public function pendingRequests(Request $request)
     {
         $mother = $request->user();
+        $motherObjectId = $this->toObjectId($mother->_id);
 
-        $relationships = Relationship::where('mother_id', $this->toObjectId($mother->_id))
+        $relationships = Relationship::where('mother_id', $motherObjectId)
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -26,10 +27,18 @@ class RelationshipController extends Controller
             ->filter()
             ->values();
 
+        $activeRelationship = Relationship::where('mother_id', $motherObjectId)
+            ->where('status', 'active')
+            ->orderBy('connected_at', 'desc')
+            ->first();
+
         return response()->json([
             'status' => true,
             'message' => 'Permintaan koneksi berhasil diambil.',
             'count' => $data->count(),
+            'active_connection' => $activeRelationship
+                ? $this->formatActiveConnection($activeRelationship)
+                : null,
             'data' => $data,
         ]);
     }
@@ -271,6 +280,23 @@ class RelationshipController extends Controller
             'father_email' => $father->email ?? null,
             'status' => $relationship->status,
             'requested_at' => $this->formatDateTime($relationship->created_at ?? $relationship->connected_at ?? null),
+        ];
+    }
+
+    private function formatActiveConnection(Relationship $relationship): ?array
+    {
+        $father = $this->fatherFromRelationship($relationship);
+        if (!$father) {
+            return null;
+        }
+
+        return [
+            'relationship_id' => (string) $relationship->_id,
+            'father_id' => (string) $relationship->father_id,
+            'father_username' => $father->username ?? null,
+            'father_email' => $father->email ?? null,
+            'status' => $relationship->status,
+            'connected_at' => $this->formatDateTime($relationship->connected_at ?? $relationship->created_at ?? null),
         ];
     }
 
