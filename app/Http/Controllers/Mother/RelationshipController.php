@@ -12,21 +12,39 @@ use MongoDB\BSON\UTCDateTime;
 
 class RelationshipController extends Controller
 {
-    public function acceptFather(Request $request, NotificationService $notificationService)
+    public function pendingRequests(Request $request)
     {
-        $request->validate([
-            'father_id' => ['required', 'string', 'regex:/^[0-9a-fA-F]{24}$/'],
+        $mother = $request->user();
+
+        $relationships = Relationship::where('mother_id', $this->toObjectId($mother->_id))
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $data = $relationships
+            ->map(fn ($relationship) => $this->formatConnectionRequest($relationship))
+            ->filter()
+            ->values();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Permintaan koneksi berhasil diambil.',
+            'count' => $data->count(),
+            'data' => $data,
         ]);
+    }
+
+    public function acceptFather(Request $request, NotificationService $notificationService, ?string $fatherId = null)
+    {
+        $fatherObjectId = $this->fatherObjectIdFromRequest($request, $fatherId);
+        if (!$fatherObjectId) {
+            return $this->invalidFatherResponse();
+        }
 
         $mother = $request->user();
         $motherObjectId = $this->toObjectId($mother->_id);
-        $fatherObjectId = new ObjectId((string) $request->father_id);
 
-        $activeRelationship = Relationship::where('mother_id', $motherObjectId)
-            ->where('status', 'active')
-            ->first();
-
-        if ($activeRelationship) {
+        if ($this->hasActiveFather($motherObjectId)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Ibu sudah memiliki koneksi ayah aktif.',
@@ -34,12 +52,7 @@ class RelationshipController extends Controller
             ], 422);
         }
 
-        $relationship = Relationship::where('mother_id', $motherObjectId)
-            ->where('father_id', $fatherObjectId)
-            ->where('status', 'pending')
-            ->whereNull('disconnected_by')
-            ->first();
-
+        $relationship = $this->pendingRelationship($motherObjectId, $fatherObjectId);
         if (!$relationship) {
             return response()->json([
                 'status' => false,
@@ -58,8 +71,7 @@ class RelationshipController extends Controller
             'updated_at' => $now,
         ]);
 
-        $father = User::where('_id', $relationship->father_id)->first();
-
+        $father = $this->fatherFromRelationship($relationship);
         if ($father) {
             $notificationService->createNotification(
                 $father->_id,
@@ -78,34 +90,82 @@ class RelationshipController extends Controller
             'status' => true,
             'message' => 'Permintaan koneksi ayah berhasil diterima.',
             'is_connected' => true,
-            'data' => [
-                'relationship_id' => (string) $relationship->_id,
-                'mother_id' => (string) $relationship->mother_id,
-                'father_id' => (string) $relationship->father_id,
-                'status' => 'active',
-                'connected_at' => $now->toDateTime()->format(\DateTime::ATOM),
-            ],
+            'data' => $this->formatRelationshipStatus($relationship, 'active', [
+                'connected_at' => $this->formatDateTime($now),
+            ]),
         ]);
     }
 
-    public function blockFather(Request $request, NotificationService $notificationService)
+    public function rejectFather(Request $request, NotificationService $notificationService, ?string $fatherId = null)
+    {
+        $fatherObjectId = $this->fatherObjectIdFromRequest($request, $fatherId);
+        if (!$fatherObjectId) {
+            return $this->invalidFatherResponse();
+        }
+
+        $mother = $request->user();
+        $motherObjectId = $this->toObjectId($mother->_id);
+        $relationship = $this->pendingRelationship($motherObjectId, $fatherObjectId);
+
+        if (!$relationship) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Permintaan koneksi ayah tidak ditemukan atau sudah tidak dapat ditolak.',
+                'is_connected' => false,
+            ], 404);
+        }
+
+        $now = $this->bsonDate();
+
+        $relationship->update([
+            'status' => 'blocked',
+            'disconnected_at' => $now,
+            'disconnected_by' => 'mother',
+            'updated_at' => $now,
+        ]);
+
+        $father = $this->fatherFromRelationship($relationship);
+        if ($father) {
+            $notificationService->createNotification(
+                $father->_id,
+                'father',
+                'Permintaan Koneksi Ditolak',
+                'Ibu menolak permintaan koneksi. Anda tidak dapat terhubung ke akun ibu ini.',
+                'connection',
+                [
+                    'mother_id' => (string) $mother->_id,
+                    'relationship_status' => 'blocked',
+                ]
+            );
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Permintaan koneksi ayah berhasil ditolak dan diblokir.',
+            'is_connected' => false,
+            'data' => $this->formatRelationshipStatus($relationship, 'blocked', [
+                'disconnected_by' => 'mother',
+                'disconnected_at' => $this->formatDateTime($now),
+                'connection_code' => $mother->anonymous_id ?? null,
+                'connection_code_available' => true,
+            ]),
+        ]);
+    }
+
+    public function blockFather(Request $request, NotificationService $notificationService, ?string $fatherId = null)
     {
         $mother = $request->user();
         $motherObjectId = $this->toObjectId($mother->_id);
 
-        $query = Relationship::where('status', 'active')
-            ->where('mother_id', $motherObjectId);
+        $query = Relationship::where('mother_id', $motherObjectId)
+            ->where('status', 'active');
 
-        if ($request->filled('father_id')) {
-            $request->validate([
-                'father_id' => ['string', 'regex:/^[0-9a-fA-F]{24}$/'],
-            ]);
-
-            $query->where('father_id', new ObjectId((string) $request->father_id));
+        $fatherObjectId = $this->fatherObjectIdFromRequest($request, $fatherId, false);
+        if ($fatherObjectId) {
+            $query->where('father_id', $fatherObjectId);
         }
 
         $relationship = $query->orderBy('connected_at', 'desc')->first();
-
         if (!$relationship) {
             return response()->json([
                 'status' => false,
@@ -123,8 +183,7 @@ class RelationshipController extends Controller
             'updated_at' => $now,
         ]);
 
-        $father = User::where('_id', $relationship->father_id)->first();
-
+        $father = $this->fatherFromRelationship($relationship);
         if ($father) {
             $notificationService->createNotification(
                 $father->_id,
@@ -143,17 +202,86 @@ class RelationshipController extends Controller
             'status' => true,
             'message' => 'Koneksi ayah berhasil diputus dan diblokir.',
             'is_connected' => false,
-            'data' => [
-                'relationship_id' => (string) $relationship->_id,
-                'mother_id' => (string) $relationship->mother_id,
-                'father_id' => (string) $relationship->father_id,
-                'status' => 'blocked',
+            'data' => $this->formatRelationshipStatus($relationship, 'blocked', [
                 'disconnected_by' => 'mother',
-                'disconnected_at' => $now->toDateTime()->format(\DateTime::ATOM),
+                'disconnected_at' => $this->formatDateTime($now),
                 'connection_code' => $mother->anonymous_id ?? null,
                 'connection_code_available' => true,
-            ],
+            ]),
         ]);
+    }
+
+    private function pendingRelationship(ObjectId $motherObjectId, ObjectId $fatherObjectId): ?Relationship
+    {
+        return Relationship::where('mother_id', $motherObjectId)
+            ->where('father_id', $fatherObjectId)
+            ->where('status', 'pending')
+            ->first();
+    }
+
+    private function hasActiveFather(ObjectId $motherObjectId): bool
+    {
+        return Relationship::where('mother_id', $motherObjectId)
+            ->where('status', 'active')
+            ->exists();
+    }
+
+    private function fatherObjectIdFromRequest(Request $request, ?string $fatherId, bool $required = true): ?ObjectId
+    {
+        $value = $fatherId ?: $request->input('father_id');
+
+        if (!$value && !$required) {
+            return null;
+        }
+
+        if (!is_string($value) || !preg_match('/^[0-9a-fA-F]{24}$/', $value)) {
+            return null;
+        }
+
+        return new ObjectId($value);
+    }
+
+    private function invalidFatherResponse()
+    {
+        return response()->json([
+            'status' => false,
+            'message' => 'father_id wajib diisi dengan format ObjectId yang valid.',
+            'errors' => [
+                'father_id' => ['father_id wajib diisi dengan format ObjectId yang valid.'],
+            ],
+        ], 422);
+    }
+
+    private function fatherFromRelationship(Relationship $relationship): ?User
+    {
+        return User::where('_id', $relationship->father_id)->first();
+    }
+
+    private function formatConnectionRequest(Relationship $relationship): ?array
+    {
+        $father = $this->fatherFromRelationship($relationship);
+        if (!$father) {
+            return null;
+        }
+
+        return [
+            'relationship_id' => (string) $relationship->_id,
+            'father_id' => (string) $relationship->father_id,
+            'father_username' => $father->username ?? null,
+            'father_email' => $father->email ?? null,
+            'status' => $relationship->status,
+            'requested_at' => $this->formatDateTime($relationship->created_at ?? $relationship->connected_at ?? null),
+        ];
+    }
+
+    private function formatRelationshipStatus(Relationship $relationship, string $status, array $extra = []): array
+    {
+        return array_merge([
+            'relationship_id' => (string) $relationship->_id,
+            'mother_id' => (string) $relationship->mother_id,
+            'father_id' => (string) $relationship->father_id,
+            'status' => $status,
+        ], $extra);
     }
 
     private function bsonDate($time = null): UTCDateTime
@@ -168,5 +296,18 @@ class RelationshipController extends Controller
         }
 
         return new ObjectId((string) $value);
+    }
+
+    private function formatDateTime($value): ?string
+    {
+        if ($value instanceof UTCDateTime) {
+            return $value->toDateTime()->format(\DateTime::ATOM);
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(\DateTime::ATOM);
+        }
+
+        return $value ? (string) $value : null;
     }
 }

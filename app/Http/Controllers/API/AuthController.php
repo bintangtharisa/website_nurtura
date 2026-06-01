@@ -224,12 +224,15 @@ class AuthController extends Controller
         }
 
         $relationship = null;
+        $connectionStatus = null;
+        $pendingRequestCount = 0;
 
         if ($user->role === 'father') {
-            $relationship = Relationship::where([
-                'father_id' => $user->_id,
-                'status' => 'active'
-            ])->first();
+            $relationship = Relationship::where('father_id', new ObjectId((string) $user->_id))
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            $connectionStatus = $relationship->status ?? null;
         }
 
         if ($user->role === 'mother') {
@@ -237,6 +240,11 @@ class AuthController extends Controller
                 'mother_id' => $user->_id,
                 'status' => 'active'
             ])->first();
+
+            $connectionStatus = $relationship ? 'active' : null;
+            $pendingRequestCount = Relationship::where('mother_id', new ObjectId((string) $user->_id))
+                ->where('status', 'pending')
+                ->count();
         }
 
         return response()->json([
@@ -251,7 +259,9 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'connection_code' => $user->anonymous_id ?? null,
-                'is_connected' => $relationship ? true : false
+                'is_connected' => ($relationship && $relationship->status === 'active') ? true : false,
+                'connection_status' => $connectionStatus,
+                'pending_request_count' => $pendingRequestCount,
             ]
         ]);
     }
