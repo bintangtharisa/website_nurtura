@@ -86,11 +86,10 @@ Route::prefix('articles')->group(function () {
     });
 });
 
-Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
-
 Route::middleware('auth:api')->group(function () {
     Route::get('/profile', [ProfileController::class, 'me']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
     Route::put('/change-password', [ProfileController::class, 'changePassword']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

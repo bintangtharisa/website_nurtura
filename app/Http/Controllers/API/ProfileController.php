@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends Controller
@@ -168,7 +167,14 @@ class ProfileController extends Controller
         $path = null;
 
         try {
-            $user = $this->authenticateRequest($request);
+            $user = $request->user('api');
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthenticated.'
+                ], 401);
+            }
 
             $request->validate([
                 'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -209,11 +215,6 @@ class ProfileController extends Controller
                 'message' => 'Validasi gagal',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (JWTException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Unauthenticated.'
-            ], 401);
         } catch (\Throwable $e) {
             if ($path && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
@@ -229,17 +230,6 @@ class ProfileController extends Controller
                 'message' => 'Gagal memperbarui foto profil'
             ], 500);
         }
-    }
-
-    private function authenticateRequest(Request $request)
-    {
-        $token = $request->bearerToken() ?: $request->input('token');
-
-        if ($token) {
-            return JWTAuth::setToken($token)->authenticate();
-        }
-
-        return JWTAuth::parseToken()->authenticate();
     }
 
     private function fatherConnection($user): ?array

@@ -674,7 +674,6 @@
     function uploadProfilePhoto(token, file) {
         const formData = new FormData();
         formData.append('photo', file);
-        formData.append('token', token);
 
         return fetch('/api/profile/photo', {
             method: 'POST',
