@@ -36,7 +36,7 @@ return [
     ],
 
     'ml_api' => [
-        'url' => env('ML_API_URL', 'http://127.0.0.1:8080'),
+        'url' => env('ML_API_URL', '"http://192.168.0.110:8080"'),
     ],
 
     'chatbot' => [

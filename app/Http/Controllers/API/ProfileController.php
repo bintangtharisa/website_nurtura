@@ -48,26 +48,10 @@ class ProfileController extends Controller
             $user = JWTAuth::parseToken()->authenticate();
 
             $request->validate([
-                'username'     => 'sometimes|string|max:255',
-                'old_password' => 'sometimes|string'
+                'username' => 'sometimes|string|max:255',
             ]);
 
             $changedUsername = $request->filled('username') && $request->username !== $user->username;
-            if ($changedUsername && !$request->filled('old_password')) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Password lama wajib diisi untuk mengubah username.'
-                ], 422);
-            }
-
-            if ($request->filled('old_password')) {
-                if (!Hash::check($request->old_password, $user->password_hash)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Password salah, data tidak diubah'
-                    ], 400);
-                }
-            }
 
             if ($changedUsername) {
                 $user->username = $request->input('username');
@@ -103,7 +87,10 @@ class ProfileController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated.'
+            ], 401);
         }
     }
 
@@ -157,7 +144,8 @@ class ProfileController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'status' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }

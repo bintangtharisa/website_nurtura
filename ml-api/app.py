@@ -17,17 +17,17 @@ from utils.screening_features import build_features
 app = Flask(__name__)
 
 # load model & scaler
-model = joblib.load("model_kmeans.pkl")
+model = joblib.load("kmeans_model.pkl")
 scaler = joblib.load("scaler.pkl")
-
+print("MODEL =", model)
+print("CENTROIDS =")
+print(scaler.inverse_transform(model.cluster_centers_))
 CLUSTER_BERESIKO = 0
 
 # MongoDB connection
 mongo_uri = os.environ.get("MONGODB_URI", "mongodb+srv://userNurtura:nurturame123@cluster0.2vph2f5.mongodb.net/DBnurtura?authSource=admin")
 client = MongoClient(mongo_uri)
 db = client['DBnurtura']
-health_records = db['health_records']
-prediction_results = db['prediction_results']
 users_collection = db['users']
 
 
@@ -101,26 +101,6 @@ def predict():
         result = "Beresiko Depresi" if cluster == CLUSTER_BERESIKO else "Tidak Beresiko Depresi"
 
         recommendation = get_ai_recommendation(result, answers, features, cluster)
-
-        # Simpan ke health_records
-        health_record = {
-            "mother_id": ObjectId(mother_id),
-            "created_at": datetime.utcnow(),
-            **{k: str(v) for k, v in answers.items()}  # convert to string
-        }
-        health_insert = health_records.insert_one(health_record)
-        health_id = health_insert.inserted_id
-
-        # Simpan ke prediction_results
-        prediction_result = {
-            "mother_id": ObjectId(mother_id),
-            "health_record_id": health_id,
-            "cluster": int(cluster),
-            "result": result,
-            "recommendation": recommendation,
-            "created_at": datetime.utcnow()
-        }
-        prediction_results.insert_one(prediction_result)
 
         return jsonify({
             "status": "success",
@@ -201,6 +181,9 @@ def chatbot():
             "message": str(e)
         }), 500
 
+print("\n=== ROUTES ===")
+print(app.url_map)
+print("==============\n")
 
 if __name__ == "__main__":
 

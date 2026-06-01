@@ -147,16 +147,24 @@ class ScreeningController extends Controller
                 'created_at' => new UTCDateTime()
             ]);
 
-            // NOTIFIKASI
-            $notificationService->createNotification(
-                (string) $motherId,
-                'mother',
-                'Screening Selesai',
-                'Screening Anda telah selesai.',
-                'screening',
-                ['result' => $result]
-            );
 
+$father = $usersCollection->findOne([
+    'role' => 'father'
+]);
+
+if ($father) {
+    $notificationService->createNotification(
+        (string) $father['_id'],
+        'father',
+        'Hasil Screening Istri Anda',
+        'Istri Anda telah melakukan screening. Hasil: ' . $result,
+        'screening',
+        [
+            'result' => $result,
+            'risk' => $result === 'Beresiko Depresi' ? 'high' : 'low'
+        ]
+    );
+}
             return response()->json([
                 'status' => true,
                 'message' => 'Screening berhasil',

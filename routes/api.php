@@ -17,6 +17,7 @@ use App\Http\Controllers\Father\DashboardController;
 use App\Http\Controllers\Father\MonitoringController;
 
 
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -42,23 +43,10 @@ Route::prefix('father')->middleware(['auth:api', 'role:father'])->group(function
     Route::get('/monitoring', [MonitoringController::class, 'history']);
 });
 
-// Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
-//     Route::get('/dashboard', function () {
-//         return response()->json([
-//             'status' => true,
-//             'message' => 'Welcome Mother'
-//         ]);
-//     });
-
-//     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
-//     Route::post('/screening', [ScreeningController::class, 'screening']);
-//     Route::get('/screening-history', [ScreeningController::class, 'history']);
-    Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
-    Route::post('/screening', [ScreeningController::class, 'screening']);
-    Route::patch('/father/accept', [MotherRelationshipController::class, 'acceptFather']);
-    Route::patch('/father/block', [MotherRelationshipController::class, 'blockFather']);
-
-// });
+Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
+Route::post('/screening', [ScreeningController::class, 'screening']);
+Route::patch('/father/accept', [MotherRelationshipController::class, 'acceptFather']);
+Route::patch('/father/block', [MotherRelationshipController::class, 'blockFather']);
 
 // Article Categories
 Route::prefix('article-categories')->group(function () {
@@ -92,10 +80,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+
+    Route::get('/chatbot/sessions', [ChatbotController::class, 'sessions']);
+    Route::get('/chatbot/sessions/{sessionId}/messages', [ChatbotController::class, 'messages']);
+    Route::delete('/chatbot/sessions/{sessionId}', [ChatbotController::class, 'deleteSession']);
+    Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->middleware('throttle:chatbot');
 });
 
 Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function () {
-
     Route::get('/dashboard', function () {
         return response()->json([
             'status' => true,
@@ -104,18 +96,6 @@ Route::prefix('mother')->middleware(['auth:api', 'role:mother'])->group(function
     });
 
     Route::get('/questions', [QuestionsControllerMother::class, 'getQuestions']);
-
     Route::post('/screening', [ScreeningController::class, 'screening']);
-
-    Route::get(
-        '/screening-history',
-        [ScreeningController::class, 'screeningHistory']
-    );
+    Route::get('/screening-history', [ScreeningController::class, 'screeningHistory']);
 });
-
-    Route::get('/chatbot/sessions', [ChatbotController::class, 'sessions']);
-    Route::get('/chatbot/sessions/{sessionId}/messages', [ChatbotController::class, 'messages']);
-    Route::delete('/chatbot/sessions/{sessionId}', [ChatbotController::class, 'deleteSession']);
-    Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->middleware('throttle:chatbot');
-
-

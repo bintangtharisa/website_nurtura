@@ -12,6 +12,68 @@ use MongoDB\BSON\UTCDateTime;
 
 class RelationshipController extends Controller
 {
+    public function getKoneksi(Request $request)
+    {
+        $mother = $request->user();
+        $motherObjectId = $this->toObjectId($mother->_id);
+
+        // Cek koneksi aktif
+        $active = Relationship::where('mother_id', $motherObjectId)
+            ->where('status', 'active')
+            ->first();
+
+        if ($active) {
+            $father = User::where('_id', $active->father_id)->first();
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'pasangan' => $father ? [
+                        'id'    => (string) $father->_id,
+                        'name'  => $father->name ?? $father->username,
+                        'email' => $father->email,
+                        'photo' => $father->photo ?? null,
+                        'sejak' => $active->connected_at
+                                    ? $active->connected_at->toDateTime()->format('d M Y')
+                                    : '-',
+                    ] : null,
+                    'pending_request' => null,
+                ],
+            ]);
+        }
+
+        // Cek pending request
+        $pending = Relationship::where('mother_id', $motherObjectId)
+            ->where('status', 'pending')
+            ->whereNull('disconnected_by')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($pending) {
+            $father = User::where('_id', $pending->father_id)->first();
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'pasangan' => null,
+                    'pending_request' => $father ? [
+                        'id'    => (string) $father->_id,
+                        'name'  => $father->name ?? $father->username,
+                        'email' => $father->email,
+                        'photo' => $father->photo ?? null,
+                    ] : null,
+                ],
+            ]);
+        }
+
+        // Tidak ada koneksi
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'pasangan'        => null,
+                'pending_request' => null,
+            ],
+        ]);
+    }
+
     public function acceptFather(Request $request, NotificationService $notificationService)
     {
         $request->validate([
@@ -93,23 +155,17 @@ class RelationshipController extends Controller
         $mother = $request->user();
         $motherObjectId = $this->toObjectId($mother->_id);
 
-        $query = Relationship::where('status', 'active')
-            ->where('mother_id', $motherObjectId);
-
-        if ($request->filled('father_id')) {
-            $request->validate([
-                'father_id' => ['string', 'regex:/^[0-9a-fA-F]{24}$/'],
-            ]);
-
-            $query->where('father_id', new ObjectId((string) $request->father_id));
-        }
-
-        $relationship = $query->orderBy('connected_at', 'desc')->first();
+        // Cek koneksi active ATAU pending
+        $relationship = Relationship::where('mother_id', $motherObjectId)
+            ->whereIn('status', ['active', 'pending'])
+            ->whereNull('disconnected_by')
+            ->orderBy('created_at', 'desc')
+            ->first();
 
         if (!$relationship) {
             return response()->json([
                 'status' => false,
-                'message' => 'Tidak ada koneksi ayah aktif untuk diblokir.',
+                'message' => 'Tidak ada koneksi untuk diblokir.',
                 'is_connected' => false,
             ], 404);
         }
@@ -129,8 +185,8 @@ class RelationshipController extends Controller
             $notificationService->createNotification(
                 $father->_id,
                 'father',
-                'Koneksi Diputus',
-                'Ibu telah memutuskan koneksi. Anda tidak dapat mengakses report ibu lagi.',
+                'Koneksi Ditolak',
+                'Ibu telah menolak permintaan koneksi Anda.',
                 'connection',
                 [
                     'mother_id' => (string) $mother->_id,
@@ -141,17 +197,13 @@ class RelationshipController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Koneksi ayah berhasil diputus dan diblokir.',
+            'message' => 'Permintaan koneksi berhasil ditolak.',
             'is_connected' => false,
             'data' => [
                 'relationship_id' => (string) $relationship->_id,
-                'mother_id' => (string) $relationship->mother_id,
-                'father_id' => (string) $relationship->father_id,
                 'status' => 'blocked',
                 'disconnected_by' => 'mother',
                 'disconnected_at' => $now->toDateTime()->format(\DateTime::ATOM),
-                'connection_code' => $mother->anonymous_id ?? null,
-                'connection_code_available' => true,
             ],
         ]);
     }
@@ -166,7 +218,6 @@ class RelationshipController extends Controller
         if ($value instanceof ObjectId) {
             return $value;
         }
-
         return new ObjectId((string) $value);
     }
 }

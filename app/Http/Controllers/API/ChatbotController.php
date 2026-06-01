@@ -130,12 +130,19 @@ class ChatbotController extends Controller
                 'chatbot' => $chatbotResult,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Gagal mengirim pesan chatbot',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+
+    \Log::error('CHATBOT ERROR', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+    ]);
+
+    return response()->json([
+        'status' => false,
+        'message' => 'Gagal mengirim pesan chatbot',
+        'error' => $e->getMessage()
+    ], 500);
+}
     }
 
     public function sessions(Request $request)
@@ -611,4 +618,6 @@ class ChatbotController extends Controller
 
         return null;
     }
+
+    
 }

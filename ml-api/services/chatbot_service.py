@@ -222,7 +222,7 @@ def build_chatbot_prompt(message, user_role, context, history):
         f"Data percakapan: {json.dumps(payload, ensure_ascii=False)}"
     )
 
-
+print("GEMINI_API_KEY =", GEMINI_API_KEY)
 def get_chatbot_reply(message, user_role, context=None, history=None):
     context = context or {}
     history = history or []
