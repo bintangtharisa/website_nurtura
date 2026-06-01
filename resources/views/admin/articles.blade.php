@@ -375,11 +375,20 @@
             });
         }
 
+        // Handler untuk menutup modal kustom warning validasi saat area luar overlay diklik
+        const warningModal = document.getElementById('validationWarningModal');
+        if (warningModal) {
+            warningModal.addEventListener('click', function (event) {
+                if (event.target === warningModal) closeValidationWarning();
+            });
+        }
+
         // Handler tombol Escape untuk menutup semua modal kustom
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 if (deleteModal && deleteModal.style.display === 'flex') closeDeleteConfirm();
                 if (successModal && successModal.style.display === 'flex') closeSaveSuccess();
+                if (warningModal && warningModal.style.display === 'flex') closeValidationWarning();
             }
         });
     });
@@ -549,17 +558,20 @@
 
     async function saveArticle() {
         const id = document.getElementById('articleId').value;
+        const title = document.getElementById('articleTitle').value.trim();
+        const description = document.getElementById('articleDescription').value.trim();
         const categoryId = document.getElementById('category_id').value;
 
-        if (!categoryId) {
-            alert("Pilih kategori dulu ya!");
+        // Validasi Form Menyeluruh (Menggantikan alert bawaan browser)
+        if (!title || !description || !categoryId) {
+            openValidationWarning("Harap isi semua data");
             return;
         }
         
         const payload = {
-            title: document.getElementById('articleTitle').value,
+            title: title,
             slug: document.getElementById('articleSlug').value,
-            description: document.getElementById('articleDescription').value,
+            description: description,
             category_id: categoryId,
             thumbnail: document.getElementById('thumbnailUrl').value || 'https://placehold.co/800x400?text=No+Image',
             status: document.getElementById('is_published').checked ? 'published' : 'draft',
@@ -584,10 +596,11 @@
                 await loadArticles(); 
             } else {
                 const result = await res.json();
-                alert("Gagal simpan: " + (result.message || "Error terjadi"));
+                openValidationWarning(result.message || "Gagal menyimpan data ke sistem.");
             }
         } catch (error) {
             console.error("Save error:", error);
+            openValidationWarning("Terjadi kendala koneksi, silakan coba lagi.");
         }
     }
 
@@ -609,6 +622,23 @@
         const modal = document.getElementById('deleteConfirmModal');
         if (modal) {
             modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    // Fungsi Pengendali Modal Peringatan Validasi
+    function openValidationWarning(message) {
+        const modal = document.getElementById('validationWarningModal');
+        const textElement = document.getElementById('validationWarningText');
+        if (modal && textElement) {
+            textElement.innerText = message;
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeValidationWarning() {
+        const modal = document.getElementById('validationWarningModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
         }
     }
 
@@ -681,6 +711,24 @@
         <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Artikel Anda telah berhasil diperbarui dan disimpan ke dalam sistem.</p>
         <div style="display: flex !important; justify-content: center !important;">
             <button type="button" onclick="closeSaveSuccess()" style="width: 100% !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #94A97E !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Selesai</button>
+        </div>
+    </div>
+</div>
+
+{{-- ===== BARU: MODAL PERINGATAN VALIDASI KUSTOM (WARNA AMBER GOLD & SAGE GREEN) ===== --}}
+<div id="validationWarningModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="validationWarningTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FFF9E6 !important; color: #D97706 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 id="validationWarningTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Periksa Kembali</h2>
+        <p id="validationWarningText" style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Harap isi semua data</p>
+        <div style="display: flex !important; justify-content: center !important;">
+            <button type="button" onclick="closeValidationWarning()" style="width: 100% !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #94A97E !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Selesai</button>
         </div>
     </div>
 </div>
