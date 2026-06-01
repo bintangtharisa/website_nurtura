@@ -333,7 +333,6 @@
 @endsection
 
 @push('scripts')
-@push('scripts')
 <script>
     const API_URL = '/api/articles';
     const CAT_URL = '/api/article-categories';
@@ -368,10 +367,19 @@
             });
         }
 
-        // Handler untuk menutup modal kustom delete saat tombol Escape ditekan
+        // Handler untuk menutup modal kustom save success saat area luar overlay diklik
+        const successModal = document.getElementById('saveSuccessModal');
+        if (successModal) {
+            successModal.addEventListener('click', function (event) {
+                if (event.target === successModal) closeSaveSuccess();
+            });
+        }
+
+        // Handler tombol Escape untuk menutup semua modal kustom
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && deleteModal && deleteModal.style.display === 'flex') {
-                closeDeleteConfirm();
+            if (event.key === 'Escape') {
+                if (deleteModal && deleteModal.style.display === 'flex') closeDeleteConfirm();
+                if (successModal && successModal.style.display === 'flex') closeSaveSuccess();
             }
         });
     });
@@ -464,7 +472,7 @@
         const btnDelete = document.getElementById('btnDelete');
         const saveStatus = document.getElementById('saveStatus');
         
-        overlay.style.display = 'flex';
+        overlay.style.setProperty('display', 'flex', 'important');
         form.reset(); 
         document.getElementById('articleId').value = '';
         document.getElementById('inputUrlField').value = '';
@@ -571,8 +579,9 @@
             });
 
             if (res.ok) {
+                closeEditor(); 
+                openSaveSuccess(); 
                 await loadArticles(); 
-                if (!id) closeEditor();
             } else {
                 const result = await res.json();
                 alert("Gagal simpan: " + (result.message || "Error terjadi"));
@@ -582,7 +591,20 @@
         }
     }
 
-    // --- PERBAIKAN POP-UP: FORCE DISPLAY & LAYER TERATAS ---
+    function openSaveSuccess() {
+        const modal = document.getElementById('saveSuccessModal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeSaveSuccess() {
+        const modal = document.getElementById('saveSuccessModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
     function openDeleteConfirm() {
         const modal = document.getElementById('deleteConfirmModal');
         if (modal) {
@@ -615,12 +637,19 @@
     }
 
     function closeEditor() {
-        document.getElementById('editorOverlay').style.display = 'none';
+        const overlay = document.getElementById('editorOverlay');
+        const form = document.getElementById('articleForm');
+        if (overlay) {
+            overlay.style.setProperty('display', 'none', 'important');
+        }
+        if (form) {
+            form.reset();
+        }
     }
 </script>
 @endpush
 
-{{-- ===== MODAL KONFIRMASI DELETE ARTIKEL KUSTOM (LAYER UTAMA TERATAS) ===== --}}
+{{-- ===== MODAL KONFIRMASI DELETE ARTIKEL ===== --}}
 <div id="deleteConfirmModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
     <div role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
         <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FEF2F2 !important; color: #EF4444 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
@@ -639,4 +668,19 @@
         </div>
     </div>
 </div>
-@endpush
+
+{{-- ===== FIXED: MODAL SUKSES DENGAN WARNA SAGE GREEN KHAS NURTURA FAMILY ===== --}}
+<div id="saveSuccessModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="saveSuccessTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #F1F5EE !important; color: #94A97E !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2 id="saveSuccessTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Berhasil Disimpan</h2>
+        <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Artikel Anda telah berhasil diperbarui dan disimpan ke dalam sistem.</p>
+        <div style="display: flex !important; justify-content: center !important;">
+            <button type="button" onclick="closeSaveSuccess()" style="width: 100% !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #94A97E !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Selesai</button>
+        </div>
+    </div>
+</div>
