@@ -105,4 +105,52 @@ class NotificationController extends Controller
             'message' => 'Success'
         ]);
     }
+
+    public function updateDeviceToken(Request $request)
+    {
+        $payload = $request->validate([
+            'fcm_token' => 'required|string',
+            'platform' => 'nullable|string|max:30',
+        ]);
+
+        $user = auth()->user();
+        $user->fcm_token = $payload['fcm_token'];
+        $user->fcm_platform = $payload['platform'] ?? null;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Device token tersimpan',
+        ]);
+    }
+
+    public function updateFatherSettings(Request $request)
+    {
+        $payload = $request->validate([
+            'risk_only' => 'required|boolean',
+            'all_changes' => 'required|boolean',
+        ]);
+
+        $user = auth()->user();
+        if (($user->role ?? null) !== 'father') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Hanya father yang dapat mengubah pengaturan ini',
+            ], 403);
+        }
+
+        $allChanges = (bool) $payload['all_changes'];
+        $user->father_notif_all_changes = $allChanges;
+        $user->father_notif_risk_only = $allChanges ? true : (bool) $payload['risk_only'];
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Pengaturan notifikasi tersimpan',
+            'data' => [
+                'risk_only' => (bool) $user->father_notif_risk_only,
+                'all_changes' => (bool) $user->father_notif_all_changes,
+            ],
+        ]);
+    }
 }

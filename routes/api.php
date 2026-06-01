@@ -97,6 +97,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
     Route::put('/change-password', [ProfileController::class, 'changePassword']);
     Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/device-token', [NotificationController::class, 'updateDeviceToken']);
+    Route::put('/notifications/father-settings', [NotificationController::class, 'updateFatherSettings']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
