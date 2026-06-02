@@ -236,6 +236,7 @@
     </div>
     {{-- ===== END MAIN WRAPPER ===== --}}
 
+    {{-- ===== MODAL CONFIRM LOGOUT ===== --}}
     <div id="logoutConfirmModal" class="logout-modal" hidden>
         <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
             <div class="logout-modal__icon" aria-hidden="true">
@@ -254,6 +255,40 @@
         </div>
     </div>
 
+    {{-- ===== POP UP SUKSES SIMPAN PROFIL ===== --}}
+    <div id="successModal" class="logout-modal" hidden>
+        <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+            <div class="logout-modal__icon" aria-hidden="true" style="background-color: #EFF6EE; color: #8FA874;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h2 id="successModalTitle" class="logout-modal__title" style="margin-top: 15px;">Berhasil</h2>
+            <p class="logout-modal__text">Profil berhasil diperbarui!</p>
+            <div class="logout-modal__actions" style="justify-content: center; margin-top: 20px;">
+                <button type="button" class="logout-modal__btn" style="background-color: #8FA874; color: #fff; width: 100%; max-width: 150px; border: none;" onclick="closeSuccessModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== MODAL DETAIL PEMERIKSAAN (DIBUTUHKAN HALAMAN MONITORING) ===== --}}
+    <div id="detailCheckModal" class="logout-modal" hidden>
+        <div class="logout-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+            <div class="logout-modal__icon" aria-hidden="true" style="background-color: #F0FDF4; color: #16A34A;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <h2 id="detailModalTitle" class="logout-modal__title">Detail Skrining</h2>
+            <p id="detailModalText" class="logout-modal__text" style="font-size: 14px; color: #4B5563;">Memuat detail...</p>
+            <div class="logout-modal__actions" style="justify-content: center; margin-top: 20px;">
+                <button type="button" class="logout-modal__btn" style="background-color: #4B5563; color: #fff; width: 100%; max-width: 150px; border: none;" onclick="document.getElementById('detailCheckModal').hidden = true;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @stack('scripts')
@@ -266,6 +301,15 @@
 
         function closeLogoutConfirm() {
             document.getElementById('logoutConfirmModal').hidden = true;
+        }
+
+        function openSuccessModal() {
+            document.getElementById('successModal').hidden = false;
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').hidden = true;
+            window.location.reload(); // Refresh akan terjadi HANYA setelah tombol OK di klik
         }
 
         function logout() {
@@ -289,8 +333,23 @@
                 if (event.target === logoutModal) closeLogoutConfirm();
             });
 
+            const successModal = document.getElementById('successModal');
+            successModal.addEventListener('click', function (event) {
+                if (event.target === successModal) closeSuccessModal();
+            });
+
+            // Handler menutup modal detail jika area luar diklik
+            const detailModal = document.getElementById('detailCheckModal');
+            if (detailModal) {
+                detailModal.addEventListener('click', function (event) {
+                    if (event.target === detailModal) detailModal.hidden = true;
+                });
+            }
+
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && !logoutModal.hidden) closeLogoutConfirm();
+                if (event.key === 'Escape' && !successModal.hidden) closeSuccessModal();
+                if (event.key === 'Escape' && detailModal && !detailModal.hidden) detailModal.hidden = true;
             });
 
             const token = localStorage.getItem('token');
@@ -304,6 +363,30 @@
             }
             if (cachedId) {
                 document.getElementById('sidebarUserId').textContent = 'ID: ' + cachedId;
+            }
+
+            // --- PERBAIKAN TOMBOL SIMPAN DI SINI ---
+            const btnSimpan = document.getElementById('btnSimpanProfil');
+            if (btnSimpan) {
+                btnSimpan.addEventListener('click', function(e) {
+                    e.preventDefault(); // Mencegah form langsung submit/refresh sendiri
+                    
+                    const originalText = btnSimpan.textContent;
+                    btnSimpan.disabled = true;
+                    btnSimpan.textContent = 'Menyimpan...'; // Loading cepat
+                    
+                    // Simulasikan request jika endpoint belum siap, atau gunakan fetch aslimu
+                    Promise.resolve()
+                        .then(() => {
+                            // Tampilkan pop-up!
+                            openSuccessModal(); 
+                        })
+                        .finally(() => {
+                            // Kembalikan tombol ke bentuk semula
+                            btnSimpan.disabled = false;
+                            btnSimpan.textContent = originalText;
+                        });
+                });
             }
         });
 

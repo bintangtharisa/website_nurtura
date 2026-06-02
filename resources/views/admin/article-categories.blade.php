@@ -92,14 +92,31 @@
     .btn--danger:hover { background: #ef4444; color: #fff; }
 </style>
 @endsection
+
 @push('scripts')
 <script>
     const API_URL = '/api/article-categories'; 
     const token = localStorage.getItem('token');
+    let categoryIdToDelete = null; 
 
     document.addEventListener('DOMContentLoaded', () => {
         initSlugListener();
         if (token) loadData();
+
+        // Handler klik area luar untuk menutup modal kustom delete
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function (event) {
+                if (event.target === deleteModal) closeDeleteModal();
+            });
+        }
+
+        // Handler tombol Escape untuk menutup semua modal kustom
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                if (deleteModal && deleteModal.style.display === 'flex') closeDeleteModal();
+            }
+        });
     });
 
     function initSlugListener() {
@@ -124,7 +141,7 @@
             });
             const categories = await res.json();
             
-            // PENTING: Deteksi apakah ID ada di '_id' atau 'id'
+            // PENTING: Deteksi apakah ID ada di '_id' or 'id'
             tbody.innerHTML = categories.map((c, index) => {
                 // MongoDB sering ganti-ganti antara _id atau id saat dikirim ke JSON
                 const realId = c._id || c.id; 
@@ -218,14 +235,59 @@
         }
     };
 
-    async function deleteCategory(id) {
+    // Fungsi Pengendali Modal Peringatan Hapus Kategori Kustom
+    function deleteCategory(id) {
         if (!id || id === 'undefined') return alert("ID tidak valid!");
-        if (!confirm('Yakin ingin menghapus kategori ini?')) return;
-        const res = await fetch(`${API_URL}/${id}`, {
+        categoryIdToDelete = id;
+        
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+        categoryIdToDelete = null;
+    }
+
+    async function executeDeleteCategory() {
+        if (!categoryIdToDelete) return;
+        
+        const res = await fetch(`${API_URL}/${categoryIdToDelete}`, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + token }
         });
-        if (res.ok) loadData();
+        
+        if (res.ok) {
+            closeDeleteModal();
+            loadData();
+        } else {
+            alert("Gagal menghapus kategori.");
+        }
     }
 </script>
 @endpush
+
+{{-- ===== MODAL KONFIRMASI DELETE KATEGORI ===== --}}
+<div id="deleteConfirmModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FEF2F2 !important; color: #EF4444 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        </div>
+        <h2 id="deleteConfirmTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Hapus Kategori</h2>
+        <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Anda yakin ingin menghapus kategori ini?</p>
+        <div style="display: flex !important; gap: 12px !important; justify-content: center !important;">
+            <button type="button" onclick="closeDeleteModal()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: 1px solid #E2E8F0 !important; background: #ffffff !important; color: #475569 !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Batal</button>
+            <button type="button" onclick="executeDeleteCategory()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #EF4444 !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Hapus</button>
+        </div>
+    </div>
+</div>

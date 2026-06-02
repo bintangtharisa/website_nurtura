@@ -217,7 +217,7 @@ function buildChart(data) {
                         stepSize: 1
                     },
                     min: 0,
-                    suggestedMax: Math.max(3, maxValue + 1)
+                    suggestMax: Math.max(3, maxValue + 1)
                 }
             }
         }
@@ -254,7 +254,7 @@ function buildTable() {
         return;
     }
 
-    tbody.innerHTML = monitoringData.map(item => {
+    tbody.innerHTML = monitoringData.map((item, index) => {
         const tanggal = formatDateLabel(item.created_at);
         const waktu = formatTimeLabel(item.created_at);
         const hasil = item.result || 'Tidak Diketahui';
@@ -273,7 +273,7 @@ function buildTable() {
                 </td>
                 <td style="padding: 13px 22px;">${badgeMap[hasil] || hasil}</td>
                 <td style="padding: 13px 22px;">
-                    <button onclick="lihatDetail('${tanggal}')" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--clr-primary);font-weight:500;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--clr-primary-light);background:var(--clr-primary-light);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--clr-primary)';this.style.color='white'" onmouseout="this.style.background='var(--clr-primary-light)';this.style.color='var(--clr-primary)'">
+                    <button onclick="bukaModalDetail(${index})" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--clr-primary);font-weight:500;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--clr-primary-light);background:var(--clr-primary-light);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--clr-primary)';this.style.color='white'" onmouseout="this.style.background='var(--clr-primary-light)';this.style.color='var(--clr-primary)'">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         Detail
                     </button>
@@ -378,9 +378,18 @@ function resultScore(result) {
     return 0;
 }
 
-function lihatDetail(tanggal) {
-    alert('Detail pemeriksaan: ' + tanggal);
-    // Ganti dengan modal atau redirect ke halaman detail
+function bukaModalDetail(index) {
+    const item = monitoringData[index];
+    if (!item) return;
+
+    const tanggalFull = formatFullDateLabel(item.created_at);
+    const waktuFull = formatTimeLabel(item.created_at);
+
+    // Set isi teks modal detail di layout utama
+    document.getElementById('detailModalText').textContent = `Detail pemeriksaan: ${tanggalFull} pukul ${waktuFull}`;
+    
+    // Tampilkan modal
+    document.getElementById('detailCheckModal').hidden = false;
 }
 
 function getApiToken() {

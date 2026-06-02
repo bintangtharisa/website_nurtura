@@ -809,6 +809,40 @@
         return `${firstChar}${maskedMiddle}${lastChar}@${domain}`;
     }
 
+    // --- FUNGSI BARU: MEMBUAT DAN MENAMPILKAN CUSTOM ERROR MODAL DI TENGAH LAYAR ---
+    function triggerCustomErrorModal(message) {
+        let errorModal = document.getElementById('customPasswordErrorModal');
+        
+        // Jika modal belum ada di halaman, kita generate strukturnya secara dinamis
+        if (!errorModal) {
+            errorModal = document.createElement('div');
+            errorModal.id = 'customPasswordErrorModal';
+            // Pengaturan styling dasar agar letaknya melayang sempurna di tengah layar
+            errorModal.style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;";
+            
+            errorModal.innerHTML = `
+                <div style="background: #fff; padding: 24px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.2);">
+                    <div style="width: 56px; height: 56px; background: #FCE8E6; color: #C5221F; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 26px; font-weight: bold;">!</div>
+                    <h3 style="margin: 0 0 8px; font-size: 18px; color: #202124; font-weight: 600;">Pembaruan Gagal</h3>
+                    <p id="customErrorModalMessage" style="margin: 0 0 20px; font-size: 14px; color: #5f6368; line-height: 1.5;"></p>
+                    <button id="customErrorModalCloseBtn" style="background: #C5221F; color: #fff; border: none; padding: 10px 24px; font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s;">OKE</button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+            
+            // Event listener klik tombol OKE untuk menutup modal error
+            document.getElementById('customErrorModalCloseBtn').addEventListener('click', function() {
+                errorModal.style.opacity = '0';
+                errorModal.style.pointerEvents = 'none';
+            });
+        }
+        
+        // Isi pesan error ke dalam modal dan tampilkan di tengah
+        document.getElementById('customErrorModalMessage').textContent = message;
+        errorModal.style.opacity = '1';
+        errorModal.style.pointerEvents = 'auto';
+    }
+
     function handleSubmit(event) {
         event.preventDefault();
 
@@ -818,88 +852,139 @@
             return;
         }
 
-        const oldPassword = document.getElementById('profileOldPassword').value.trim();
-        const newPassword = document.getElementById('profileNewPassword').value.trim();
-
-        if (oldPassword && newPassword) {
-            changePassword(token);
-        } else {
-            updateProfile(token);
-        }
-    }
-
-    function updateProfile(token) {
         const username = document.getElementById('profileUsername').value.trim();
         const oldPassword = document.getElementById('profileOldPassword').value.trim();
-
-        if (!username) {
-            alert('Username tidak boleh kosong.');
-            return;
-        }
-
-        const payload = {
-            username
-        };
-
-        if (oldPassword) {
-            payload.old_password = oldPassword;
-        }
-
-        fetch('/api/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(async response => {
-            const data = await response.json();
-            if (!response.ok || !data.status) {
-                throw new Error(data.message || 'Gagal memperbarui profil.');
-            }
-            alert('Profil berhasil diperbarui!');
-            window.location.reload();
-        })
-        .catch(error => {
-            alert(error.message || 'Terjadi kesalahan saat memperbarui profil.');
-        });
-    }
-
-    function changePassword(token) {
-        const oldPassword = document.getElementById('profileOldPassword').value.trim();
         const newPassword = document.getElementById('profileNewPassword').value.trim();
 
-        if (!oldPassword || !newPassword) {
-            alert('Password lama dan password baru harus diisi untuk mengganti password.');
+        if (!username) {
+            triggerCustomErrorModal('Username tidak boleh kosong.');
             return;
         }
 
-        fetch('/api/change-password', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                old_password: oldPassword,
-                new_password: newPassword
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.textContent : 'Simpan';
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Menyimpan...';
+        }
+
+        // KONDISI 1: User mengganti password (dan simpan username)
+        if (oldPassword && newPassword) {
+            fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username })
             })
-        })
-        .then(async response => {
-            const data = await response.json();
-            if (!response.ok || !data.status) {
-                throw new Error(data.message || 'Gagal mengganti password.');
+            .then(response => response.json())
+            .then(data => {
+                if (!data.status) {
+                    throw new Error(data.message || 'Gagal memperbarui profil.');
+                }
+                return fetch('/api/change-password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.status) {
+                    // Memicu catch block apabila respons API menyatakan password salah
+                    throw new Error(data.message || 'Password lama salah atau gagal ganti password.');
+                }
+                
+                // NOTIF SUKSES: Menggunakan fungsi bawaan modal sukses kamu
+                if (typeof openSuccessModal === 'function') {
+                    const successTextEl = document.querySelector('#successModal .modal-text, #successModal p');
+                    if (successTextEl) successTextEl.textContent = 'Profil dan password berhasil diubah, silakan login ulang.';
+                    
+                    openSuccessModal();
+                    
+                    const successOkBtn = document.getElementById('successModalOkBtn') || document.querySelector('#successModal button');
+                    if (successOkBtn) {
+                        successOkBtn.addEventListener('click', function() {
+                            localStorage.removeItem('token');
+                            window.location.href = '/login';
+                        });
+                    } else {
+                        setTimeout(() => {
+                            localStorage.removeItem('token');
+                            window.location.href = '/login';
+                        }, 2000);
+                    }
+                } else {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                }
+            })
+            .catch(error => {
+                // NOTIF ERROR: Jika password salah atau gagal, alihkan ke modal tengah dengan tombol OKE
+                triggerCustomErrorModal(error.message);
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+            });
+        } 
+        // KONDISI 2: Salah satu field password kosong saat mau update
+        else if (oldPassword || newPassword) {
+            triggerCustomErrorModal('Password lama dan baru harus diisi keduanya!');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
-            alert('Password berhasil diubah, silakan login ulang.');
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        })
-        .catch(error => {
-            alert(error.message || 'Terjadi kesalahan saat mengganti password.');
-        });
+        } 
+        // KONDISI 3: Hanya ubah username biasa tanpa ubah password
+        else {
+            fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.status) {
+                    throw new Error(data.message || 'Gagal memperbarui profil.');
+                }
+                
+                if (typeof openSuccessModal === 'function') {
+                    openSuccessModal();
+                    const successOkBtn = document.getElementById('successModalOkBtn') || document.querySelector('#successModal button');
+                    if (successOkBtn) {
+                        successOkBtn.addEventListener('click', () => window.location.reload());
+                    } else {
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    }
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                // NOTIF ERROR: Jika update username gagal, tampilkan modal tengah
+                triggerCustomErrorModal(error.message);
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+            });
+        }
     }
 </script>
 @endpush

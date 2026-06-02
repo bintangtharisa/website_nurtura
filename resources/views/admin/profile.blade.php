@@ -300,6 +300,7 @@ function togglePassword(inputId, btnElement) {
 }
 
 let adminOriginalUsername = '';
+let nextRedirectUrl = null; 
 
 function maskEmail(email) {
     if (!email || email.indexOf('@') === -1) {
@@ -317,10 +318,62 @@ function maskEmail(email) {
     return `${firstChar}${maskedMiddle}${lastChar}@${domain}`;
 }
 
+// Pengendali Modal Kustom Notifikasi
+function showSuccessModal(title, message, redirectUrl = null) {
+    document.getElementById('successAlertTitle').innerText = title;
+    document.getElementById('successAlertMessage').innerText = message;
+    nextRedirectUrl = redirectUrl;
+    document.getElementById('profileSuccessModal').style.setProperty('display', 'flex', 'important');
+}
+
+function closeSuccessModal() {
+    document.getElementById('profileSuccessModal').style.setProperty('display', 'none', 'important');
+    if (nextRedirectUrl) {
+        if (nextRedirectUrl === 'reload') {
+            location.reload();
+        } else {
+            window.location.href = nextRedirectUrl;
+        }
+    }
+}
+
+function showErrorModal(title, message) {
+    document.getElementById('errorAlertTitle').innerText = title;
+    document.getElementById('errorAlertMessage').innerText = message;
+    document.getElementById('profileErrorModal').style.setProperty('display', 'flex', 'important');
+}
+
+function closeErrorModal() {
+    document.getElementById('profileErrorModal').style.setProperty('display', 'none', 'important');
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const token = localStorage.getItem("token");
 
     if (!token) return;
+
+    // Handler klik area luar overlay untuk menutup modal kustom
+    const successModal = document.getElementById('profileSuccessModal');
+    const errorModal = document.getElementById('profileErrorModal');
+
+    if (successModal) {
+        successModal.addEventListener('click', function(e) {
+            if (e.target === successModal) closeSuccessModal();
+        });
+    }
+    if (errorModal) {
+        errorModal.addEventListener('click', function(e) {
+            if (e.target === errorModal) closeErrorModal();
+        });
+    }
+
+    // Handler tombol Escape keyboard
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (successModal && successModal.style.display === 'flex') closeSuccessModal();
+            if (errorModal && errorModal.style.display === 'flex') closeErrorModal();
+        }
+    });
 
     // 1. AMBIL DATA UNTUK MENGISI FORM
     fetch("/api/profile", {
@@ -349,22 +402,20 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function handleSubmit(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     const passwordLama = document.getElementById("profilePasswordLama").value.trim();
     const passwordBaru = document.getElementById("profilePasswordBaru").value.trim();
 
     if (passwordLama && passwordBaru) {
-        changePassword(e);
+        changePassword();
     } else {
-        updateProfile(e);
+        updateProfile();
     }
 }
 
 // 2. FUNGSI UNTUK MENYIMPAN PERUBAHAN
-function updateProfile(e) {
-    e.preventDefault(); 
-    
+function updateProfile() {
     const token = localStorage.getItem("token");
     const btn = document.getElementById("btnSubmit");
     
@@ -372,7 +423,7 @@ function updateProfile(e) {
     const passwordLama = document.getElementById("profilePasswordLama").value.trim();
 
     if (!username) {
-        alert("Username tidak boleh kosong.");
+        showErrorModal("Validasi Gagal", "Username tidak boleh kosong.");
         return;
     }
 
@@ -381,7 +432,7 @@ function updateProfile(e) {
     };
 
     if (username !== adminOriginalUsername && passwordLama === "") {
-        alert("Password lama wajib diisi untuk mengubah username.");
+        showErrorModal("Autentikasi Diperlukan", "Password lama wajib diisi untuk mengubah username.");
         return;
     }
 
@@ -389,8 +440,10 @@ function updateProfile(e) {
         payload.old_password = passwordLama;
     }
 
-    btn.disabled = true;
-    btn.innerText = "Menyimpan...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Menyimpan...";
+    }
 
     fetch("/api/profile", {
         method: "PUT",
@@ -404,29 +457,28 @@ function updateProfile(e) {
     .then(res => res.json())
     .then(data => {
         if (data.status) {
-            alert("Profil berhasil diperbarui!");
-            location.reload();
+            showSuccessModal("Berhasil", "Profil berhasil diperbarui!", "reload");
         } else {
-            alert(data.message || "Gagal memperbarui profil.");
+            showErrorModal("Gagal Memperbarui", data.message || "Gagal memperbarui profil.");
         }
     })
-    .catch(() => alert("Terjadi kesalahan"))
+    .catch(() => showErrorModal("Kesalahan Sistem", "Terjadi kesalahan saat memproses data."))
     .finally(() => {
-        btn.disabled = false;
-        btn.innerText = "Simpan Perubahan";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "Simpan Perubahan";
+        }
     });
 }
 
-function changePassword(e) {
-    e.preventDefault();
-
+function changePassword() {
     const token = localStorage.getItem("token");
 
     const oldPassword = document.getElementById("profilePasswordLama").value;
     const newPassword = document.getElementById("profilePasswordBaru").value;
 
     if (!oldPassword || !newPassword) {
-        alert("Password lama dan password baru wajib diisi");
+        showErrorModal("Validasi Input", "Password lama dan password baru wajib diisi");
         return;
     }
 
@@ -448,17 +500,46 @@ function changePassword(e) {
         const data = await res.json();
 
         if (res.ok) {
-            alert("Password berhasil diubah, silakan login ulang");
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            showSuccessModal("Berhasil diubah", "Password berhasil diubah, silakan login ulang", "/login");
         } else {
-            alert(data.message || "Gagal mengubah password");
+            showErrorModal("Gagal Mengubah", data.message || "Gagal mengubah password");
         }
     })
     .catch(err => {
         console.error(err);
-        alert("Terjadi kesalahan jaringan");
+        showErrorModal("Kesalahan Jaringan", "Terjadi kesalahan koneksi jaringan");
     });
 }
 </script>
 @endpush
+
+{{-- ===== MODAL KUSTOM POP-UP NOTIFIKASI BERHASIL (HIJAU PUPUS / SAGE) ===== --}}
+<div id="profileSuccessModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(5px) !important; -webkit-backdrop-filter: blur(5px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" style="background: #ffffff !important; padding: 40px 32px !important; border-radius: 20px !important; max-width: 400px !important; width: 85% !important; text-align: center !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; position: relative !important;">
+        <div style="width: 56px !important; height: 56px !important; background: #E6EBE0 !important; color: #94A480 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 24px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2 id="successAlertTitle" style="font-size: 22px !important; font-weight: 600 !important; color: #2B2B2B !important; margin: 0 0 12px 0 !important; font-family: 'Georgia', 'Playfair Display', serif !important;">Berhasil</h2>
+        <p id="successAlertMessage" style="font-size: 14px !important; color: #7A7A7A !important; margin: 0 0 28px 0 !important; font-family: 'DM Sans', 'Inter', sans-serif !important; line-height: 1.5 !important;">Profil berhasil diperbarui!</p>
+        <button type="button" onclick="closeSuccessModal()" style="width: 100% !important; max-width: 160px !important; padding: 12px 24px !important; border-radius: 10px !important; border: none !important; background: #94A480 !important; color: #ffffff !important; font-weight: 600 !important; font-size: 14px !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important; transition: background 0.2s !important;">OK</button>
+    </div>
+</div>
+
+{{-- ===== MODAL KUSTOM POP-UP NOTIFIKASI GAGAL / VALIDASI (MERAH) ===== --}}
+<div id="profileErrorModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(5px) !important; -webkit-backdrop-filter: blur(5px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" style="background: #ffffff !important; padding: 40px 32px !important; border-radius: 20px !important; max-width: 400px !important; width: 85% !important; text-align: center !important; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; position: relative !important;">
+        <div style="width: 56px !important; height: 56px !important; background: #FEF2F2 !important; color: #EF4444 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 24px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 id="errorAlertTitle" style="font-size: 20px !important; font-weight: 600 !important; color: #2B2B2B !important; margin: 0 0 12px 0 !important; font-family: 'Georgia', serif !important;">Peringatan</h2>
+        <p id="errorAlertMessage" style="font-size: 14px !important; color: #7A7A7A !important; margin: 0 0 28px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Terjadi kesalahan pada input data atau sistem.</p>
+        <button type="button" onclick="closeErrorModal()" style="width: 100% !important; max-width: 160px !important; padding: 12px 24px !important; border-radius: 10px !important; border: none !important; background: #EF4444 !important; color: #ffffff !important; font-weight: 600 !important; font-size: 14px !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">OK</button>
+    </div>
+</div>

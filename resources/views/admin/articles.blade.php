@@ -338,8 +338,6 @@
     const CAT_URL = '/api/article-categories';
     const token = localStorage.getItem('token');
     
-    // PERBAIKAN 1: Jadikan allArticles variabel global (di luar fungsi)
-    // Supaya fungsi filterByStatus bisa membaca data yang baru di-load
     let allArticles = []; 
     let currentStatusFilter = 'all';
 
@@ -358,6 +356,39 @@
         document.getElementById('is_published').addEventListener('change', function() {
             if (document.getElementById('articleTitle').value.trim() !== "") {
                 saveArticle();
+            }
+        });
+
+        // Handler untuk menutup modal kustom delete saat area luar overlay diklik
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function (event) {
+                if (event.target === deleteModal) closeDeleteConfirm();
+            });
+        }
+
+        // Handler untuk menutup modal kustom save success saat area luar overlay diklik
+        const successModal = document.getElementById('saveSuccessModal');
+        if (successModal) {
+            successModal.addEventListener('click', function (event) {
+                if (event.target === successModal) closeSaveSuccess();
+            });
+        }
+
+        // Handler untuk menutup modal kustom warning validasi saat area luar overlay diklik
+        const warningModal = document.getElementById('validationWarningModal');
+        if (warningModal) {
+            warningModal.addEventListener('click', function (event) {
+                if (event.target === warningModal) closeValidationWarning();
+            });
+        }
+
+        // Handler tombol Escape untuk menutup semua modal kustom
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                if (deleteModal && deleteModal.style.display === 'flex') closeDeleteConfirm();
+                if (successModal && successModal.style.display === 'flex') closeSaveSuccess();
+                if (warningModal && warningModal.style.display === 'flex') closeValidationWarning();
             }
         });
     });
@@ -380,38 +411,32 @@
     }
 
     async function loadArticles() {
-    const grid = document.getElementById('articlesGrid');
-    grid.innerHTML = '<p>Loading articles...</p>';
-    
-    try {
-        // PERBAIKAN: Tambahkan ?status=all supaya backend kirim semua data
-        // (Pastikan controllermu bisa menerima parameter status)
-        const res = await fetch(`${API_URL}?status=all`, { 
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
-            }
-        });
+        const grid = document.getElementById('articlesGrid');
+        grid.innerHTML = '<p>Loading articles...</p>';
         
-        allArticles = await res.json();
-        
-        // Cek di console log: apakah datanya beneran ada 4?
-        console.log("Data dari API:", allArticles);
+        try {
+            const res = await fetch(`${API_URL}?status=all`, { 
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            allArticles = await res.json();
+            console.log("Data dari API:", allArticles);
 
-        // Update Stats
-        document.getElementById('statTotal').innerText = allArticles.length;
-        document.getElementById('statPublished').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'published').length;
-        document.getElementById('statDraft').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'draft').length;
+            // Update Stats
+            document.getElementById('statTotal').innerText = allArticles.length;
+            document.getElementById('statPublished').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'published').length;
+            document.getElementById('statDraft').innerText = allArticles.filter(a => String(a.status).toLowerCase() === 'draft').length;
 
-        renderGrid(); 
-    } catch (e) {
-        console.error("Fetch error:", e);
-        grid.innerHTML = '<p>Failed to load articles.</p>';
+            renderGrid(); 
+        } catch (e) {
+            console.error("Fetch error:", e);
+            grid.innerHTML = '<p>Failed to load articles.</p>';
+        }
     }
-}
 
-    // PERBAIKAN 4: Fungsi Render Terpisah
-    // Ini memastikan saat kamu klik tab "Draft", dia mengambil data dari allArticles yang sudah di-load
     function renderGrid() {
         const grid = document.getElementById('articlesGrid');
         
@@ -420,7 +445,6 @@
             displayData = allArticles.filter(a => String(a.status).toLowerCase() === currentStatusFilter.toLowerCase());
         }
 
-        // Tampilan jika data kosong (seperti yang kamu alami di tab Draft)
         if (displayData.length === 0) {
             grid.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #94A3B8;">
@@ -448,8 +472,6 @@
         currentStatusFilter = status; 
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-        
-        // Cukup panggil renderGrid, tidak perlu fetch ulang ke API tiap ganti tab
         renderGrid(); 
     }
 
@@ -459,7 +481,7 @@
         const btnDelete = document.getElementById('btnDelete');
         const saveStatus = document.getElementById('saveStatus');
         
-        overlay.style.display = 'flex';
+        overlay.style.setProperty('display', 'flex', 'important');
         form.reset(); 
         document.getElementById('articleId').value = '';
         document.getElementById('inputUrlField').value = '';
@@ -485,7 +507,6 @@
                 document.getElementById('thumbnailUrl').value = a.thumbnail || '';
                 document.getElementById('inputUrlField').value = a.thumbnail || '';
                 
-                // Pastikan checkbox sinkron dengan status DB
                 document.getElementById('is_published').checked = (String(a.status).toLowerCase() === 'published');
                 
                 if(a.thumbnail) {
@@ -501,7 +522,6 @@
         }
     }
 
-    // --- LOGIKA THUMBNAIL & PREVIEW ---
     function handleUrlInput(url) {
         if (url.trim() !== "") {
             document.getElementById('thumbnailUrl').value = url;
@@ -538,17 +558,20 @@
 
     async function saveArticle() {
         const id = document.getElementById('articleId').value;
+        const title = document.getElementById('articleTitle').value.trim();
+        const description = document.getElementById('articleDescription').value.trim();
         const categoryId = document.getElementById('category_id').value;
 
-        if (!categoryId) {
-            alert("Pilih kategori dulu ya!");
+        // Validasi Form Menyeluruh (Menggantikan alert bawaan browser)
+        if (!title || !description || !categoryId) {
+            openValidationWarning("Harap isi semua data");
             return;
         }
         
         const payload = {
-            title: document.getElementById('articleTitle').value,
+            title: title,
             slug: document.getElementById('articleSlug').value,
-            description: document.getElementById('articleDescription').value,
+            description: description,
             category_id: categoryId,
             thumbnail: document.getElementById('thumbnailUrl').value || 'https://placehold.co/800x400?text=No+Image',
             status: document.getElementById('is_published').checked ? 'published' : 'draft',
@@ -568,33 +591,144 @@
             });
 
             if (res.ok) {
-                // Jangan lupakan loadArticles() untuk merefresh UI setelah simpan
+                closeEditor(); 
+                openSaveSuccess(); 
                 await loadArticles(); 
-                if (!id) closeEditor(); // Hanya tutup jika artikel baru
             } else {
                 const result = await res.json();
-                alert("Gagal simpan: " + (result.message || "Error terjadi"));
+                openValidationWarning(result.message || "Gagal menyimpan data ke sistem.");
             }
         } catch (error) {
             console.error("Save error:", error);
+            openValidationWarning("Terjadi kendala koneksi, silakan coba lagi.");
+        }
+    }
+
+    function openSaveSuccess() {
+        const modal = document.getElementById('saveSuccessModal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeSaveSuccess() {
+        const modal = document.getElementById('saveSuccessModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    function openDeleteConfirm() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    // Fungsi Pengendali Modal Peringatan Validasi
+    function openValidationWarning(message) {
+        const modal = document.getElementById('validationWarningModal');
+        const textElement = document.getElementById('validationWarningText');
+        if (modal && textElement) {
+            textElement.innerText = message;
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeValidationWarning() {
+        const modal = document.getElementById('validationWarningModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    function closeDeleteConfirm() {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
         }
     }
 
     async function deleteArticle() {
+        openDeleteConfirm();
+    }
+
+    async function executeDeleteArticle() {
         const id = document.getElementById('articleId').value;
-        if (!confirm('Yakin ingin menghapus artikel ini?')) return;
         const res = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
+            closeDeleteConfirm();
             closeEditor();
             loadArticles();
         }
     }
 
     function closeEditor() {
-        document.getElementById('editorOverlay').style.display = 'none';
+        const overlay = document.getElementById('editorOverlay');
+        const form = document.getElementById('articleForm');
+        if (overlay) {
+            overlay.style.setProperty('display', 'none', 'important');
+        }
+        if (form) {
+            form.reset();
+        }
     }
 </script>
 @endpush
+
+{{-- ===== MODAL KONFIRMASI DELETE ARTIKEL ===== --}}
+<div id="deleteConfirmModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FEF2F2 !important; color: #EF4444 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        </div>
+        <h2 id="deleteConfirmTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Hapus Artikel</h2>
+        <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <div style="display: flex !important; gap: 12px !important; justify-content: center !important;">
+            <button type="button" onclick="closeDeleteConfirm()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: 1px solid #E2E8F0 !important; background: #ffffff !important; color: #475569 !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Batal</button>
+            <button type="button" onclick="executeDeleteArticle()" style="flex: 1 !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #EF4444 !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Hapus</button>
+        </div>
+    </div>
+</div>
+
+{{-- ===== FIXED: MODAL SUKSES DENGAN WARNA SAGE GREEN KHAS NURTURA FAMILY ===== --}}
+<div id="saveSuccessModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="saveSuccessTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #F1F5EE !important; color: #94A97E !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h2 id="saveSuccessTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Berhasil Disimpan</h2>
+        <p style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Artikel Anda telah berhasil diperbarui dan disimpan ke dalam sistem.</p>
+        <div style="display: flex !important; justify-content: center !important;">
+            <button type="button" onclick="closeSaveSuccess()" style="width: 100% !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #94A97E !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Selesai</button>
+        </div>
+    </div>
+</div>
+
+{{-- ===== BARU: MODAL PERINGATAN VALIDASI KUSTOM (WARNA AMBER GOLD & SAGE GREEN) ===== --}}
+<div id="validationWarningModal" style="display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15, 23, 42, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important;">
+    <div role="dialog" aria-modal="true" aria-labelledby="validationWarningTitle" style="background: #ffffff !important; padding: 32px !important; border-radius: 16px !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; z-index: 100000 !important; position: relative !important;">
+        <div aria-hidden="true" style="width: 48px !important; height: 48px !important; background: #FFF9E6 !important; color: #D97706 !important; border-radius: 999px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 auto 16px !important;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 id="validationWarningTitle" style="font-size: 18px !important; font-weight: 700 !important; color: #0F172A !important; margin: 0 0 8px 0 !important; font-family: 'DM Sans', sans-serif !important;">Periksa Kembali</h2>
+        <p id="validationWarningText" style="font-size: 14px !important; color: #64748B !important; margin: 0 0 24px 0 !important; font-family: 'DM Sans', sans-serif !important; line-height: 1.5 !important;">Harap isi semua data</p>
+        <div style="display: flex !important; justify-content: center !important;">
+            <button type="button" onclick="closeValidationWarning()" style="width: 100% !important; padding: 10px 16px !important; border-radius: 8px !important; border: none !important; background: #94A97E !important; color: #ffffff !important; font-weight: 500 !important; cursor: pointer !important; font-family: 'DM Sans', sans-serif !important;">Selesai</button>
+        </div>
+    </div>
+</div>
