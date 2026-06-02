@@ -26,19 +26,6 @@
     <p class="stat-desc">User yang aktif dalam 2 bulan terakhir</p>
   </div>
 
-  {{-- Prediction Accuracy --}}
-  <div class="stat-card">
-    <div class="stat-card__top">
-      <div class="stat-card__icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      </div>
-    </div>
-    <div class="stat-card__label">Prediction Accuracy</div>
-    <div class="stat-card__value">94.8%</div>
-  </div>
-
   {{-- Total Pengguna (highlight) --}}
   <div class="stat-card stat-card--highlight">
     <div class="stat-card__top">
@@ -51,9 +38,6 @@
     </div>
     <div class="stat-card__label">Total Pengguna</div>
     <div class="stat-card__value" id="totalPengguna">Loading...</div>
-    <div class="stat-card__note">
-      <span class="up">+12%</span> bulan ini
-    </div>
   </div>
 
 </section>

@@ -95,7 +95,8 @@
 
 @push('scripts')
 <script>
-    const API_URL = '/api/article-categories'; 
+    const API_URL = '/api/article-categories';
+    const ADMIN_CATEGORY_URL = `${API_URL}?include_inactive=1`;
     const token = localStorage.getItem('token');
     let categoryIdToDelete = null; 
 
@@ -136,7 +137,7 @@
     async function loadData() {
         const tbody = document.getElementById('categoryTableBody');
         try {
-            const res = await fetch(API_URL, { 
+            const res = await fetch(ADMIN_CATEGORY_URL, { 
                 headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' } 
             });
             const categories = await res.json();
@@ -146,12 +147,16 @@
                 // MongoDB sering ganti-ganti antara _id atau id saat dikirim ke JSON
                 const realId = c._id || c.id; 
                 
+                const isActive = c.is_active === true || c.is_active === 1 || c.is_active === '1';
+                const statusLabel = isActive ? 'AKTIF' : 'TIDAK AKTIF';
+                const statusClass = isActive ? 'badge--low' : 'badge--high';
+
                 return `
                     <tr>
                         <td style="color: #999;">${index + 1}</td>
                         <td><strong>${c.name}</strong></td>
                         <td style="font-family:monospace; color:#666;">${c.slug}</td>
-                        <td><span class="badge ${c.is_active ? 'badge--low' : 'badge--high'}">AKTIF</span></td>
+                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
                         <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
                             <button onclick="openModal('edit', '${realId}')" class="btn btn--outline" style="padding: 4px 10px;">Edit</button>
                             <button onclick="deleteCategory('${realId}')" class="btn btn--danger" style="padding: 4px 10px;">Hapus</button>

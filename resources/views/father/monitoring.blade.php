@@ -38,23 +38,6 @@
                 </select>
             </div>
             <div class="card__body">
-                {{-- Status Summary --}}
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                    <div style="background: var(--clr-bg); border-radius: var(--radius-sm); padding: 14px 16px;">
-                        <div style="font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Status 7 Hari</div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading);" id="statusLabel">Stabil</span>
-                            <span style="font-size: 11.5px; font-weight: 500; background: #E6F4EA; color: #2E7D32; padding: 3px 8px; border-radius: 20px;" id="statusDelta">Naik 5%</span>
-                        </div>
-                    </div>
-                    <div style="background: var(--clr-bg); border-radius: var(--radius-sm); padding: 14px 16px;">
-                        <div style="font-size: 11px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Tren Bulanan</div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--clr-text-heading);">Meningkat</span>
-                            <span style="font-size: 11.5px; font-weight: 500; background: var(--clr-high-bg); color: var(--clr-high-text); padding: 3px 8px; border-radius: 20px;">Turun 2%</span>
-                        </div>
-                    </div>
-                </div>
                 {{-- Chart --}}
                 <div class="chart-wrapper">
                     <canvas id="monitoringChart"></canvas>
@@ -82,7 +65,6 @@
                 <div style="display: flex; flex-direction: column; gap: 12px; height: 100%;">
                     <div id="currentResultBox" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--clr-low-bg); border-radius: var(--radius-sm);">
                         <span id="currentResultLabel" style="font-size: 13px; font-weight: 500; color: var(--clr-low-text);">Tidak Beresiko Depresi</span>
-                        <span id="currentResultPercent" style="font-size: 20px; font-weight: 700; color: var(--clr-low-text);">25%</span>
                     </div>
                     <div id="currentResultDescription" style="font-size: 12px; color: var(--clr-text-muted); line-height: 1.6;">
                         Kondisi istri dalam batas normal. Tetap pantau secara rutin dan berikan dukungan emosional.
@@ -305,35 +287,25 @@ function updateConnectedMotherLabel(mother) {
 }
 
 function updateSummary(entries, latestResult = null) {
-    const statusLabel = document.getElementById('statusLabel');
-    const statusDelta = document.getElementById('statusDelta');
-
     if (!entries.length) {
-        statusLabel.textContent = 'Tidak Diketahui';
-        statusDelta.textContent = 'Stabil 0%';
         updateCurrentResultCard(latestResult?.result || null);
         return;
     }
 
     const sorted = [...entries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const latest = sorted[0];
-    statusLabel.textContent = latest.result || 'Tidak Diketahui';
-    statusDelta.textContent = computeTrend(sorted);
     updateCurrentResultCard(latestResult?.result || latest.result);
 }
 
 function updateCurrentResultCard(result) {
     const box = document.getElementById('currentResultBox');
     const label = document.getElementById('currentResultLabel');
-    const percent = document.getElementById('currentResultPercent');
     const description = document.getElementById('currentResultDescription');
 
     if (result === 'Beresiko Depresi') {
         box.style.background = 'var(--clr-high-bg)';
         label.style.color = 'var(--clr-high-text)';
-        percent.style.color = 'var(--clr-high-text)';
         label.textContent = 'Beresiko Depresi';
-        percent.textContent = '85%';
         description.textContent = 'Hasil terakhir menunjukkan kondisi beresiko. Dampingi istri dan pertimbangkan bantuan profesional.';
         return;
     }
@@ -341,41 +313,15 @@ function updateCurrentResultCard(result) {
     if (result === 'Tidak Beresiko Depresi') {
         box.style.background = 'var(--clr-low-bg)';
         label.style.color = 'var(--clr-low-text)';
-        percent.style.color = 'var(--clr-low-text)';
         label.textContent = 'Tidak Beresiko Depresi';
-        percent.textContent = '25%';
         description.textContent = 'Kondisi istri dalam batas normal. Tetap pantau secara rutin dan berikan dukungan emosional.';
         return;
     }
 
     box.style.background = 'var(--clr-bg)';
     label.style.color = 'var(--clr-text-muted)';
-    percent.style.color = 'var(--clr-text-muted)';
     label.textContent = 'Tidak Diketahui';
-    percent.textContent = '0%';
     description.textContent = 'Belum ada hasil skrining yang bisa ditampilkan.';
-}
-
-function computeTrend(entries) {
-    if (entries.length < 2) {
-        return 'Stabil 0%';
-    }
-
-    const score = resultScore(entries[0].result);
-    const previousScore = resultScore(entries[1].result);
-    if (score > previousScore) {
-        return 'Meningkat';
-    }
-    if (score < previousScore) {
-        return 'Menurun';
-    }
-    return 'Stabil';
-}
-
-function resultScore(result) {
-    if (result === 'Beresiko Depresi') return 2;
-    if (result === 'Tidak Beresiko Depresi') return 1;
-    return 0;
 }
 
 function bukaModalDetail(index) {

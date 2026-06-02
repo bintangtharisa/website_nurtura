@@ -6,10 +6,6 @@
 
 @push('styles')
 <style>
-  .m-search-box { position: relative; }
-  .m-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8; }
-  .m-search-input { padding: 10px 16px 10px 36px; border-radius: 6px; border: 1px solid #E2E8F0; outline: none; font-size: 13px; width: 280px; background: #FFFFFF; color: #334155; }
-  
   .m-btn-publish { background: #A3B18A; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s; }
   .m-btn-publish:hover { background: #8E9C76; }
 
@@ -119,16 +115,6 @@
     <p class="page-header__desc">Konfigurasi 9 parameter klinis kuesioner diagnosis sistem Nurtura.</p>
   </div>
   
-  <div class="page-header__actions">
-    <div class="m-search-box">
-      <svg class="m-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" class="m-search-input" placeholder="Cari parameter...">
-    </div>
-    <button class="m-btn-publish">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-      Publish Versi Baru
-    </button>
-  </div>
 </div>
 
 <div class="m-card-full">

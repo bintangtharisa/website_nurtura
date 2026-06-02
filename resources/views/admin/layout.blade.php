@@ -137,7 +137,7 @@
                                 <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                             </svg>
                         </span>
-                        <span class="sidebar__nav-label">Manajemen Model</span>
+                        <span class="sidebar__nav-label">Manajemen Pertanyaan</span>
                     </a>
                 </li>
 

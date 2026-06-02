@@ -8,9 +8,17 @@ use Illuminate\Http\Request;
 
 class ArticleCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = ArticleCategory::where('is_active', true)->get();
+        $query = ArticleCategory::query();
+        $user = auth('api')->user();
+
+        if (!$request->boolean('include_inactive') || !$user || $user->role !== 'admin') {
+            $query->where('is_active', true);
+        }
+
+        $categories = $query->orderBy('created_at', 'desc')->get();
+
         return response()->json($categories);
     }
 
