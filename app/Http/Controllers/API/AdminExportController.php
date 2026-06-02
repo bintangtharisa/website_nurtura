@@ -191,7 +191,7 @@ class AdminExportController extends Controller
         ]);
     }
 
-    public function summaryPdf(Request $request)
+    public function summaryPdf(Request $request): StreamedResponse
     {
         $this->validateExportRequest($request);
 
@@ -235,9 +235,10 @@ class AdminExportController extends Controller
             'insights' => $this->summaryInsights($summary, $quarters),
         ]);
 
-        return response($pdf, 200, [
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf;
+        }, 'ringkasan-export-' . now()->format('Ymd-His') . '.pdf', [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="ringkasan-export-' . now()->format('Ymd-His') . '.pdf"',
         ]);
     }
 
