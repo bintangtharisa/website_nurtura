@@ -38,6 +38,7 @@
     </div>
     <div class="stat-card__label">Total Pengguna</div>
     <div class="stat-card__value" id="totalPengguna">Loading...</div>
+    <p class="stat-desc" style="color: #ffffff;">Total pengguna dalam sistem</p>
   </div>
 
 </section>
